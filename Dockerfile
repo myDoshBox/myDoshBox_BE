@@ -26,42 +26,6 @@ COPY --from=development /app/build ./build
 
 CMD [ "node", "build/index.js" ]
 
-# FROM node:lts-alpine3.19 as development
-
-# WORKDIR /app
-
-# COPY package.json yarn.lock ./
-
-# # COPY package.json .
-
-# # COPY yarn.lock .
-
-# RUN npm install --frozen-lockfile
-
-# RUN npm install
-
-# COPY . .
-
-# RUN npm run build
-
-
-# FROM node:lts-alpine3.19 as production
-
-# ARG NODE_ENV=production
-# ENV NODE_ENV=${NODE_ENV}
-
-# WORKDIR /src/app
-
-# COPY package.json .
-
-# COPY yarn.lock .
-
-# RUN npm install --only=production
-
-# COPY --from=development /src/app/build ./build
-
-# CMD [ "node", "build/index.js" ]
-
 
 
 
