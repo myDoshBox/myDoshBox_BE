@@ -8,7 +8,9 @@ export const verifyIndividualUserEmail = async (
   res: Response
 ) => {};
 
-export const individualUserLogin = async (req: Request, res: Response) => {};
+export const individualUserLogin = async (req: Request, res: Response) => {
+  const {email, password} = req.body;
+};
 
 export const generateOTP = async (req: Request, res: Response) => {};
 

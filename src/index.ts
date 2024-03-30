@@ -2,12 +2,17 @@
 import express from "express";
 import { Request, Response } from "express";
 import connectDB from "./config/dbconn.config";
+import organizationRoute from './modules/authentication/organizationUserAuth/individualAuth.route'
 
 const app = express();
-
+app.use(express.json())
+app.use(express.urlencoded({extended:false}));
+ 
 app.get("/", (req: Request, res: Response) => {
   return res.json({ msg: "welcome to doshbox api" });
 });
+
+app.use('/organization', organizationRoute)
 
 const PORT = process.env.PORT;
 
