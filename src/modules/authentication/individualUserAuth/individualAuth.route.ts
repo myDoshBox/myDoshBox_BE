@@ -1,9 +1,10 @@
 import { Router } from "express";
-import { individualUserRegistration } from "../individualUserAuth/individualUserAuth.controller";
+import { individualUserLogin, individualUserRegistration } from "../individualUserAuth/individualUserAuth.controller";
 
 const router = Router();
 
 // routes
-// router.route("/register").post(individualUserRegistration);
+router.route("/register").post(individualUserRegistration);
+router.post('/signin', individualUserLogin) 
 
 export default router;
