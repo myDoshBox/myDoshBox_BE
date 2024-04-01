@@ -3,6 +3,7 @@ import express from "express";
 import { Request, Response } from "express";
 import connectDB from "./config/dbconn.config";
 import organizationRoute from './modules/authentication/organizationUserAuth/individualAuth.route'
+import individualRoute from './modules/authentication/individualUserAuth/individualAuth.route';
 
 const app = express();
 app.use(express.json())
@@ -13,6 +14,7 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.use('/organization', organizationRoute)
+app.use('/auth', individualRoute)
 
 const PORT = process.env.PORT;
 
