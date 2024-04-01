@@ -4,6 +4,6 @@ import { individualUserRegistration } from "../individualUserAuth/individualUser
 const router = Router();
 
 // routes
-// router.route("/register").post(individualUserRegistration);
+router.route("/register").post(individualUserRegistration);
 
 export default router;
