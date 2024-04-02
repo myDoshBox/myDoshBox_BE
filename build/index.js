@@ -6,10 +6,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const express_1 = __importDefault(require("express"));
 const dbconn_config_1 = __importDefault(require("./config/dbconn.config"));
+const organizationAuth_route_1 = __importDefault(require("./modules/authentication/organizationUserAuth/organizationAuth.route"));
 const app = (0, express_1.default)();
 app.get("/", (req, res) => {
     return res.json({ msg: "welcome to doshbox api" });
 });
+app.use(express_1.default.json());
+app.use("/api/organization", organizationAuth_route_1.default);
 const PORT = process.env.PORT;
 (0, dbconn_config_1.default)()
     .then(() => {
