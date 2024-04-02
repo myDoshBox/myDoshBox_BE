@@ -3,7 +3,6 @@ import mongoose, {  Model, ObjectId, Schema } from "mongoose";
 
 export interface IndividualUserDocument {
     _id: ObjectId;
-    name: string;
     email: string;
     password: string;
     phoneNumber: string;
@@ -16,10 +15,7 @@ interface IndividualUserMethods {
 
 // create a schema for the individual user
 const individualUserAuthSchema = new Schema<IndividualUserDocument>({
-    name: {
-        type: String,
-        required: true
-    },
+
     email: {
         type: String,
         required: true,

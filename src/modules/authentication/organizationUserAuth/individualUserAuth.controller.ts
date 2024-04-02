@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 
 
 export const organizationRegister = async (req: Request, res: Response): Promise<Response> => {
-    const { name, email, password, phone } = req.body;
+    const { email, password, phone } = req.body;
     const organizationExist = await oranizationUserModel.findOne({ email });
     if (organizationExist) return res.status(400).json({ message: "Organization already exists!" });
 

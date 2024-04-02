@@ -3,7 +3,6 @@ import {hash, compare} from "bcrypt"
 
 export interface OrganizationDocument{
     _id: ObjectId;
-    name: string;
     email: string;
     password: string;
     phone: string;
@@ -15,7 +14,6 @@ interface OrganizationMethods {
 }
 
 const organizationSchema = new Schema<OrganizationDocument>({
-    name: {type: String, required: true},
     email: {type: String, required: true, unique: true},
     password: {type: String, required: true},
     phone: {type: String, required: true},
