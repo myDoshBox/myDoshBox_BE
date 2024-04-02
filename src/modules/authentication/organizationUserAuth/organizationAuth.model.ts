@@ -55,6 +55,8 @@ const organizationalSchema: Schema<organizationalDoc> = new mongoose.Schema({
   },
   passwordConfirmation: {
     type: String,
+    required: [true, "Please provide a password"],
+    minlength: [8, "Password must be at least 8 characters long"],
     select: false,
   },
   passwordChangedAt: Date,
@@ -87,11 +89,14 @@ organizationalSchema.methods.createPasswordResetToken = function (
     .update(resetToken)
     .digest("hex");
   console.log({ resetToken }, this.passwordResetToken);
-  this.passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000);
+
+  const resetExpires = new Date();
+  resetExpires.setMinutes(resetExpires.getMinutes() + 10); // Add 10 minutes to the current time
+  this.passwordResetExpires = resetExpires;
+
   return resetToken;
 };
 
-// Export the UserModel
 const OrganizationModel: Model<organizationalDoc> =
   mongoose.model<organizationalDoc>("Organization", organizationalSchema);
 
