@@ -1,7 +1,10 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import OrganizationModel from "./organizationAuth.model";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import sendEmail from "../../../utils/email.utils";
+import catchAsync from "../../../utils/catchAsync";
+import AppError from "../../../utils/appError";
 
 interface TokenPayload {
   id: string;
@@ -14,91 +17,87 @@ const signToken = (id: string): string => {
   });
 };
 
-export const signup = async (req: Request, res: Response) => {
-  try {
-    const { passwordConfirmation, ...userData } = req.body;
+const createSendToken = (user: any, statusCode: number, res: Response) => {
+  const token = signToken(user._id);
 
-    if (userData.password !== passwordConfirmation) {
-      return res.status(400).json({
-        status: "fail",
-        message: "Passwords do not match",
-      });
-    }
+  user.password = undefined;
 
-    const newUser = await OrganizationModel.create(userData);
-
-    const token = signToken(newUser._id);
-
-    res.status(201).json({
-      status: "success",
-      token,
-      data: {
-        user: newUser,
-      },
-    });
-  } catch (err: any) {
-    res.status(400).json({
-      status: "fail",
-      message: err.message,
-    });
-  }
+  res.status(statusCode).json({
+    status: "success",
+    token,
+    data: {
+      user,
+    },
+  });
 };
 
-export const login = async (req: Request, res: Response) => {
-  try {
+export const signup = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    // const org = await OrganizationModel.create({
+    //   name: req.body.name,
+    //   email: req.body.email,
+    //   orgEmail: req.body.orgEmail,
+    //   password: req.body.password,
+    //   passwordConfirmation: req.body.passwordConfirmation,
+    // });
+
+    const { name, email, orgEmail, password, passwordConfirmation } = req.body;
+
+    if (password !== passwordConfirmation) {
+      return next(new AppError("Passwords do not match", 400));
+    }
+
+    const org = await OrganizationModel.create({
+      name,
+      email,
+      orgEmail,
+    });
+
+    createSendToken(org, 201, res);
+  }
+);
+
+export const login = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({
-        status: "fail",
-        message: " please provide email and password",
-      });
+      return next(new AppError("Please provide email and password!", 400));
     }
 
+    // 2) Check if user exists && password is correct
     const user = await OrganizationModel.findOne({ email }).select("+password");
 
-    if (!user || !(await user?.correctPassword(password, user.password))) {
-      return res.status(404).json({
-        status: "fail",
-        message: "Incorrect email or password",
-      });
+    if (!user || !(await user.correctPassword(password, user.password))) {
+      return next(new AppError("Incorrect email or password", 401));
     }
 
-    const token = signToken(user._id);
-    res.status(200).json({
-      status: "success",
-      token,
-    });
-  } catch (err: any) {
-    res.status(400).json({
-      status: "fail",
-      message: err.message,
-    });
+    // 3) If everything ok, send token to client
+    createSendToken(user, 200, res);
   }
-};
+);
 
-export const forgotPassword = async (req: Request, res: Response) => {
-  try {
+export const forgotPassword = catchAsync(
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    // 1) Get user based on POSTed email
     const org = await OrganizationModel.findOne({ email: req.body.email });
-
     if (!org) {
-      return res.status(404).json({
-        status: "fail",
-        Message: "There is no user with this email address",
-      });
+      return next(new AppError("There is no user with email address.", 404));
     }
 
+    // 2) Generate the random reset token
     const resetToken = org.createPasswordResetToken();
-
     await org.save({ validateBeforeSave: false });
 
+    // 3) Send it to user's email
     const resetURL = `${req.protocol}://${req.get(
       "host"
-    )}//api/organization/resetpassword/${resetToken}`;
+    )}/api/organization/resetPassword/${resetToken}`;
 
-    const message = `Forgot your password? Submit a PATCH request with your new password and password Confirmation to: ${resetURL}.\nIf you didn't forget your password, please ignore this email!`;
+    const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetURL}.\nIf you didn't forget your password, please ignore this email!`;
 
     try {
+      // sendEmail function needs to be implemented separately
       await sendEmail({
         email: org.email,
         subject: "Your password reset token (valid for 10 min)",
@@ -114,17 +113,41 @@ export const forgotPassword = async (req: Request, res: Response) => {
       org.passwordResetExpires = undefined;
       await org.save({ validateBeforeSave: false });
 
-      return res.status(500).json({
-        status: "fail",
-        message: "There was an error sending the email. Try again later!",
-      });
+      return next(
+        new AppError(
+          "There was an error sending the email. Try again later!",
+          500
+        )
+      );
     }
-  } catch (err: any) {
-    res.status(400).json({
-      status: "fail",
-      message: err.message,
-    });
   }
-};
+);
 
-export const resetPassword = async (req: Request, res: Response) => {};
+export const resetPassword = catchAsync(
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    // 1) Get user based on the token
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(req.params.token)
+      .digest("hex");
+
+    const org = await OrganizationModel.findOne({
+      passwordResetToken: hashedToken,
+      passwordResetExpires: { $gt: Date.now() },
+    });
+
+    // 2) If token has not expired, and there is org, set the new password
+    if (!org) {
+      return next(new AppError("Token is invalid or has expired", 400));
+    }
+    org.password = req.body.password;
+    org.passwordConfirmation = req.body.passwordConfirm;
+    org.passwordResetToken = undefined;
+    org.passwordResetExpires = undefined;
+    await org.save();
+
+    // 3) Update changedPasswordAt property for the org
+    // 4) Log the org in, send JWT
+    createSendToken(org, 200, res);
+  }
+);

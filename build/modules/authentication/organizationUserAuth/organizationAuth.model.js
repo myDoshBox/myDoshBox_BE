@@ -20,12 +20,10 @@ const organizationalSchema = new mongoose_1.default.Schema({
     name: {
         type: String,
         required: [true, "Please tell us your name"],
-        unique: true,
     },
     orgEmail: {
         type: String,
         required: [true, "Please tell us your email"],
-        unique: true,
         lowercase: true,
         validate: {
             validator: validator_utils_1.emailValidator,
@@ -50,6 +48,7 @@ const organizationalSchema = new mongoose_1.default.Schema({
     },
     passwordConfirmation: {
         type: String,
+        select: false,
     },
     passwordChangedAt: Date,
     passwordResetToken: String,
@@ -76,9 +75,10 @@ organizationalSchema.methods.createPasswordResetToken = function () {
         .update(resetToken)
         .digest("hex");
     console.log({ resetToken }, this.passwordResetToken);
-    this.passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000);
+    const resetExpires = new Date();
+    resetExpires.setMinutes(resetExpires.getMinutes() + 10); // Add 10 minutes to the current time
+    this.passwordResetExpires = resetExpires;
     return resetToken;
 };
-// Export the UserModel
 const OrganizationModel = mongoose_1.default.model("Organization", organizationalSchema);
 exports.default = OrganizationModel;

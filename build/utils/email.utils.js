@@ -13,8 +13,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const nodemailer_1 = __importDefault(require("nodemailer"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 const sendEmail = (options) => __awaiter(void 0, void 0, void 0, function* () {
-    // 1) Create a transporter
+    // Ensure all necessary environment variables are provided
+    if (!process.env.EMAIL_HOST ||
+        !process.env.EMAIL_PORT ||
+        !process.env.EMAIL_USERNAME ||
+        !process.env.EMAIL_PASSWORD) {
+        throw new Error("Email configuration is incomplete. Please provide EMAIL_HOST, EMAIL_PORT, EMAIL_USERNAME, and EMAIL_PASSWORD environment variables.");
+    }
+    // Create a transporter
     const transporter = nodemailer_1.default.createTransport({
         host: process.env.EMAIL_HOST,
         port: Number(process.env.EMAIL_PORT),
@@ -23,7 +32,7 @@ const sendEmail = (options) => __awaiter(void 0, void 0, void 0, function* () {
             pass: process.env.EMAIL_PASSWORD,
         },
     });
-    // 2) Define the email options
+    // Define the email options
     const mailOptions = {
         from: "Oladapo Elijah <toktogift@gmail.com>",
         to: options.email,
@@ -31,7 +40,7 @@ const sendEmail = (options) => __awaiter(void 0, void 0, void 0, function* () {
         text: options.message,
         // html:
     };
-    // 3) Actually send the email
+    // Actually send the email
     yield transporter.sendMail(mailOptions);
 });
 exports.default = sendEmail;
