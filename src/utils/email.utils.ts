@@ -1,4 +1,4 @@
-import nodemailer, { Transporter } from 'nodemailer';
+import nodemailer, { Transporter } from "nodemailer";
 
 interface EmailOptions {
   email: string;
@@ -19,7 +19,7 @@ const sendEmail = async (options: EmailOptions): Promise<void> => {
 
   // 2) Define the email options
   const mailOptions = {
-    from: 'Oladapo Elijah <toktogift@gmail.com>',
+    from: "Oladapo Elijah <toktogift@gmail.com>",
     to: options.email,
     subject: options.subject,
     text: options.message,

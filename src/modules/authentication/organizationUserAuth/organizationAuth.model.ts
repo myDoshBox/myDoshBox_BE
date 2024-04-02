@@ -3,7 +3,7 @@ import { emailValidator } from "../../../utils/validator.utils";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
-// Extend the UserDoc interface to include virtual properties
+// Extend the OrganizationDoc interface to include virtual properties
 interface organizationalDoc extends Document {
   name: string;
   email: string;
@@ -27,12 +27,10 @@ const organizationalSchema: Schema<organizationalDoc> = new mongoose.Schema({
   name: {
     type: String,
     required: [true, "Please tell us your name"],
-    unique: true,
   },
   orgEmail: {
     type: String,
     required: [true, "Please tell us your email"],
-    unique: true,
     lowercase: true,
     validate: {
       validator: emailValidator,
@@ -57,6 +55,7 @@ const organizationalSchema: Schema<organizationalDoc> = new mongoose.Schema({
   },
   passwordConfirmation: {
     type: String,
+    select: false,
   },
   passwordChangedAt: Date,
   passwordResetToken: String,

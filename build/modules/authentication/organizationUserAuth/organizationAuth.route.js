@@ -29,6 +29,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const organizationController = __importStar(require("./organizationAuth.controller"));
 const router = express_1.default.Router();
+router.post("/signup", organizationController.signup);
 router.post("/login", organizationController.login);
 router.post("/forgotPassword", organizationController.forgotPassword);
 router.patch("/resetPassword/:token", organizationController.resetPassword);

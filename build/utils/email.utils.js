@@ -25,7 +25,7 @@ const sendEmail = (options) => __awaiter(void 0, void 0, void 0, function* () {
     });
     // 2) Define the email options
     const mailOptions = {
-        from: 'Oladapo Elijah <toktogift@gmail.com>',
+        from: "Oladapo Elijah <toktogift@gmail.com>",
         to: options.email,
         subject: options.subject,
         text: options.message,

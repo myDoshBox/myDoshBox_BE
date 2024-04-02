@@ -8,11 +8,22 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resetPassword = exports.forgotPassword = exports.login = void 0;
+exports.resetPassword = exports.forgotPassword = exports.login = exports.signup = void 0;
 const organizationAuth_model_1 = __importDefault(require("./organizationAuth.model"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const email_utils_1 = __importDefault(require("../../../utils/email.utils"));
@@ -21,6 +32,33 @@ const signToken = (payload) => {
         expiresIn: process.env.JWT_EXPIRES_IN,
     });
 };
+const signup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const _a = req.body, { passwordConfirmation } = _a, userData = __rest(_a, ["passwordConfirmation"]);
+        if (userData.password !== passwordConfirmation) {
+            return res.status(400).json({
+                status: "fail",
+                message: "Passwords do not match",
+            });
+        }
+        const newUser = yield organizationAuth_model_1.default.create(userData);
+        const token = signToken(newUser._id);
+        res.status(201).json({
+            status: "success",
+            token,
+            data: {
+                user: newUser,
+            },
+        });
+    }
+    catch (err) {
+        res.status(400).json({
+            status: "fail",
+            message: err.message,
+        });
+    }
+});
+exports.signup = signup;
 const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { email, password } = req.body;
