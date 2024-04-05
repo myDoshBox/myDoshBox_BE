@@ -6,6 +6,7 @@ import connectDB from "./config/dbconn.config";
 import organizationRoutes from "./modules/authentication/organizationUserAuth/organizationAuth.route";
 
 import googleAuthRoutes from "./modules/authentication/organizationUserAuth/googleOrganizationUserAuth.route";
+import googleIndividualUserAuthroute from "./modules/authentication/individualUserAuth/googleIndividualUserAuth.route";
 
 const app = express();
 
@@ -24,6 +25,8 @@ app.get("/", (req: Request, res: Response) => {
 app.use("/api/organization", organizationRoutes);
 
 app.use("/auth", googleAuthRoutes);
+
+app.use("/auth/ind", googleIndividualUserAuthroute);
 
 
 const PORT = process.env.PORT;
