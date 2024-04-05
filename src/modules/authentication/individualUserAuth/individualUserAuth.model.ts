@@ -7,6 +7,7 @@ export interface IndividualUserDocument {
     password: string;
     phoneNumber: string;
     verified: boolean;
+    passwordResetToken?: string;
 }
 
 interface IndividualUserMethods {
