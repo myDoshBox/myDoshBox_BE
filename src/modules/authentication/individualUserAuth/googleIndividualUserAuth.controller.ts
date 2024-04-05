@@ -12,8 +12,8 @@ export const getGoogleUrl = async (req: Request, res: Response) => {
   // const encodedStateOptions = btoa(JSON.stringify(stateOptions));
 
   const oAuth2Client = new OAuth2Client(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.GOOGLE_CLIENT_IDS,
+    process.env.GOOGLE_CLIENT_SECRETS,
     process.env.GOOGLE_REDIRECT_URI
   );
 
@@ -44,8 +44,8 @@ export const getGoogleUserDetail = async (req: Request, res: Response) => {
     // const decodedState = JSON.parse(atob(state as string));
 
     const oAuth2Client = new OAuth2Client(
-      process.env.GOOGLE_CLIENT_ID,
-      process.env.GOOGLE_CLIENT_SECRET,
+      process.env.GOOGLE_CLIENT_IDS,
+      process.env.GOOGLE_CLIENT_SECRETS,
       process.env.GOOGLE_REDIRECT_URI
     );
 
