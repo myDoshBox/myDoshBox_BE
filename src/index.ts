@@ -26,16 +26,13 @@ app.get("/", (req: Request, res: Response) => {
   return res.json({ msg: "welcome to doshbox api" });
 });
 
-app.use("/api/organization", organizationRoutes);
+app.use("/api/organization", organizationRoutes)
 
-<<<<<<< HEAD
 // app.use("/auth", googleAuthRoutes);
-=======
+
 app.use("/auth", googleAuthRoutes);
 
 app.use("/auth/ind", googleIndividualUserAuthroute);
-
->>>>>>> b7da169122a502bfe50539dc950a207ec3518382
 
 const PORT = process.env.PORT;
 
