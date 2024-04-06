@@ -56,7 +56,6 @@ export const login = catchAsync(async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    // return next(new AppError("Please provide email and password!", 400));
     res.status(401).json({
       status: "fail",
       message: "Password do not match",
