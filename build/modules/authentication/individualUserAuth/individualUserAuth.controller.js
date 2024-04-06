@@ -8,19 +8,53 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.logout = exports.resetPassword = exports.verifyOTP = exports.generateOTP = exports.individualUserLogin = exports.verifyIndividualUserEmail = exports.individualUserRegistration = void 0;
-const individualUserRegistration = (req, res) => __awaiter(void 0, void 0, void 0, function* () { });
+exports.individualUserRegistration = void 0;
+const individualUserAuth_model_1 = __importDefault(require("./individualUserAuth.model"));
+const individualHashPassword_1 = require("./individualHashPassword");
+const individualUserRegistration = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { email, phoneNumber, password } = req.body;
+        // Hash the password
+        const hashedPassword = yield (0, individualHashPassword_1.hashPassword)(password);
+        // check if the user already exists
+        const userExists = yield individualUserAuth_model_1.default.findOne({ email })
+            .select("email")
+            .lean();
+        if (userExists) {
+            return res.status(400).json({
+                message: "User already exists",
+            });
+        }
+        // create a new user
+        const newUser = new individualUserAuth_model_1.default({
+            email,
+            phoneNumber,
+            password: hashedPassword // The password is hashed
+        });
+        // save the user to the database
+        yield newUser.save();
+        // send a response
+        res.status(201).json({
+            message: "User registered successfully",
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            message: "Internal server error",
+        });
+    }
+});
 exports.individualUserRegistration = individualUserRegistration;
-const verifyIndividualUserEmail = (req, res) => __awaiter(void 0, void 0, void 0, function* () { });
-exports.verifyIndividualUserEmail = verifyIndividualUserEmail;
-const individualUserLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () { });
-exports.individualUserLogin = individualUserLogin;
-const generateOTP = (req, res) => __awaiter(void 0, void 0, void 0, function* () { });
-exports.generateOTP = generateOTP;
-const verifyOTP = (req, res) => __awaiter(void 0, void 0, void 0, function* () { });
-exports.verifyOTP = verifyOTP;
-const resetPassword = (req, res) => __awaiter(void 0, void 0, void 0, function* () { });
-exports.resetPassword = resetPassword;
-const logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () { });
-exports.logout = logout;
+// export const verifyIndividualUserEmail = async (
+//   req: Request,
+//   res: Response
+// ) => {};
+// export const individualUserLogin = async (req: Request, res: Response) => {};
+// export const generateOTP = async (req: Request, res: Response) => {};
+// export const verifyOTP = async (req: Request, res: Response) => {};
+// export const resetPassword = async (req: Request, res: Response) => {};
+// export const logout = async (req: Request, res: Response) => {};

@@ -48,6 +48,8 @@ const organizationalSchema = new mongoose_1.default.Schema({
     },
     passwordConfirmation: {
         type: String,
+        required: [true, "Please provide a password"],
+        minlength: [8, "Password must be at least 8 characters long"],
         select: false,
     },
     passwordChangedAt: Date,

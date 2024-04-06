@@ -12,7 +12,6 @@
     "start": "npm run build && node ./build/index.js"
   },
   "dependencies": {
-    "@types/bcrypt": "^5.0.2",
     "@types/cors": "^2.8.17",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/lodash": "^4.17.0",
