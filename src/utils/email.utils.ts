@@ -15,7 +15,7 @@ const sendEmail = async (options: EmailOptions): Promise<void> => {
     !process.env.EMAIL_HOST ||
     !process.env.EMAIL_PORT ||
     !process.env.EMAIL_USERNAME ||
-    !process.env.EMAIL_PASSWORD
+    !process.env.EMAIL_PASSWORD 
   ) {
     throw new Error(
       "Email configuration is incomplete. Please provide EMAIL_HOST, EMAIL_PORT, EMAIL_USERNAME, and EMAIL_PASSWORD environment variables."

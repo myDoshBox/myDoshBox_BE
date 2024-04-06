@@ -1,6 +1,21 @@
-import mongoose from "mongoose";
+import { compare, hash } from "bcrypt";
+import mongoose, { Model, model } from "mongoose";
 
 // create a schema for the individual user
+
+interface IndividaulDocument {
+  email: string;
+  phoneNumber: string;
+  password: string;
+  confirmPassword: string;
+  verified: boolean;
+}
+
+
+interface Methods {
+  comparePassword(password: string): Promise<boolean>;
+}
+
 const individualUserAuthSchema = new mongoose.Schema({
   email: {
     type: String,
@@ -18,23 +33,27 @@ const individualUserAuthSchema = new mongoose.Schema({
   },
   confirmPassword: {
     type: String,
-    required: true,
   },
+  verified: {
+    type: Boolean,
+    default: false,
+  }
 });
 
-individualUserAuthSchema.pre("save", function (next) {
-  if (this.isModified("password") || this.isNew) {
-    if (this.password !== this.confirmPassword) {
-      return next(new Error("Passwords do not match"));
-    }
+individualUserAuthSchema.pre("save", async function (next) {
+  // Hash the token
+  if (this.isModified("password")) {
+      this.password = await hash(this.password, 10);
   }
   next();
 });
 
-// create a model for the individual user
-const IndividualUser = mongoose.model(
-  "IndividualUser",
-  individualUserAuthSchema
-);
+individualUserAuthSchema.methods.comparePassword = async function (password: string) {
+  const result = await compare(password, this.password); // Change this.token to this.password
+  return result;
+}
 
-export default IndividualUser;
+
+// create a model for the individual user
+ 
+export default model("IndividualUser", individualUserAuthSchema) as Model<IndividaulDocument, {}, Methods>

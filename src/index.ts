@@ -7,6 +7,7 @@ import organizationRoutes from "./modules/authentication/organizationUserAuth/or
 
 import googleAuthRoutes from "./modules/authentication/organizationUserAuth/googleOrganizationUserAuth.route";
 import googleIndividualUserAuthroute from "./modules/authentication/individualUserAuth/googleIndividualUserAuth.route";
+import individualRouter from "./modules/authentication/individualUserAuth/individualAuth.route";
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use("/api/organization", organizationRoutes);
 app.use("/auth", googleAuthRoutes);
 
 app.use("/auth/ind", googleIndividualUserAuthroute);
+app.use('/auth', individualRouter);
 
 
 const PORT = process.env.PORT;

@@ -31,31 +31,31 @@ const createSendToken = (user: any, statusCode: number, res: Response) => {
   });
 };
 
-export const signup = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    // const org = await OrganizationModel.create({
-    //   name: req.body.name,
-    //   email: req.body.email,
-    //   orgEmail: req.body.orgEmail,
-    //   password: req.body.password,
-    //   passwordConfirmation: req.body.passwordConfirmation,
-    // });
+// export const signup = catchAsync(
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     const org = await OrganizationModel.create({
+//       name: req.body.name,
+//       email: req.body.email,
+//       orgEmail: req.body.orgEmail,
+//       password: req.body.password,
+//       passwordConfirmation: req.body.passwordConfirmation,
+//     });
 
-    const { name, email, orgEmail, password, passwordConfirmation } = req.body;
+//     const { name, email, orgEmail, password, passwordConfirmation } = req.body;
 
-    if (password !== passwordConfirmation) {
-      return next(new AppError("Passwords do not match", 400));
-    }
+//     if (password !== passwordConfirmation) {
+//       return next(new AppError("Passwords do not match", 400));
+//     }
 
-    const org = await OrganizationModel.create({
-      name,
-      email,
-      orgEmail,
-    });
+//     const org = await OrganizationModel.create({
+//       name,
+//       email,
+//       orgEmail,
+//     });
 
-    createSendToken(org, 201, res);
-  }
-);
+//     createSendToken(org, 201, res);
+//   }
+// );
 
 export const login = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {

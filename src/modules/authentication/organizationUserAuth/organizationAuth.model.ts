@@ -1,6 +1,6 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 import { emailValidator } from "../../../utils/validator.utils";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 import crypto from "crypto";
 
 // Extend the OrganizationDoc interface to include virtual properties
