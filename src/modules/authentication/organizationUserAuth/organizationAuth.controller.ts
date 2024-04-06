@@ -52,25 +52,31 @@ export const signup = catchAsync(async (req: Request, res: Response) => {
   createSendToken(org, 201, res);
 });
 
-export const login = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { email, password } = req.body;
+export const login = catchAsync(async (req: Request, res: Response) => {
+  const { email, password } = req.body;
 
-    if (!email || !password) {
-      return next(new AppError("Please provide email and password!", 400));
-    }
-
-    // 2) Check if user exists && password is correct
-    const user = await OrganizationModel.findOne({ email }).select("+password");
-
-    if (!user || !(await user.correctPassword(password, user.password))) {
-      return next(new AppError("Incorrect email or password", 401));
-    }
-
-    // 3) If everything ok, send token to client
-    createSendToken(user, 200, res);
+  if (!email || !password) {
+    // return next(new AppError("Please provide email and password!", 400));
+    res.status(401).json({
+      status: "fail",
+      message: "Password do not match",
+    });
   }
-);
+
+  // 2) Check if user exists && password is correct
+  const user = await OrganizationModel.findOne({ email }).select("+password");
+
+  if (!user || !(await user.correctPassword(password, user.password))) {
+    // return next(new AppError("Incorrect email or password", 401));
+    res.status(401).json({
+      status: "fail",
+      message: "Password do not match",
+    });
+  }
+
+  // 3) If everything ok, send token to client
+  createSendToken(user, 200, res);
+});
 
 export const forgotPassword = catchAsync(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
