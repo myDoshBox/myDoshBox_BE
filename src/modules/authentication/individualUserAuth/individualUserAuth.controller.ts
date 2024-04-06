@@ -1,3 +1,4 @@
+
 import { Request, Response } from "express";
 import IndividualUser, { UserDocument } from "./individualUserAuth.model";
 
@@ -42,25 +43,4 @@ export const individualUserRegistration = async (
   }
 };
 
-// export const verifyIndividualUserEmail = async (
-//   req: Request,
-//   res: Response
-// ) => {
-//   // Implement email verification logic here
-// };
 
-// export const generateOTP = async (req: Request, res: Response) => {
-//   // Implement OTP generation logic here
-// };
-
-// export const verifyOTP = async (req: Request, res: Response) => {
-//   // Implement OTP verification logic here
-// };
-
-// export const resetPassword = async (req: Request, res: Response) => {
-//   // Implement password reset logic here
-// };
-
-// export const logout = async (req: Request, res: Response) => {
-//   // Implement logout logic here
-// };

@@ -1,3 +1,4 @@
+
 import mongoose, { Schema, Document } from "mongoose";
 import bcrypt from "bcrypt";
 
@@ -95,3 +96,4 @@ const Individual = mongoose.model<UserDocument, UserModel>(
 );
 
 export default Individual;
+
