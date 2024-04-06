@@ -1,20 +1,38 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import express from "express";
+// import cors from "cors";
 import { Request, Response } from "express";
 import connectDB from "./config/dbconn.config";
-import organizationRoute from './modules/authentication/organizationUserAuth/individualAuth.route'
-import individualRoute from './modules/authentication/individualUserAuth/individualAuth.route';
+import organizationRoutes from "./modules/authentication/organizationUserAuth/organizationAuth.route";
+
+<<<<<<< HEAD
+// import googleAuthRoutes from "./modules/authentication/organizationUserAuth/googleOrganizationUserAuth.route";
+=======
+import googleAuthRoutes from "./modules/authentication/organizationUserAuth/googleOrganizationUserAuth.route";
+import googleIndividualUserAuthroute from "./modules/authentication/individualUserAuth/googleIndividualUserAuth.route";
+>>>>>>> b7da169122a502bfe50539dc950a207ec3518382
 
 const app = express();
-app.use(express.json())
-app.use(express.urlencoded({extended:false}));
- 
+
+// app.use(cors());
+app.use(express.json());
+app.use(
+  express.urlencoded({
+    extended: true,
+  })
+);
+
 app.get("/", (req: Request, res: Response) => {
   return res.json({ msg: "welcome to doshbox api" });
 });
 
-app.use('/organization', organizationRoute)
-app.use('/auth', individualRoute)
+app.use("/api/organization", organizationRoutes)
+
+// app.use("/auth", googleAuthRoutes);
+
+app.use("/auth", googleAuthRoutes);
+
+app.use("/auth/ind", googleIndividualUserAuthroute);
 
 const PORT = process.env.PORT;
 
