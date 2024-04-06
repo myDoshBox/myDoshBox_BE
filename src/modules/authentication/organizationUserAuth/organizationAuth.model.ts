@@ -49,14 +49,10 @@ const organizationalSchema: Schema<organizationalDoc> = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: [true, "Please provide a password"],
-    minlength: [8, "Password must be at least 8 characters long"],
     select: false,
   },
   passwordConfirmation: {
     type: String,
-    required: [true, "Please provide a password"],
-    minlength: [8, "Password must be at least 8 characters long"],
     select: false,
   },
   passwordChangedAt: Date,
