@@ -5,7 +5,12 @@ import { Request, Response } from "express";
 import connectDB from "./config/dbconn.config";
 import organizationRoutes from "./modules/authentication/organizationUserAuth/organizationAuth.route";
 
+<<<<<<< HEAD
 // import googleAuthRoutes from "./modules/authentication/organizationUserAuth/googleOrganizationUserAuth.route";
+=======
+import googleAuthRoutes from "./modules/authentication/organizationUserAuth/googleOrganizationUserAuth.route";
+import googleIndividualUserAuthroute from "./modules/authentication/individualUserAuth/googleIndividualUserAuth.route";
+>>>>>>> b7da169122a502bfe50539dc950a207ec3518382
 
 const app = express();
 
@@ -23,7 +28,14 @@ app.get("/", (req: Request, res: Response) => {
 
 app.use("/api/organization", organizationRoutes);
 
+<<<<<<< HEAD
 // app.use("/auth", googleAuthRoutes);
+=======
+app.use("/auth", googleAuthRoutes);
+
+app.use("/auth/ind", googleIndividualUserAuthroute);
+
+>>>>>>> b7da169122a502bfe50539dc950a207ec3518382
 
 const PORT = process.env.PORT;
 
