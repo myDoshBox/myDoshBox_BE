@@ -1,15 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import express from "express";
-import cors from "cors";
+// import cors from "cors";
 import { Request, Response } from "express";
 import connectDB from "./config/dbconn.config";
 import organizationRoutes from "./modules/authentication/organizationUserAuth/organizationAuth.route";
 
-import googleAuthRoutes from "./modules/authentication/organizationUserAuth/googleOrganizationUserAuth.route";
+// import googleAuthRoutes from "./modules/authentication/organizationUserAuth/googleOrganizationUserAuth.route";
 
 const app = express();
 
-app.use(cors());
+// app.use(cors());
 app.use(express.json());
 app.use(
   express.urlencoded({
@@ -23,8 +23,7 @@ app.get("/", (req: Request, res: Response) => {
 
 app.use("/api/organization", organizationRoutes);
 
-app.use("/auth", googleAuthRoutes);
-
+// app.use("/auth", googleAuthRoutes);
 
 const PORT = process.env.PORT;
 
