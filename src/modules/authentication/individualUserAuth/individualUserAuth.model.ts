@@ -1,6 +1,7 @@
-
-import mongoose, { Schema, Document } from "mongoose";
-import bcrypt from "bcrypt";
+import mongoose, { Document, Model, Schema } from "mongoose";
+import { emailValidator } from "../../../utils/validator.utils";
+import bcrypt from "bcryptjs";
+import crypto from "crypto";
 
 // Interface representing the individual document
 export interface UserDocument extends Document {
@@ -9,10 +10,13 @@ export interface UserDocument extends Document {
   password: string;
   _confirmPassword?: string;
   isVerified: boolean;
+  passwordChangedAt?: Date;
+  passwordResetToken?: string;
+  passwordResetExpires?: Date;
 }
 
 // Helper functions for user management
-export interface UserModel extends mongoose.Model<UserDocument> {
+export interface UserModel extends Model<UserDocument> {
   getAllUsers: () => Promise<UserDocument[]>;
   getUserByEmail: (email: string) => Promise<UserDocument | null>;
   getUserById: (id: string) => Promise<UserDocument | null>;
@@ -28,9 +32,7 @@ const individualSchema: Schema<UserDocument> = new Schema(
       trim: true,
       minlength: [5, "Email must be at least 5 characters"],
       validate: {
-        validator: (value: string) => {
-          return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-        },
+        validator: emailValidator,
         message: "Invalid email format",
       },
     },
@@ -96,4 +98,3 @@ const Individual = mongoose.model<UserDocument, UserModel>(
 );
 
 export default Individual;
-
