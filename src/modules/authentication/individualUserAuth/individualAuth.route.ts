@@ -1,12 +1,14 @@
-import express, { Router } from "express";
-import { individualUserRegistration } from "./individualUserAuth.controller";
+import { Router } from "express";
+import { generateOTP, individualUserLogin, individualUserRegistration, resetIndividualPassword, verifyIndividualUserEmail, verifyOTP } from "../individualUserAuth/individualUserAuth.controller";
 
-const router: Router = express.Router();
+const individualrouter = Router();
 
-router.post("/register", individualUserRegistration);
-// router.post("/login", login);
+// routes
+individualrouter.route("/register").post(individualUserRegistration);
+individualrouter.route('/login').post(individualUserLogin);
+individualrouter.route('/generate/otp').post(generateOTP);
+individualrouter.route('/verify-otp').post(verifyOTP); 
+individualrouter.route('/reset-password').post(resetIndividualPassword);
+individualrouter.route('/verify-individual-email').post(verifyIndividualUserEmail)
 
-// router.post("/forgotPassword", forgotPassword);
-// router.patch("/resetPassword/:token", resetPassword);
-
-export default router;
+export default individualrouter; 
