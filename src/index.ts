@@ -4,8 +4,16 @@ import { Request, Response } from "express";
 import connectDB from "./config/dbconn.config";
 import organizationRoute from './modules/authentication/organizationUserAuth/individualAuth.route'
 import individualRoute from './modules/authentication/individualUserAuth/individualAuth.route';
+import cors from "cors";
 
 const app = express();
+app.use(
+  cors({
+    origin: "*",
+    credentials: false,
+  })
+);
+
 app.use(express.json())
 app.use(express.urlencoded({extended:false}));
  
