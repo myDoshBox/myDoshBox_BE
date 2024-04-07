@@ -4,7 +4,7 @@ import express from "express";
 import { Request, Response } from "express";
 import connectDB from "./config/dbconn.config";
 import organizationRoutes from "./modules/authentication/organizationUserAuth/organizationAuth.route";
-import individualUserRouter from './modules/authentication/individualUserAuth.route'
+import individualUserRouter from './modules/authentication/individualUserAuth/individualAuth.route'
 import googleAuthRoutes from "./modules/authentication/organizationUserAuth/googleOrganizationUserAuth.route";
 import googleIndividualUserAuthroute from "./modules/authentication/individualUserAuth/googleIndividualUserAuth.route";
 
