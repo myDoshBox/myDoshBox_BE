@@ -8,7 +8,7 @@ interface ISession {
   user: Schema.Types.ObjectId;
   valid: boolean;
   userAgent: string;
-  kind: string;
+  userKind: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -19,7 +19,7 @@ const sessionSchema = new Schema<ISession>(
       type: mongoose.Schema.Types.ObjectId,
       ref: "GoogleOrganizationUser" || "GoogleIndividualUser",
     },
-    kind: { type: String, enum: ["org", "ind", "g-org", "g-ind"] },
+    userKind: { type: String, enum: ["org", "ind", "g-org", "g-ind"] },
     valid: { type: Boolean, default: true },
     userAgent: { type: String },
   },
