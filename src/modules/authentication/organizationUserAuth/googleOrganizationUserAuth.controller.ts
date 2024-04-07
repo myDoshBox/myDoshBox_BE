@@ -3,6 +3,7 @@ import { Credentials, OAuth2Client } from "google-auth-library";
 import GoogleOrganizationUser from "./googleOrganizationUserAuth.model";
 import { createSession } from "../../../utilities/createSession.util";
 import { generateAccessAndRefreshToken } from "../../../utilities/generateAccessAndRefreshToken.util";
+import { createSessionAndSendTokens } from "../../../utilities/createSessionAndSendToken.util";
 
 export const getGoogleUrl = async (req: Request, res: Response) => {
   const oAuth2Client = new OAuth2Client(
@@ -73,21 +74,20 @@ export const getGoogleUserDetail = async (
       });
     }
 
-    const session = await createSession(
-      googleUserExist._id.toString(),
-      req.get("user-agent") || "",
-      "g-org"
-    );
+    const createSessionAndSendTokensOptions = {
+      user: googleUserExist.toObject(),
+      userAgent: req.get("user-agent") || "",
+      userKind: "g-org",
+      message: "Google user sucessfully logged in",
+    };
 
-    const { accessToken, refreshToken } = generateAccessAndRefreshToken(
-      googleUserExist,
-      session._id
-    );
+    const { status, message, user, accessToken, refreshToken } =
+      await createSessionAndSendTokens(createSessionAndSendTokensOptions);
 
     return res.status(200).json({
-      status: "success",
-      message: "Google user sucessfully logged in",
-      user: googleUserExist,
+      status,
+      message,
+      user,
       accessToken,
       refreshToken,
     });
