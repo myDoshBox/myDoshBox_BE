@@ -26,8 +26,8 @@ app.get("/", (req: Request, res: Response) => {
 app.use("/api/organization", organizationRoutes);
 app.use("/api/individual", individualUserRouter);
 
-app.use("/auth", googleAuthRoutes);
-app.use("/auth/ind", googleIndividualUserAuthroute);
+app.use("/api/auth/org", googleAuthRoutes);
+app.use("/api/auth/ind", googleIndividualUserAuthroute);
 
 app.use(errorHandler);
 

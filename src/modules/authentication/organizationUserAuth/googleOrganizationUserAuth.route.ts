@@ -19,8 +19,8 @@ import {
 
 const router = express.Router();
 
-router.post("/oauth/get-google-url", getGoogleUrl);
-router.get("/oauth/google", getGoogleUserDetail);
+router.post("/oauth/google", getGoogleUrl);
+router.get("/oauth/google/callback", getGoogleUserDetail);
 router.post("/oauth/google/create-user", createGoogleUser);
 
 export default router;
