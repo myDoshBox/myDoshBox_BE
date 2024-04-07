@@ -8,6 +8,7 @@ import individualUserRouter from "./modules/authentication/individualUserAuth/in
 import googleAuthRoutes from "./modules/authentication/organizationUserAuth/googleOrganizationUserAuth.route";
 import googleIndividualUserAuthroute from "./modules/authentication/individualUserAuth/googleIndividualUserAuth.route";
 import { errorHandler } from "./utilities/errorHandler.util";
+import individualrouter from "./modules/authentication/individualUserAuth/individualAuth.route";
 
 const app = express();
 
@@ -36,7 +37,7 @@ const PORT = process.env.PORT;
 connectDB()
   .then(() => {
     try {
-      console.log("connected to mongoose");
+      console.log("connected to mongoose"); 
 
       app.listen(PORT, () => {
         console.log(`server is running on http://localhost:${PORT}`);
