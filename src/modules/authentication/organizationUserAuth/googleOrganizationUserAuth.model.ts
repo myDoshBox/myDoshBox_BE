@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 
-interface IUser {
+interface IGoogleOrganizationUser {
   sub: string;
   name: string;
   email: string;
@@ -12,7 +12,7 @@ interface IUser {
   updatedAt: Date;
 }
 
-const userSchema = new Schema<IUser>(
+const userSchema = new Schema<IGoogleOrganizationUser>(
   {
     name: { type: String, required: true },
     email: { type: String, required: true },
@@ -27,6 +27,9 @@ const userSchema = new Schema<IUser>(
   }
 );
 
-const User = mongoose.model<IUser>("User", userSchema);
+const GoogleOrganizationUser = mongoose.model<IGoogleOrganizationUser>(
+  "GoogleOrganizationUser",
+  userSchema
+);
 
-export { User };
+export default GoogleOrganizationUser;

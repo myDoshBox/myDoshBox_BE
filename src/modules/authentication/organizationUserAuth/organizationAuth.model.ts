@@ -94,6 +94,6 @@ organizationalSchema.methods.createPasswordResetToken = function (
 };
 
 const OrganizationModel: Model<organizationalDoc> =
-  mongoose.model<organizationalDoc>("Organization", organizationalSchema);
+  mongoose.model<organizationalDoc>("OrganizationUser", organizationalSchema);
 
 export default OrganizationModel;

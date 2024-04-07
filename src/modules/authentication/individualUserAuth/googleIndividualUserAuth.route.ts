@@ -1,6 +1,5 @@
 import express from "express";
 import {
-  createGoogleUser,
   getGoogleUrl,
   getGoogleUserDetail,
 } from "./googleIndividualUserAuth.controller";

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { Credentials, OAuth2Client } from "google-auth-library";
-import { User } from "../../users/individualUsers/googleIndividualAuth.model";
+import GoogleIndividualUser from "./googleIndividualAuth.model";
 // import { signJwt } from "../../users/organizationUsers/organizationUsers.utils";
 import { createSession } from "../../../utilities/createSession.util";
 import { generateAccessAndRefreshToken } from "../../../utilities/generateAccessAndRefreshToken.util";
@@ -62,7 +62,7 @@ export const getGoogleUserDetail = async (req: Request, res: Response) => {
     }
     console.log("hello");
 
-    const googleUserExist = await User.findOne({
+    const googleUserExist = await GoogleIndividualUser.findOne({
       sub: userDetails.sub,
     });
 
@@ -83,7 +83,8 @@ export const getGoogleUserDetail = async (req: Request, res: Response) => {
 
     const session = await createSession(
       googleUserExist._id.toString(),
-      req.get("user-agent") || ""
+      req.get("user-agent") || "",
+      "g-ind"
     );
 
     const { accessToken, refreshToken } = generateAccessAndRefreshToken(
@@ -103,82 +104,70 @@ export const getGoogleUserDetail = async (req: Request, res: Response) => {
       accessToken,
       refreshToken,
     });
-  } catch (err:any) {
+  } catch (err: any) {
     console.log(err.stack);
     return res.json(err.stack);
   }
 };
 
-export const createGoogleUser = async (req: Request, res: Response) => {
-  try {
-    // console.log(req.body);
-    const {
-      name,
-      email,
-      email_verified,
-      picture,
-      sub,
-    } = req.body;
+// export const createGoogleUser = async (req: Request, res: Response) => {
+//   try {
+//     // console.log(req.body);
+//     const { name, email, email_verified, picture, sub } = req.body;
 
-    if (
-        !name ||
-        !email ||
-        !email_verified ||
-        !picture ||
-        !sub
-    ) {
-        return res.status(400).json({
-            status: false,
-            message: "Please provide all the needed data for signup",
-        });
-    }
+//     if (!name || !email || !email_verified || !picture || !sub) {
+//       return res.status(400).json({
+//         status: false,
+//         message: "Please provide all the needed data for signup",
+//       });
+//     }
 
-    const emailAlreadyExist = await User.findOne({
-      email,
-    });
-    //const emailAlreadyExist = await OtherUserModels.findOne({ email: userDetails.email });
-    //const emailAlreadyExist = await OtherUserModels.findOne({ email: userDetails.email });
+//     const emailAlreadyExist = await GoogleIndividualUser.findOne({
+//       email,
+//     });
+//     //const emailAlreadyExist = await OtherUserModels.findOne({ email: userDetails.email });
+//     //const emailAlreadyExist = await OtherUserModels.findOne({ email: userDetails.email });
 
-    if (emailAlreadyExist) {
-      return res.status(400).json({
-        status: false,
-        message: "User with email already exist",
-      });
-    }
+//     if (emailAlreadyExist) {
+//       return res.status(400).json({
+//         status: false,
+//         message: "User with email already exist",
+//       });
+//     }
 
-    const user = await User.create({
-      name,
-      email,
-      email_verified,
-      picture,
-      sub,
-    });
+//     const user = await GoogleIndividualUser.create({
+//       name,
+//       email,
+//       email_verified,
+//       picture,
+//       sub,
+//     });
 
-    const session = await createSession(
-      user._id.toString(),
-      req.get("user-agent") || ""
-    );
+//     const session = await createSession(
+//       user._id.toString(),
+//       req.get("user-agent") || ""
+//     );
 
-    const { accessToken, refreshToken } = generateAccessAndRefreshToken(
-      user,
-      session._id
-    );
+//     const { accessToken, refreshToken } = generateAccessAndRefreshToken(
+//       user,
+//       session._id
+//     );
 
-    console.log("Existing Google User");
-    console.log(user);
-    console.log(accessToken);
-    console.log(refreshToken);
+//     console.log("Existing Google User");
+//     console.log(user);
+//     console.log(accessToken);
+//     console.log(refreshToken);
 
-    return res.status(201).json({
-      status: true,
-      message: "google user sucessfully created",
-      user,
-      refreshToken,
-      accessToken,
-    });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (err: any) {
-    console.log(err.stack);
-    return res.json(err);
-  }
-};
+//     return res.status(201).json({
+//       status: true,
+//       message: "google user sucessfully created",
+//       user,
+//       refreshToken,
+//       accessToken,
+//     });
+//     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//   } catch (err: any) {
+//     console.log(err.stack);
+//     return res.json(err);
+//   }
+// };

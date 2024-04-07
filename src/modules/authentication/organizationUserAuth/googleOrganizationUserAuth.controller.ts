@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { Credentials, OAuth2Client } from "google-auth-library";
-import { User } from "../../users/organizationUsers/OrganizationUser.model";
+import GoogleOrganizationUser from "./googleOrganizationUserAuth.model";
 // import { signJwt } from "../../users/organizationUsers/organizationUsers.utils";
 import { createSession } from "../../../utilities/createSession.util";
 import { generateAccessAndRefreshToken } from "../../../utilities/generateAccessAndRefreshToken.util";
@@ -62,7 +62,7 @@ export const getGoogleUserDetail = async (req: Request, res: Response) => {
     }
     console.log("hello");
 
-    const googleUserExist = await User.findOne({
+    const googleUserExist = await GoogleOrganizationUser.findOne({
       sub: userDetails.sub,
     });
 
@@ -137,7 +137,7 @@ export const createGoogleUser = async (req: Request, res: Response) => {
       });
     }
 
-    const emailAlreadyExist = await User.findOne({
+    const emailAlreadyExist = await GoogleOrganizationUser.findOne({
       email,
     });
     //const emailAlreadyExist = await OtherUserModels.findOne({ email: userDetails.email });
@@ -150,7 +150,7 @@ export const createGoogleUser = async (req: Request, res: Response) => {
       });
     }
 
-    const user = await User.create({
+    const user = await GoogleOrganizationUser.create({
       name,
       email,
       email_verified,
