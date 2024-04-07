@@ -8,14 +8,14 @@ export const individualUserRegistration = async (
   res: Response
 ) => {
   try {
-    const { email, phoneNumber, password } = req.body;
+    const { email, phoneNumber, password, name } = req.body;
 
     const userExists = await IndividualUser.findOne({ email }).lean();
 
     if (userExists) {
       return res.status(400).json({
         message: 'User already exists',
-      });  
+      });
     }
 
     // create a new user
@@ -23,6 +23,7 @@ export const individualUserRegistration = async (
       email,
       phoneNumber,
       password,
+      name,
     });
 
     // save the user to the database
@@ -61,6 +62,6 @@ export const generateOTP = async (req: Request, res: Response) => {};
 
 export const verifyOTP = async (req: Request, res: Response) => {};
 
-export const resetPassword = async (req: Request, res: Response) => {};   
+export const resetPassword = async (req: Request, res: Response) => {};
 
 export const logout = async (req: Request, res: Response) => {};
