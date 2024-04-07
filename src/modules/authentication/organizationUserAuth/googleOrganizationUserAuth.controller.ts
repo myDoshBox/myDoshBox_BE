@@ -83,7 +83,8 @@ export const getGoogleUserDetail = async (req: Request, res: Response) => {
 
     const session = await createSession(
       googleUserExist._id.toString(),
-      req.get("user-agent") || ""
+      req.get("user-agent") || "",
+      "g-org"
     );
 
     const { accessToken, refreshToken } = generateAccessAndRefreshToken(
@@ -162,7 +163,8 @@ export const createGoogleUser = async (req: Request, res: Response) => {
 
     const session = await createSession(
       user._id.toString(),
-      req.get("user-agent") || ""
+      req.get("user-agent") || "",
+      "g-org"
     );
 
     const { accessToken, refreshToken } = generateAccessAndRefreshToken(
