@@ -53,7 +53,7 @@ export const getGoogleUserDetail = async (
 
     if (!userDetails.email_verified) {
       return res.status(400).json({
-        status: false,
+        status: "failed",
         message: "Google user not verified",
       });
     }
@@ -83,7 +83,7 @@ export const getGoogleUserDetail = async (
       );
 
       return res.status(201).json({
-        status: true,
+        status: "success",
         message: "google user sucessfully created",
         user,
         refreshToken,
@@ -103,7 +103,7 @@ export const getGoogleUserDetail = async (
     );
 
     return res.status(200).json({
-      status: true,
+      status: "success",
       message: "Google user sucessfully logged in",
       user: googleUserExist,
       accessToken,

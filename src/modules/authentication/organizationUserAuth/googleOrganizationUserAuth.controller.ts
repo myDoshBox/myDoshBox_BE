@@ -85,7 +85,7 @@ export const getGoogleUserDetail = async (
     );
 
     return res.status(200).json({
-      status: true,
+      status: "success",
       message: "Google user sucessfully logged in",
       user: googleUserExist,
       accessToken,
@@ -119,7 +119,7 @@ export const createGoogleUser = async (req: Request, res: Response) => {
       !contact_phone
     ) {
       return res.status(400).json({
-        status: false,
+        status: "failed",
         message: "Please provide the all the needed data for signup",
       });
     }
@@ -132,7 +132,7 @@ export const createGoogleUser = async (req: Request, res: Response) => {
 
     if (emailAlreadyExist) {
       return res.status(400).json({
-        status: false,
+        status: "failed",
         message: "User with email already exist",
       });
     }
@@ -159,7 +159,7 @@ export const createGoogleUser = async (req: Request, res: Response) => {
     );
 
     return res.status(201).json({
-      status: true,
+      status: "success",
       message: "google user sucessfully created",
       user,
       refreshToken,
