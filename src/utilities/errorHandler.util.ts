@@ -1,4 +1,4 @@
-import { Response, Request, NextFunction } from "express";
+import { Response, Request } from "express";
 
 export interface ErrorResponse {
   message: string;
@@ -11,8 +11,7 @@ export interface ErrorResponse {
 export const errorHandler = (
   err: ErrorResponse,
   req: Request,
-  res: Response,
-  next: NextFunction
+  res: Response
 ) => {
   if (err.name === "ValidationError") {
     err.statusCode = 400;
