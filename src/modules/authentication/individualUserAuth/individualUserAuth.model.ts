@@ -24,7 +24,6 @@ export interface UserModel extends Model<UserDocument> {
   createPasswordResetToken(): string;
 }
 
-
 const individualSchema: Schema<UserDocument> = new Schema(
   {
     email: {
@@ -100,7 +99,7 @@ individualSchema.methods.createPasswordResetToken = function (
     .createHash("sha256")
     .update(resetToken)
     .digest("hex");
-  
+
   console.log({ resetToken }, this.passwordResetToken);
 
   const resetExpires = new Date();
@@ -125,7 +124,7 @@ individualSchema.statics.getUserById = async function (id: string) {
 
 // Create a model for the individual user
 const Individual = mongoose.model<UserDocument, UserModel>(
-  "Individual",
+  "IndividualUser",
   individualSchema
 );
 

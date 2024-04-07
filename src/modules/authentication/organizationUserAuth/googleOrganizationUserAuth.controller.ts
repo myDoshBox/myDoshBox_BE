@@ -1,16 +1,11 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { Credentials, OAuth2Client } from "google-auth-library";
-import { User } from "../../users/organizationUsers/OrganizationUser.model";
-// import { signJwt } from "../../users/organizationUsers/organizationUsers.utils";
+import GoogleOrganizationUser from "./googleOrganizationUserAuth.model";
 import { createSession } from "../../../utilities/createSession.util";
 import { generateAccessAndRefreshToken } from "../../../utilities/generateAccessAndRefreshToken.util";
-// import { createSession } from "./sessionsController.controller";
+import { createSessionAndSendTokens } from "../../../utilities/createSessionAndSendToken.util";
 
 export const getGoogleUrl = async (req: Request, res: Response) => {
-  console.log("here");
-  // const stateOptions = req.body;
-  // const encodedStateOptions = btoa(JSON.stringify(stateOptions));
-
   const oAuth2Client = new OAuth2Client(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
@@ -21,7 +16,6 @@ export const getGoogleUrl = async (req: Request, res: Response) => {
     access_type: "offline",
     prompt: "consent",
     include_granted_scopes: true,
-    // state: encodedStateOptions,
     scope:
       "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email",
   });
@@ -37,11 +31,13 @@ export const getUserDetails = async (access_token: string) => {
   return data;
 };
 
-export const getGoogleUserDetail = async (req: Request, res: Response) => {
+export const getGoogleUserDetail = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { code } = req.query;
-
-    // const decodedState = JSON.parse(atob(state as string));
 
     const oAuth2Client = new OAuth2Client(
       process.env.GOOGLE_CLIENT_ID,
@@ -56,21 +52,18 @@ export const getGoogleUserDetail = async (req: Request, res: Response) => {
 
     if (!userDetails.email_verified) {
       return res.status(400).json({
-        status: false,
+        status: "failed",
         message: "Google user not verified",
       });
     }
-    console.log("hello");
 
-    const googleUserExist = await User.findOne({
+    const googleUserExist = await GoogleOrganizationUser.findOne({
       sub: userDetails.sub,
     });
 
-    //
-
     if (!googleUserExist) {
       return res.status(200).json({
-        status: true,
+        status: "success",
         data: {
           name: userDetails.name,
           email: userDetails.email,
@@ -81,37 +74,31 @@ export const getGoogleUserDetail = async (req: Request, res: Response) => {
       });
     }
 
-    const session = await createSession(
-      googleUserExist._id.toString(),
-      req.get("user-agent") || ""
-    );
+    const createSessionAndSendTokensOptions = {
+      user: googleUserExist.toObject(),
+      userAgent: req.get("user-agent") || "",
+      userKind: "g-org",
+      message: "Google user sucessfully logged in",
+    };
 
-    const { accessToken, refreshToken } = generateAccessAndRefreshToken(
-      googleUserExist,
-      session._id
-    );
-
-    console.log("New Google User");
-    console.log(googleUserExist);
-    console.log(accessToken);
-    console.log(refreshToken);
+    const { status, message, user, accessToken, refreshToken } =
+      await createSessionAndSendTokens(createSessionAndSendTokensOptions);
 
     return res.status(200).json({
-      status: true,
-      message: "Google user sucessfully logged in",
-      user: googleUserExist,
+      status,
+      message,
+      user,
       accessToken,
       refreshToken,
     });
-  } catch (err) {
-    console.log("error");
-    return res.json(err);
+  } catch (err: unknown) {
+    // console.log("errorrrrrrrrrrr", err);
+    next(err);
   }
 };
 
 export const createGoogleUser = async (req: Request, res: Response) => {
   try {
-    // console.log(req.body);
     const {
       name,
       email,
@@ -132,12 +119,12 @@ export const createGoogleUser = async (req: Request, res: Response) => {
       !contact_phone
     ) {
       return res.status(400).json({
-        status: false,
+        status: "failed",
         message: "Please provide the all the needed data for signup",
       });
     }
 
-    const emailAlreadyExist = await User.findOne({
+    const emailAlreadyExist = await GoogleOrganizationUser.findOne({
       email,
     });
     //const emailAlreadyExist = await OtherUserModels.findOne({ email: userDetails.email });
@@ -145,12 +132,12 @@ export const createGoogleUser = async (req: Request, res: Response) => {
 
     if (emailAlreadyExist) {
       return res.status(400).json({
-        status: false,
+        status: "failed",
         message: "User with email already exist",
       });
     }
 
-    const user = await User.create({
+    const user = await GoogleOrganizationUser.create({
       name,
       email,
       email_verified,
@@ -162,7 +149,8 @@ export const createGoogleUser = async (req: Request, res: Response) => {
 
     const session = await createSession(
       user._id.toString(),
-      req.get("user-agent") || ""
+      req.get("user-agent") || "",
+      "g-org"
     );
 
     const { accessToken, refreshToken } = generateAccessAndRefreshToken(
@@ -170,13 +158,8 @@ export const createGoogleUser = async (req: Request, res: Response) => {
       session._id
     );
 
-    console.log("Existing Google User");
-    console.log(user);
-    console.log(accessToken);
-    console.log(refreshToken);
-
     return res.status(201).json({
-      status: true,
+      status: "success",
       message: "google user sucessfully created",
       user,
       refreshToken,

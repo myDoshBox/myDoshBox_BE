@@ -23,42 +23,45 @@ interface organizationalDoc extends Document {
   createPasswordResetToken(): string;
 }
 
-const organizationalSchema: Schema<organizationalDoc> = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, "Please tell us your name"],
-  },
-  orgEmail: {
-    type: String,
-    required: [true, "Please tell us your email"],
-    lowercase: true,
-    validate: {
-      validator: emailValidator,
-      message: "Please provide a valid email address",
+const organizationalSchema: Schema<organizationalDoc> = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, "Please tell us your name"],
     },
-  },
-  email: {
-    type: String,
-    required: [true, "Please tell us your email"],
-    unique: true,
-    lowercase: true,
-    validate: {
-      validator: emailValidator,
-      message: "Please provide a valid email address",
+    orgEmail: {
+      type: String,
+      required: [true, "Please tell us your email"],
+      lowercase: true,
+      validate: {
+        validator: emailValidator,
+        message: "Please provide a valid email address",
+      },
     },
+    email: {
+      type: String,
+      required: [true, "Please tell us your email"],
+      unique: true,
+      lowercase: true,
+      validate: {
+        validator: emailValidator,
+        message: "Please provide a valid email address",
+      },
+    },
+    password: {
+      type: String,
+      select: false,
+    },
+    passwordConfirmation: {
+      type: String,
+      select: false,
+    },
+    passwordChangedAt: Date,
+    passwordResetToken: String,
+    passwordResetExpires: Date,
   },
-  password: {
-    type: String,
-    select: false,
-  },
-  passwordConfirmation: {
-    type: String,
-    select: false,
-  },
-  passwordChangedAt: Date,
-  passwordResetToken: String,
-  passwordResetExpires: Date,
-});
+  { timestamps: true }
+);
 
 // Hash password before saving to the database
 organizationalSchema.pre<organizationalDoc>("save", async function (next) {
@@ -94,6 +97,6 @@ organizationalSchema.methods.createPasswordResetToken = function (
 };
 
 const OrganizationModel: Model<organizationalDoc> =
-  mongoose.model<organizationalDoc>("Organization", organizationalSchema);
+  mongoose.model<organizationalDoc>("OrganizationUser", organizationalSchema);
 
 export default OrganizationModel;

@@ -3,7 +3,10 @@ import { Types } from "mongoose";
 import { signJwt, verifyJwt } from "./signAndVerifyToken.util";
 
 import { Session } from "../modules/sessions/session.model";
-import { User } from "../modules/users/organizationUsers/OrganizationUser.model";
+import GoogleOrganizationUser from "../modules/authentication/organizationUserAuth/googleOrganizationUserAuth.model";
+import GoogleIndividualUser from "../modules/authentication/individualUserAuth/googleIndividualAuth.model";
+import IndividualUser from "../modules/authentication/individualUserAuth/individualUserAuth.model";
+import OrganizationUser from "../modules/authentication/organizationUserAuth/organizationAuth.model";
 
 export function generateAccessAndRefreshToken(
   userObject: object,
@@ -35,7 +38,7 @@ export async function reIssueAccessToken({
 
   if (!session || !session.valid) return false;
 
-  const user = await User.findById({ _id: session.user });
+  const user = await GoogleOrganizationUser.findById({ _id: session.user });
 
   if (!user) return false;
 
