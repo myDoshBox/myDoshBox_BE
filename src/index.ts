@@ -4,9 +4,10 @@ import express from "express";
 import { Request, Response } from "express";
 import connectDB from "./config/dbconn.config";
 import organizationRoutes from "./modules/authentication/organizationUserAuth/organizationAuth.route";
-import individualUserRouter from './modules/authentication/individualUserAuth/individualAuth.route'
+import individualUserRouter from "./modules/authentication/individualUserAuth/individualAuth.route";
 import googleAuthRoutes from "./modules/authentication/organizationUserAuth/googleOrganizationUserAuth.route";
 import googleIndividualUserAuthroute from "./modules/authentication/individualUserAuth/googleIndividualUserAuth.route";
+import { errorHandler } from "./utilities/errorHandler.util";
 
 const app = express();
 
@@ -22,14 +23,13 @@ app.get("/", (req: Request, res: Response) => {
   return res.json({ msg: "welcome to doshbox api" });
 });
 
-app.use("/api/organization", organizationRoutes)
-app.use("/api/individual", individualUserRouter)
-
-// app.use("/auth", googleAuthRoutes);
+app.use("/api/organization", organizationRoutes);
+app.use("/api/individual", individualUserRouter);
 
 app.use("/auth", googleAuthRoutes);
-
 app.use("/auth/ind", googleIndividualUserAuthroute);
+
+app.use(errorHandler);
 
 const PORT = process.env.PORT;
 

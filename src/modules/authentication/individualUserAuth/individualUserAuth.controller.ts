@@ -1,9 +1,10 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import IndividualUser, { UserDocument } from "./individualUserAuth.model";
 
 export const individualUserRegistration = async (
   req: Request,
-  res: Response
+  res: Response,
+  next: NextFunction
 ) => {
   try {
     const { email, phoneNumber, password, confirmPassword } = req.body;
@@ -34,14 +35,11 @@ export const individualUserRegistration = async (
     res.status(201).json({
       message: "User registered successfully",
     });
-  } catch (error) {
-    console.error("Error in individualUserRegistration:", error);
-    res.status(500).json({
-      message: "Internal server error",
-    });
+  } catch (error: unknown) {
+    // console.error("Error in individualUserRegistration:", error.name, "HEREEEEEEEEEEEEEEEEEEEEEE");
+    next(error);
   }
 };
-
 
 // export const verifyIndividualUserEmail = async (
 //   req: Request,
@@ -150,4 +148,3 @@ export const verifyOTP = async (req: Request, res: Response) => {};
 export const resetPassword = async (req: Request, res: Response) => {};
 
 export const logout = async (req: Request, res: Response) => {};
-
