@@ -201,10 +201,11 @@ export const individualUserLogin = async (req: Request, res: Response) => {
 };
 
 export const generateOTP = async (req: Request, res: Response) => {
-  const {userId} = req.body;
-  if(!isValidObjectId(userId)) return res.status(400).json({message: "Invalid userId!"});
-  const user = await IndividualUser.findById({_id: userId});
+  const {email} = req.body;
+  // if(!isValidObjectId(userId)) return res.status(400).json({message: "Invalid userId!"});
+  const user = await IndividualUser.findOne({email});
   if(!user) return res.status(400).json({message: "User not found!"});
+  const userId = user._id;
   const token = generateToken();
   console.log(token)
 
@@ -220,12 +221,14 @@ export const generateOTP = async (req: Request, res: Response) => {
 };
 
 export const verifyOTP = async (req: Request, res: Response) => {
-  const {owner, token} = req.body;
+  const {email, token} = req.body;
   try {
-    const verifyToken = await individualAuthPasswordToken.findOne({owner});
+    const user = await IndividualUser.findOne({email})
+    if(!user) return res.status(400).json({message: "Invalid user!"})
+    const verifyToken = await individualAuthPasswordToken.findOne({owner: user._id});
 
     if (!verifyToken) {
-        return res.status(403).json({ error: "Invalid token!" });
+        return res.status(403).json({ error: "Invalid token!"});
     }
 
     const matched = await verifyToken.compareToken(token);
