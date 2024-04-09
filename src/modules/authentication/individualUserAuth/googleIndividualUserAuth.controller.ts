@@ -1,8 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { Credentials, OAuth2Client } from "google-auth-library";
 import GoogleIndividualUser from "./googleIndividualAuth.model";
-import { createSession } from "../../../utilities/createSession.util";
-import { generateAccessAndRefreshToken } from "../../../utilities/generateAccessAndRefreshToken.util";
+import { createSessionAndSendTokens } from "../../../utilities/createSessionAndSendToken.util";
 
 export const getGoogleUrl = async (req: Request, res: Response) => {
   const oAuth2Client = new OAuth2Client(
@@ -63,7 +62,7 @@ export const getGoogleUserDetail = async (
     });
 
     if (!googleUserExist) {
-      const user = await GoogleIndividualUser.create({
+      const newUser = await GoogleIndividualUser.create({
         name,
         email,
         email_verified,
@@ -71,41 +70,39 @@ export const getGoogleUserDetail = async (
         sub,
       });
 
-      const session = await createSession(
-        user._id.toString(),
-        req.get("user-agent") || "",
-        "g-ind"
-      );
+      const createSessionAndSendTokensOptions = {
+        user: newUser.toObject(),
+        userAgent: req.get("user-agent") || "",
+        userKind: "g-ind",
+        message: "Individual google user successfully created",
+      };
 
-      const { accessToken, refreshToken } = generateAccessAndRefreshToken(
-        user,
-        session._id
-      );
+      const { status, message, user, accessToken, refreshToken } =
+        await createSessionAndSendTokens(createSessionAndSendTokensOptions);
 
       return res.status(201).json({
-        status: "success",
-        message: "google user sucessfully created",
+        status,
+        message,
         user,
         refreshToken,
         accessToken,
       });
     }
 
-    const session = await createSession(
-      googleUserExist._id.toString(),
-      req.get("user-agent") || "",
-      "g-ind"
-    );
+    const createSessionAndSendTokensOptions = {
+      user: googleUserExist.toObject(),
+      userAgent: req.get("user-agent") || "",
+      userKind: "g-ind",
+      message: "Individual google user successfully logged in",
+    };
 
-    const { accessToken, refreshToken } = generateAccessAndRefreshToken(
-      googleUserExist,
-      session._id
-    );
+    const { status, message, user, accessToken, refreshToken } =
+      await createSessionAndSendTokens(createSessionAndSendTokensOptions);
 
     return res.status(200).json({
-      status: "success",
-      message: "Google user sucessfully logged in",
-      user: googleUserExist,
+      status,
+      message,
+      user,
       accessToken,
       refreshToken,
     });
