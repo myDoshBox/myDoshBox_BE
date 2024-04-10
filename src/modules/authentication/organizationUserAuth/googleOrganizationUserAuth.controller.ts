@@ -1,8 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { Credentials, OAuth2Client } from "google-auth-library";
 import GoogleOrganizationUser from "./googleOrganizationUserAuth.model";
-import { createSession } from "../../../utilities/createSession.util";
-import { generateAccessAndRefreshToken } from "../../../utilities/generateAccessAndRefreshToken.util";
 import { createSessionAndSendTokens } from "../../../utilities/createSessionAndSendToken.util";
 
 export const getGoogleUrl = async (req: Request, res: Response) => {
@@ -26,6 +24,7 @@ export const getUserDetails = async (access_token: string) => {
   const response = await fetch(
     `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${access_token}`
   );
+
   const data = await response.json();
 
   return data;
@@ -51,7 +50,7 @@ export const getGoogleUserDetail = async (
     const userDetails = await getUserDetails(googleUser.access_token as string);
 
     if (!userDetails.email_verified) {
-      return res.status(400).json({
+      return res.status(401).json({
         status: "failed",
         message: "Google user not verified",
       });
@@ -131,13 +130,13 @@ export const createGoogleUser = async (req: Request, res: Response) => {
     //const emailAlreadyExist = await OtherUserModels.findOne({ email: userDetails.email });
 
     if (emailAlreadyExist) {
-      return res.status(400).json({
+      return res.status(409).json({
         status: "failed",
         message: "User with email already exist",
       });
     }
 
-    const user = await GoogleOrganizationUser.create({
+    const newUser = await GoogleOrganizationUser.create({
       name,
       email,
       email_verified,
@@ -147,20 +146,19 @@ export const createGoogleUser = async (req: Request, res: Response) => {
       contact_phone,
     });
 
-    const session = await createSession(
-      user._id.toString(),
-      req.get("user-agent") || "",
-      "g-org"
-    );
+    const createSessionAndSendTokensOptions = {
+      user: newUser.toObject(),
+      userAgent: req.get("user-agent") || "",
+      userKind: "g-org",
+      message: "Google user sucessfully created and logged in",
+    };
 
-    const { accessToken, refreshToken } = generateAccessAndRefreshToken(
-      user,
-      session._id
-    );
+    const { status, message, user, accessToken, refreshToken } =
+      await createSessionAndSendTokens(createSessionAndSendTokensOptions);
 
     return res.status(201).json({
-      status: "success",
-      message: "google user sucessfully created",
+      status,
+      message,
       user,
       refreshToken,
       accessToken,

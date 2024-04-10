@@ -14,7 +14,8 @@ export const createSessionAndSendTokens = async (options: {
 
   const { accessToken, refreshToken } = generateAccessAndRefreshToken(
     user,
-    session._id
+    session._id,
+    userKind
   );
 
   console.log({
