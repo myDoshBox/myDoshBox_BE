@@ -10,6 +10,9 @@ import googleIndividualUserAuthroute from "./modules/authentication/individualUs
 import { errorHandler } from "./utilities/errorHandler.util";
 import individualrouter from "./modules/authentication/individualUserAuth/individualAuth.route";
 
+const swaggerJsDoc = require("swagger-jsdoc")
+const swaggerUi = require('swagger-ui-express')
+const options = require('./modules/authentication/individualUserAuth/individualAuthSwagger')
 const app = express();
 
 app.use(cors());
@@ -31,6 +34,9 @@ app.use("/api/auth/org", googleAuthRoutes);
 app.use("/api/auth/ind", googleIndividualUserAuthroute);
 
 app.use(errorHandler);
+
+const spec = swaggerJsDoc(options)
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(spec))
 
 const PORT = process.env.PORT;
 
