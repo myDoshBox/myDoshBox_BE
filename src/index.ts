@@ -14,6 +14,9 @@ import { errorHandler } from "./utilities/errorHandler.util";
 import { options } from "./swagger";
 import { option } from "./swagger";
 
+const swaggerJsDoc = require("swagger-jsdoc")
+const swaggerUi = require('swagger-ui-express')
+const options = require('./modules/authentication/individualUserAuth/individualAuthSwagger')
 const app = express();
 
 app.use(cors());
@@ -36,13 +39,13 @@ app.use("/api/auth/ind", googleIndividualUserAuthroute);
 
 app.use(errorHandler);
 
-const specs = swaggerJSDOC(options);
-const specs2 = swaggerJSDOC(option);
+
+const spec = swaggerJsDoc(options)
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(spec))
+=======
 //const swaggerUiSetup = swaggerUi.setup(specs);
 
 //app.use("/api-docs", swaggerUi.serve, swaggerUiSetup);
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs2));
 
 
 const PORT = process.env.PORT;

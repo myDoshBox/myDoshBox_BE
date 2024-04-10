@@ -245,18 +245,29 @@ export const verifyOTP = async (req: Request, res: Response) => {
 };
 
 export const resetIndividualPassword = async (req: Request, res: Response) => {
-  const {userId, password} = req.body;
-  // if(!isValidObjectId(userId)) return res.status(400).json({message: "Invalid userId!"});
-  const user = await IndividualUser.findById({_id:userId});
-  if(!user) return res.status(400).json({message: "User not found!"});
-  user.password = password;    
-  await user.save();
+  const { email, password } = req.body;
+  
+  try {
+    // Find the user by email
+    const user = await IndividualUser.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "User not found!" });
+    }
 
-  await individualAuthPasswordToken.findOneAndDelete({
-    owner: userId
-  })
+    // Update the user's password
+    user.password = password;
+    await user.save();
 
-  res.json({message: "Password reset successfully!"});
+    // Find the user ID
+    const userId = user._id;
+
+    // Delete the password reset token
+    await individualAuthPasswordToken.findOneAndDelete({ owner: userId });
+
+    res.json({ message: "Password reset successfully!" });
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
-
 // export const logout = async (req: Request, res: Response) => {};
