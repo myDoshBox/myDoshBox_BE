@@ -29,6 +29,12 @@ export const getUserDetails = async (access_token: string) => {
   return data;
 };
 
+/**
+ * Retrieves the details of a Google user using the provided authorization code.
+ * @param req - The request object.
+ * @param res - The response object.
+ * @param next - The next function.
+ */
 export const getGoogleUserDetail = async (
   req: Request,
   res: Response,

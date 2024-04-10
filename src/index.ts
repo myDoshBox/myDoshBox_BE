@@ -12,6 +12,7 @@ import googleAuthRoutes from "./modules/authentication/organizationUserAuth/goog
 import googleIndividualUserAuthroute from "./modules/authentication/individualUserAuth/googleIndividualUserAuth.route";
 import { errorHandler } from "./utilities/errorHandler.util";
 import { options } from "./swagger";
+import { option } from "./swagger";
 
 const app = express();
 
@@ -36,8 +37,13 @@ app.use("/api/auth/ind", googleIndividualUserAuthroute);
 app.use(errorHandler);
 
 const specs = swaggerJSDOC(options);
+const specs2 = swaggerJSDOC(option);
+//const swaggerUiSetup = swaggerUi.setup(specs);
 
+//app.use("/api-docs", swaggerUi.serve, swaggerUiSetup);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs2));
+
 
 const PORT = process.env.PORT;
 
