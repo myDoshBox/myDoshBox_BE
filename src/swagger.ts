@@ -439,13 +439,13 @@ export const opts = {
     ],
     components: {
       schemas: {
-        OrganizationUser: {
+        IndividuaLUser: {
           type: "object",
           required: ["email", "phoneNumber", "password"],
           properties: {
             email: {
               type: "string",
-              description: "Organization email",
+              description: "Individual email",
             },
             phoneNumber: {
               type: "string",
@@ -453,7 +453,7 @@ export const opts = {
             },
             password: {
               type: "string",
-              description: "Organization Password",
+              description: "Individual Password",
             },
           },
         },
