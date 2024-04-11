@@ -307,8 +307,8 @@ export const opt = {
             "application/json": {},
           },
         },
-        "200": {
-          description: "Organization successfully retrieved",
+        "201": {
+          description: "Organization successfully created",
           content: {
             "application/json": {},
           },
@@ -418,6 +418,75 @@ export const opt = {
     },
     apis: [
       "./src/modules/authentication/organizationUserAuth/organizationAuth.route.ts",
+    ],
+  },
+};
+
+//  swagger documentation for  individual authentication
+export const opts = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "Doshbox API",
+      description: "This is Doshbox API Swagger documentation",
+      version: "1.0.0",
+    },
+    servers: [
+      {
+        url: "http://localhost:5000",
+        description: "This is the server Doshbox API",
+      },
+    ],
+    components: {
+      schemas: {
+        OrganizationUser: {
+          type: "object",
+          required: ["email", "phoneNumber", "password"],
+          properties: {
+            email: {
+              type: "string",
+              description: "Organization email",
+            },
+            phoneNumber: {
+              type: "string",
+              description: "User's Email",
+            },
+            password: {
+              type: "string",
+              description: "Organization Password",
+            },
+          },
+        },
+      },
+      responses: {
+        "400": {
+          description: "Please provide all required fields",
+          content: {
+            "application/json": {},
+          },
+        },
+        "401": {
+          description: "User not found",
+          content: {
+            "application/json": {},
+          },
+        },
+        "409": {
+          description: "User with email already exists",
+          content: {
+            "application/json": {},
+          },
+        },
+        "201": {
+          description: "Individual successfully created",
+          content: {
+            "application/json": {},
+          },
+        },
+      },
+    },
+    apis: [
+      "./src/modules/authentication/individualUserAuth/individualAuth.route.ts",
     ],
   },
 };
