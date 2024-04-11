@@ -42,14 +42,10 @@ const organizationalSchema = new mongoose_1.default.Schema({
     },
     password: {
         type: String,
-        required: [true, "Please provide a password"],
-        minlength: [8, "Password must be at least 8 characters long"],
         select: false,
     },
     passwordConfirmation: {
         type: String,
-        required: [true, "Please provide a password"],
-        minlength: [8, "Password must be at least 8 characters long"],
         select: false,
     },
     passwordChangedAt: Date,
@@ -78,7 +74,7 @@ organizationalSchema.methods.createPasswordResetToken = function () {
         .digest("hex");
     console.log({ resetToken }, this.passwordResetToken);
     const resetExpires = new Date();
-    resetExpires.setMinutes(resetExpires.getMinutes() + 10); // Add 10 minutes to the current time
+    resetExpires.setMinutes(resetExpires.getMinutes() + 60); // Add 10 minutes to the current time
     this.passwordResetExpires = resetExpires;
     return resetToken;
 };

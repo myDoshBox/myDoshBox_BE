@@ -8,15 +8,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.hashPassword = void 0;
-const bcrypt_1 = __importDefault(require("bcrypt"));
-// Function to hash a password
-const hashPassword = (password) => __awaiter(void 0, void 0, void 0, function* () {
-    const saltRounds = 10;
-    return yield bcrypt_1.default.hash(password, saltRounds);
-});
-exports.hashPassword = hashPassword;
+exports.createSession = void 0;
+const session_model_1 = require("../modules/sessions/session.model");
+function createSession(userId, userAgent) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const session = yield session_model_1.Session.create({ user: userId, userAgent });
+        return session.toJSON();
+    });
+}
+exports.createSession = createSession;

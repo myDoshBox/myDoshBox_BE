@@ -87,7 +87,7 @@ organizationalSchema.methods.createPasswordResetToken = function (
   console.log({ resetToken }, this.passwordResetToken);
 
   const resetExpires = new Date();
-  resetExpires.setMinutes(resetExpires.getMinutes() + 10); // Add 10 minutes to the current time
+  resetExpires.setMinutes(resetExpires.getMinutes() + 60); // Add 10 minutes to the current time
   this.passwordResetExpires = resetExpires;
 
   return resetToken;

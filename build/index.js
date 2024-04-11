@@ -9,6 +9,7 @@ const cors_1 = __importDefault(require("cors"));
 const dbconn_config_1 = __importDefault(require("./config/dbconn.config"));
 const organizationAuth_route_1 = __importDefault(require("./modules/authentication/organizationUserAuth/organizationAuth.route"));
 const googleOrganizationUserAuth_route_1 = __importDefault(require("./modules/authentication/organizationUserAuth/googleOrganizationUserAuth.route"));
+const googleIndividualUserAuth_route_1 = __importDefault(require("./modules/authentication/individualUserAuth/googleIndividualUserAuth.route"));
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
@@ -20,6 +21,7 @@ app.get("/", (req, res) => {
 });
 app.use("/api/organization", organizationAuth_route_1.default);
 app.use("/auth", googleOrganizationUserAuth_route_1.default);
+app.use("/auth/ind", googleIndividualUserAuth_route_1.default);
 const PORT = process.env.PORT;
 (0, dbconn_config_1.default)()
     .then(() => {

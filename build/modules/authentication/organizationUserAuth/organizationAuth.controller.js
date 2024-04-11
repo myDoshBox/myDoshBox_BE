@@ -16,9 +16,10 @@ exports.resetPassword = exports.forgotPassword = exports.login = exports.signup 
 const organizationAuth_model_1 = __importDefault(require("./organizationAuth.model"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const crypto_1 = __importDefault(require("crypto"));
-const email_utils_1 = __importDefault(require("../../../utils/email.utils"));
+// import sendEmail from "../../../utils/email.utils";
 const catchAsync_1 = __importDefault(require("../../../utils/catchAsync"));
 const appError_1 = __importDefault(require("../../../utils/appError"));
+const email_utils_1 = require("../../../utils/email.utils");
 const signToken = (id) => {
     const payload = { id };
     return jsonwebtoken_1.default.sign(payload, process.env.JWT_SECRET, {
@@ -36,12 +37,12 @@ const createSendToken = (user, statusCode, res) => {
         },
     });
 };
-exports.signup = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+exports.signup = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { name, email, orgEmail, password, passwordConfirmation } = req.body;
     if (password !== passwordConfirmation) {
         res.status(401).json({
-            status: 'fail',
-            message: "Password do not match"
+            status: "fail",
+            message: "Password do not match",
         });
     }
     const org = yield organizationAuth_model_1.default.create({
@@ -49,19 +50,26 @@ exports.signup = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0,
         email,
         orgEmail,
         password,
-        passwordConfirmation
+        passwordConfirmation,
     });
     createSendToken(org, 201, res);
 }));
-exports.login = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+exports.login = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password } = req.body;
     if (!email || !password) {
-        return next(new appError_1.default("Please provide email and password!", 400));
+        res.status(401).json({
+            status: "fail",
+            message: "Password do not match",
+        });
     }
     // 2) Check if user exists && password is correct
     const user = yield organizationAuth_model_1.default.findOne({ email }).select("+password");
     if (!user || !(yield user.correctPassword(password, user.password))) {
-        return next(new appError_1.default("Incorrect email or password", 401));
+        // return next(new AppError("Incorrect email or password", 401));
+        res.status(401).json({
+            status: "fail",
+            message: "Password do not match",
+        });
     }
     // 3) If everything ok, send token to client
     createSendToken(user, 200, res);
@@ -77,25 +85,30 @@ exports.forgotPassword = (0, catchAsync_1.default)((req, res, next) => __awaiter
     yield org.save({ validateBeforeSave: false });
     // 3) Send it to user's email
     const resetURL = `${req.protocol}://${req.get("host")}/api/organization/resetPassword/${resetToken}`;
-    const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetURL}.\nIf you didn't forget your password, please ignore this email!`;
-    try {
-        // sendEmail function needs to be implemented separately
-        yield (0, email_utils_1.default)({
-            email: org.email,
-            subject: "Your password reset token (valid for 10 min)",
-            message,
-        });
-        res.status(200).json({
-            status: "success",
-            message: "Token sent to email!",
-        });
-    }
-    catch (err) {
-        org.passwordResetToken = undefined;
-        org.passwordResetExpires = undefined;
-        yield org.save({ validateBeforeSave: false });
-        return next(new appError_1.default("There was an error sending the email. Try again later!", 500));
-    }
+    // const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetURL}.\nIf you didn't forget your password, please ignore this email!`;
+    // try {
+    //   // sendEmail function needs to be implemented separately
+    //   await sendEmail({
+    //     email: org.email,
+    //     subject: "Your password reset token (valid for 10 min)",
+    //     message,
+    //   });
+    //   res.status(200).json({
+    //     status: "success",
+    //     message: "Token sent to email!",
+    //   });
+    // } catch (err) {
+    //   org.passwordResetToken = undefined;
+    //   org.passwordResetExpires = undefined;
+    //   await org.save({ validateBeforeSave: false });
+    //   return next(
+    //     new AppError(
+    //       "There was an error sending the email. Try again later!",
+    //       500
+    //     )
+    //   );
+    // }
+    (0, email_utils_1.sendURLEmail)(org.email, resetURL);
 }));
 exports.resetPassword = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     // 1) Get user based on the token
