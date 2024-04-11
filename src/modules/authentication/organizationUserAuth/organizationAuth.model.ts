@@ -7,10 +7,10 @@ import crypto from "crypto";
 interface organizationalDoc extends Document {
   name: string;
   email: string;
-  orgEmail: string;
+  org_Email: string;
   phoneNumber: string;
   password: string;
-  passwordConfirmation: string;
+  password_Confirmation: string;
   passwordChangedAt?: Date;
   passwordResetToken?: string;
   passwordResetExpires?: Date;
@@ -29,7 +29,7 @@ const organizationalSchema: Schema<organizationalDoc> = new mongoose.Schema(
       type: String,
       required: [true, "Please tell us your name"],
     },
-    orgEmail: {
+    org_Email: {
       type: String,
       required: [true, "Please tell us your email"],
       lowercase: true,
@@ -52,7 +52,7 @@ const organizationalSchema: Schema<organizationalDoc> = new mongoose.Schema(
       type: String,
       select: false,
     },
-    passwordConfirmation: {
+    password_Confirmation: {
       type: String,
       select: false,
     },
