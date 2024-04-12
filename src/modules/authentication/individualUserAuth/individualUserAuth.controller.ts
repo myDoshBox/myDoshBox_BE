@@ -1,8 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import IndividualUser, { IndividaulDocument } from "./individualUserAuth.model";
 import individualAuthPasswordToken from "./individualAuthPasswordToken";
-import { isValidObjectId } from "mongoose";
 import Jwt from "jsonwebtoken";
+import { sendOtpEmail } from "../../../utils/email.utils";
+import catchAsync from "../../../utils/catchAsync";
+import AppError from "../../../utils/appError";
 
 export const generateToken = (length = 4) =>{
   // decallar variable 
@@ -14,7 +16,6 @@ export const generateToken = (length = 4) =>{
   }
   return otp;
 }
-
 
 export const individualUserRegistration = async (
   req: Request,
@@ -200,25 +201,132 @@ export const individualUserLogin = async (req: Request, res: Response) => {
   res.status(201).json({token, userId: user._id});
 };
 
-export const generateOTP = async (req: Request, res: Response) => {
-  const {email} = req.body;
-  // if(!isValidObjectId(userId)) return res.status(400).json({message: "Invalid userId!"});
-  const user = await IndividualUser.findOne({email});
-  if(!user) return res.status(400).json({message: "User not found!"});
-  const userId = user._id;
-  const token = generateToken();
-  console.log(token)
+// export const generateOTP = async (req: Request, res: Response) => {
+//   const {email} = req.body;
+//   // if(!isValidObjectId(userId)) return res.status(400).json({message: "Invalid userId!"});
+//   const user = await IndividualUser.findOne({email});
+//   if(!user) return res.status(400).json({message: "User not found!"});
+//   const userId = user._id;
+//   const token = generateToken();
+//   console.log(token)
 
-  await individualAuthPasswordToken.findOneAndDelete({
-    owner: userId
-  });
+//   await individualAuthPasswordToken.findOneAndDelete({
+//     owner: userId
+//   });
 
-  const newToken = await individualAuthPasswordToken.create({
-    owner: userId,
-    token
-  })
-  res.json({Token: newToken.token}); 
-};
+//   const newToken = await individualAuthPasswordToken.create({
+//     owner: userId,
+//     token
+//   })
+
+//   const message = `Forgot your password? Here is one time password for your reset password : ${token}.\nIf you didn't forget your password, please ignore this email!`;
+
+//   try {
+//     // sendEmail function needs to be implemented separately
+//     await sendEmail({
+//       email,
+//       subject: "Your password reset token (valid for 10 min)",
+//       message,
+//     });
+
+//     // res.status(200).json({
+//     //   status: "success",
+//     //   message: "Token sent to email!",
+//     // });
+//     res.json({Token: newToken.token}); 
+
+//   } catch (err) {
+//     // user. = undefined;
+//     // user.passwordResetExpires = undefined;
+//     await user.save({ validateBeforeSave: false });
+//     return res.status(500).json({ err: "Cannot send email!" });
+//   }
+// };
+
+// export const generateOTP = catchAsync(
+//   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+//     // 1) Get user based on POSTed email
+//     const {email} = req.body;
+//       const user = await IndividualUser.findOne({email});
+//       if (!user) {
+//         return next(new AppError("There is no user with email address.", 404));
+//       }
+//       const userId = user._id;
+//       const token = generateToken();
+//       await user.save({ validateBeforeSave: false });
+
+//       console.log(token)
+    
+//       await individualAuthPasswordToken.findOneAndDelete({
+//         owner: userId
+//       });
+    
+//       const newToken = await individualAuthPasswordToken.create({
+//         owner: userId,
+//         token
+//       })
+    
+//       const message = `Forgot your password? Here is one time password for your reset password : ${token}.\nIf you didn't forget your password, please ignore this email!`;
+    
+//       try {
+//         // sendEmail function needs to be implemented separately
+//         await sendEmail({
+//           email,
+//           subject: "Your password reset token (valid for 10 min)",
+//           message,
+//         });
+    
+//         // res.status(200).json({
+//         //   status: "success",
+//         //   message: "Token sent to email!",
+//         // });
+//         res.json({Token: newToken.token}); 
+    
+//       } catch (err) {
+//         // user. = undefined;
+//         // user.passwordResetExpires = undefined;
+
+//       return next(
+//         new AppError(
+//           "There was an error sending the email. Try again later!",
+//           500
+//         )
+//       );
+//     }
+//   }
+// );
+
+export const generateOTP = catchAsync(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    // 1) Get user based on POSTed email
+    const { email } = req.body;
+    if (!email) {
+      return next(new AppError("Please provide an email address.", 400));
+    }
+    
+    const user = await IndividualUser.findOne({ email });
+    if (!user) {
+      return next(new AppError("There is no user with that email address.", 404));
+    }
+ 
+    const userId = user._id;
+    const token = generateToken(); // Make sure generateToken function exists and generates secure tokens
+
+    await individualAuthPasswordToken.findOneAndDelete({ owner: userId });
+    const newToken = await individualAuthPasswordToken.create({ owner: userId, token });
+
+    // const message = `Forgot your password? Here is a one-time password for resetting your password: ${token}.\nIf you didn't forget your password, please ignore this email.`;
+
+    // sendEmail function needs to be implemented separately
+    sendOtpEmail(token, email) 
+
+    res.status(200).json({ token: newToken.token });
+  } catch (err) {
+    console.error("Error in generateOTP:", err);
+    return next(new AppError("There was an error sending the email. Please try again later.", 500));
+  }
+});
+
 
 export const verifyOTP = async (req: Request, res: Response) => {
   const {email, token} = req.body;

@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import OrganizationModel from "./organizationAuth.model";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import sendEmail from "../../../utils/email.utils";
+import { sendURLEmail } from "../../../utils/email.utils";
 import catchAsync from "../../../utils/catchAsync";
 import AppError from "../../../utils/appError";
 
@@ -98,11 +98,12 @@ export const forgotPassword = catchAsync(
 
     try {
       // sendEmail function needs to be implemented separately
-      await sendEmail({
-        email: org.email,
-        subject: "Your password reset token (valid for 10 min)",
-        message,
-      });
+      // await sendEmail({
+      //   email: org.email,
+      //   subject: "Your password reset token (valid for 10 min)",
+      //   message,
+      // });
+      sendURLEmail(org.email, resetURL)
 
       res.status(200).json({
         status: "success",
