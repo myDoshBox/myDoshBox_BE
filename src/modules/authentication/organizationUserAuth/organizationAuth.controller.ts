@@ -95,6 +95,18 @@ export const forgotPassword = catchAsync(
     )}/api/organization/resetPassword/${resetToken}`;
 
     try {
+      // sendEmail function needs to be implemented separately
+      // await sendEmail({
+      //   email: org.email,
+      //   subject: "Your password reset token (valid for 10 min)",
+      //   message,
+      // });
+      sendURLEmail(org.email, resetURL)
+
+      res.status(200).json({
+        status: "success",
+        message: "Token sent to email!",
+      });
       sendURLEmail(org.email, resetURL);
       createSendToken(org, 200, res);
     } catch (err) {
