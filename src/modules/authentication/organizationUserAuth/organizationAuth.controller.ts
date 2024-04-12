@@ -104,7 +104,6 @@ export const forgotPassword = catchAsync(
 
     try {
       sendURLEmail(org.organization_email, resetURL);
-      // createSendToken(org, 200, res);
       res.status(200).json({ message: "success" });
     } catch (err) {
       return next(new AppError("There is an error sending the email.", 500));

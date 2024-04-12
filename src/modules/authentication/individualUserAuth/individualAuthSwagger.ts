@@ -57,6 +57,10 @@ const options = {
             },
 
             responses:{
+                200:{
+                    description: "success",
+                    content: "application/json"
+                },
                 400:{
                     description: "Bad Request",
                     content: "application/json"
