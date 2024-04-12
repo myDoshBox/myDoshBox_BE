@@ -12,11 +12,12 @@ import googleAuthRoutes from "./modules/authentication/organizationUserAuth/goog
 import googleIndividualUserAuthroute from "./modules/authentication/individualUserAuth/googleIndividualUserAuth.route";
 import { errorHandler } from "./utilities/errorHandler.util";
 import { options } from "./swagger";
-import { option } from "./swagger";
+// import { option } from "./swagger";
 
-const swaggerJsDoc = require("swagger-jsdoc")
-const swaggerUi = require('swagger-ui-express')
-const options = require('./modules/authentication/individualUserAuth/individualAuthSwagger')
+// const swaggerJsDoc = require("swagger-jsdoc")
+// const swaggerUi = require('swagger-ui-express')
+// const options = require("./modules/authentication/individualUserAuth/individualAuthSwagger");
+
 const app = express();
 
 app.use(cors());
@@ -39,14 +40,13 @@ app.use("/api/auth/ind", googleIndividualUserAuthroute);
 
 app.use(errorHandler);
 
+const spec = swaggerJSDOC(options);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(spec));
 
-const spec = swaggerJsDoc(options)
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(spec))
-=======
-//const swaggerUiSetup = swaggerUi.setup(specs);
+// =======
+// //const swaggerUiSetup = swaggerUi.setup(specs);
 
-//app.use("/api-docs", swaggerUi.serve, swaggerUiSetup);
-
+// //app.use("/api-docs", swaggerUi.serve, swaggerUiSetup);
 
 const PORT = process.env.PORT;
 

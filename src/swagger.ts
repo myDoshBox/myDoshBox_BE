@@ -105,7 +105,100 @@ export const options = {
             },
           },
         },
+        OrganizationUserSignup: {
+          type: "object",
+          required: [
+            "organization_name",
+            "user_email",
+            "organization_email",
+            "password",
+            "password_Confirmation",
+          ],
+          properties: {
+            organization_name: {
+              type: "string",
+              description: "Organization Username",
+            },
+            organization_email: {
+              type: "string",
+              description: "Organization Email",
+            },
+            user_email: {
+              type: "string",
+              description: "User's Email",
+            },
+            password: {
+              type: "string",
+              description: "Organization Password",
+            },
+            password_Confirmation: {
+              type: "string",
+              description: "Organization Password",
+            },
+          },
+        },
+        OrganizationUserLogin: {
+          type: "object",
+          required: ["organization_email", "password"],
+          properties: {
+            organization_email: {
+              type: "string",
+              description: "Organization Email",
+            },
+            password: {
+              type: "string",
+              description: "Organization Password",
+            },
+          },
+        },
+        OrganizationUserForgotPassword: {
+          type: "object",
+          required: ["organization_email"],
+          properties: {
+            organization_email: {
+              type: "string",
+              description: "Organization Email",
+            },
+          },
+        },
+        OrganizationUserResetPassword: {
+          type: "object",
+          required: ["password", "password_Confirmation"],
+          properties: {
+            password: {
+              type: "string",
+              description: "Organization Old Password",
+            },
+            password_Confirmation: {
+              type: "string",
+              description: "Organization New Passsword",
+            },
+          },
+        },
+        IndividualUserSignup: {
+          type: "object",
+          required: ["name", "email", "password", "confirmPassword"],
+          properties: {
+            name: {
+              type: "string",
+              description: "Individual Username",
+            },
+            email: {
+              type: "string",
+              description: "User's Email",
+            },
+            password: {
+              type: "string",
+              description: "user Password",
+            },
+            confirmPassword: {
+              type: "string",
+              description: "user confirm Password",
+            },
+          },
+        },
       },
+
       responses: {
         400: {
           description: "Please provide all required field",
@@ -123,11 +216,31 @@ export const options = {
           description: "Google AuthorizedUrl successful gotten",
           contents: "application/json",
         },
+        201: {
+          description: "User successfully created",
+          content: {
+            "application/json": {},
+          },
+        },
+      },
+      securitySchemes: {
+        ApiKeyAuth: {
+          type: "apikey",
+          in: "header",
+          name: "Authorization",
+        },
       },
     },
+    security: [
+      {
+        ApiKeyAuth: [],
+      },
+    ],
   },
   apis: [
     "./src/modules/authentication/organizationUserAuth/googleOrganizationUserAuth.route.ts",
+    "./src/modules/authentication/organizationUserAuth/organizationAuth.route.ts",
+    "./src/modules/authentication/individualUserAuth/individualAuth.route.ts",
   ],
 };
 
@@ -245,248 +358,4 @@ export const option = {
   apis: [
     "./src/modules/authentication/individualUserAuth/googleIndividualUserAuth.route.ts",
   ],
-};
-
-// swagger documentation for  organization authentication
-
-export const opt = {
-  definition: {
-    openapi: "3.0.0",
-    info: {
-      title: "Doshbox API",
-      description: "This is Doshbox API Swagger documentation",
-      version: "1.0.0",
-    },
-    servers: [
-      {
-        url: "http://localhost:5000",
-        description: "This is the server Doshbox API",
-      },
-    ],
-    components: {
-      schemas: {
-        OrganizationUser: {
-          type: "object",
-          required: ["name", "email", "org_Email", "password"],
-          properties: {
-            name: {
-              type: "string",
-              description: "This is the username provided by the organization",
-            },
-            org_Email: {
-              type: "string",
-              description: "Organization email",
-            },
-            email: {
-              type: "string",
-              description: "User's Email",
-            },
-            password: {
-              type: "string",
-              description: "Organization Password",
-            },
-          },
-        },
-      },
-      responses: {
-        "400": {
-          description: "Please provide all required fields",
-          content: {
-            "application/json": {},
-          },
-        },
-        "401": {
-          description: "User not found",
-          content: {
-            "application/json": {},
-          },
-        },
-        "409": {
-          description: "User with email already exists",
-          content: {
-            "application/json": {},
-          },
-        },
-        "201": {
-          description: "Organization successfully created",
-          content: {
-            "application/json": {},
-          },
-        },
-      },
-    },
-    paths: {
-      "/login": {
-        post: {
-          tags: ["Login"],
-          summary: "Logs in a user",
-          operationId: "loginUser",
-          requestBody: {
-            required: true,
-            content: {
-              "application/json": {
-                schema: {
-                  $ref: "#/components/schemas/OrganizationLogin",
-                },
-              },
-            },
-          },
-          responses: {
-            "200": {
-              description: "Login successful",
-              content: {
-                "application/json": {},
-              },
-            },
-            "400": {
-              description: "Please provide correct details",
-              content: {
-                "application/json": {},
-              },
-            },
-            "401": {
-              description: "User not found",
-              content: {
-                "application/json": {},
-              },
-            },
-          },
-        },
-      },
-      "/forgotpassword": {
-        post: {
-          tags: ["Forgot Password"],
-          summary: "Initiate password reset process",
-          operationId: "forgotPassword",
-          requestBody: {
-            required: true,
-            content: {
-              "application/json": {
-                schema: {
-                  $ref: "#/components/schemas/ForgotPassword",
-                },
-              },
-            },
-          },
-          responses: {
-            "200": {
-              description: "Email sent successfully",
-              content: {
-                "application/json": {},
-              },
-            },
-            "401": {
-              description: "User not found",
-              content: {
-                "application/json": {},
-              },
-            },
-          },
-        },
-      },
-      "/resetPassword": {
-        post: {
-          tags: ["Reset Password"],
-          summary: "Reset user's password",
-          operationId: "resetPassword",
-          requestBody: {
-            required: true,
-            content: {
-              "application/json": {
-                schema: {
-                  $ref: "#/components/schemas/ResetPassword",
-                },
-              },
-            },
-          },
-          responses: {
-            "200": {
-              description: "Password reset successful",
-              content: {
-                "application/json": {},
-              },
-            },
-            "400": {
-              description: "Please provide all required fields",
-              content: {
-                "application/json": {},
-              },
-            },
-          },
-        },
-      },
-    },
-    apis: [
-      "./src/modules/authentication/organizationUserAuth/organizationAuth.route.ts",
-    ],
-  },
-};
-
-//  swagger documentation for  individual authentication
-export const opts = {
-  definition: {
-    openapi: "3.0.0",
-    info: {
-      title: "Doshbox API",
-      description: "This is Doshbox API Swagger documentation",
-      version: "1.0.0",
-    },
-    servers: [
-      {
-        url: "http://localhost:5000",
-        description: "This is the server Doshbox API",
-      },
-    ],
-    components: {
-      schemas: {
-        IndividuaLUser: {
-          type: "object",
-          required: ["email", "phoneNumber", "password"],
-          properties: {
-            email: {
-              type: "string",
-              description: "Individual email",
-            },
-            phoneNumber: {
-              type: "string",
-              description: "User's Email",
-            },
-            password: {
-              type: "string",
-              description: "Individual Password",
-            },
-          },
-        },
-      },
-      responses: {
-        "400": {
-          description: "Please provide all required fields",
-          content: {
-            "application/json": {},
-          },
-        },
-        "401": {
-          description: "User not found",
-          content: {
-            "application/json": {},
-          },
-        },
-        "409": {
-          description: "User with email already exists",
-          content: {
-            "application/json": {},
-          },
-        },
-        "201": {
-          description: "Individual successfully created",
-          content: {
-            "application/json": {},
-          },
-        },
-      },
-    },
-    apis: [
-      "./src/modules/authentication/individualUserAuth/individualAuth.route.ts",
-    ],
-  },
 };

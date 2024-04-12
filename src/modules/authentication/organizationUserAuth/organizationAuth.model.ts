@@ -5,9 +5,9 @@ import crypto from "crypto";
 
 // Extend the OrganizationDoc interface to include virtual properties
 interface organizationalDoc extends Document {
-  name: string;
-  email: string;
-  org_Email: string;
+  organization_name: string;
+  user_email: string;
+  organization_email: string;
   phoneNumber: string;
   password: string;
   password_Confirmation: string;
@@ -25,11 +25,11 @@ interface organizationalDoc extends Document {
 
 const organizationalSchema: Schema<organizationalDoc> = new mongoose.Schema(
   {
-    name: {
+    organization_name: {
       type: String,
       required: [true, "Please tell us your name"],
     },
-    org_Email: {
+    organization_email: {
       type: String,
       required: [true, "Please tell us your email"],
       lowercase: true,
@@ -38,7 +38,7 @@ const organizationalSchema: Schema<organizationalDoc> = new mongoose.Schema(
         message: "Please provide a valid email address",
       },
     },
-    email: {
+    user_email: {
       type: String,
       required: [true, "Please tell us your email"],
       unique: true,

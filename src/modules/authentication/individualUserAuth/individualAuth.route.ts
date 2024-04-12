@@ -13,7 +13,7 @@ const individualrouter = Router();
 /**
  * @swagger
  * tags:
- *   name: Individual
+ *   name: IndividualUserAuth
  *   description: Api endpoint to manage individual auth
  */
 
@@ -26,24 +26,24 @@ const individualrouter = Router();
 
 /**
  * @swagger
- *   /api/individual/signup
+ *   /api/individual/signup:
  *     post:
  *       summary: Sign up an organization user
  *       description: Sign up a new user for the organization.
- *       tags: [OrganizationUserAuth]
+ *       tags: [IndividualUserAuth]
  *       requestBody:
  *         required: true
  *         content:
  *           application/json:
  *             schema:
- *               $ref: "#/components/schemas/OrganizationUserSignup"
+ *               $ref: "#/components/schemas/IndividualUserSignup"
  *       responses:
  *         '200':
  *           description: User successfully signed up
  *           content:
  *             application/json:
  *               schema:
- *                 $ref: "#/components/schemas/OrganizationUser"
+ *                 $ref: "#/components/schemas/IndividualUserSignup"
  *         '400':
  *           $ref: "#/components/responses/400"
  *         '401':
