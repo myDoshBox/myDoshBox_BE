@@ -1,16 +1,23 @@
 import { Router } from "express";
-import { generateOTP, individualUserLogin, individualUserRegistration, resetIndividualPassword, verifyIndividualUserEmail, verifyOTP } from "../individualUserAuth/individualUserAuth.controller";
+import {
+  generateOTP,
+  individualUserLogin,
+  individualUserRegistration,
+  resetIndividualPassword,
+  verifyIndividualUserEmail,
+  verifyOTP,
+} from "../individualUserAuth/individualUserAuth.controller";
 
 const individualrouter = Router();
 
- /**
+/**
  * @swagger
  * tags:
  *   name: Individual
  *   description: Api endpoint to manage individual auth
  */
 
- /**
+/**
  * @swagger
  * tags:
  *   name: Otp
@@ -18,26 +25,55 @@ const individualrouter = Router();
  */
 
 /**
- * @swagger 
+ * @swagger
+ *   /api/individual/signup
+ *     post:
+ *       summary: Sign up an organization user
+ *       description: Sign up a new user for the organization.
+ *       tags: [OrganizationUserAuth]
+ *       requestBody:
+ *         required: true
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/OrganizationUserSignup"
+ *       responses:
+ *         '200':
+ *           description: User successfully signed up
+ *           content:
+ *             application/json:
+ *               schema:
+ *                 $ref: "#/components/schemas/OrganizationUser"
+ *         '400':
+ *           $ref: "#/components/responses/400"
+ *         '401':
+ *           $ref: "#/components/responses/401"
+ *
+ */
+
+individualrouter.route("/signup").post(individualUserRegistration);
+
+/**
+ * @swagger
  * /api/individual/login:
  *   post:
  *     summary: Sign in a user
- *     tags: 
+ *     tags:
  *       - Individual
  *     requestBody:
  *       required: true
- *       content: 
+ *       content:
  *         application/json:
- *           schema: 
+ *           schema:
  *             type: object
  *             properties:
- *               email: 
+ *               email:
  *                 type: string
  *                 description: Registered user email
  *               password:
  *                 type: string
- *                 description: Registered user password 
- *             required: 
+ *                 description: Registered user password
+ *             required:
  *               - email
  *               - password
  *     responses:
@@ -54,19 +90,19 @@ const individualrouter = Router();
  */
 
 // routes
-individualrouter.route('/login').post(individualUserLogin);
+individualrouter.route("/login").post(individualUserLogin);
 
-/** 
-* @swagger
+/**
+ * @swagger
  * /api/individual/register:
  *   post:
  *     summary: Generate otp for password reset
- *     tags: 
+ *     tags:
  *       - Individual
  *     requestBody:
- *       content: 
+ *       content:
  *         application/json:
- *           schema: 
+ *           schema:
  *             $ref: '#/components/schemas/Individual'
  *     responses:
  *       "200":
@@ -83,25 +119,25 @@ individualrouter.route('/login').post(individualUserLogin);
 
 individualrouter.route("/register").post(individualUserRegistration);
 
-/** 
+/**
  * @swagger
  * /api/individual/generate/otp:
  *   post:
  *     summary: Generate Otp for password reset
- *     tags: 
+ *     tags:
  *       - Otp
  *     requestBody:
  *       required: true
- *       content: 
+ *       content:
  *         application/json:
- *           schema: 
+ *           schema:
  *             type: object
  *             properties:
  *               email:
  *                 type: string
- *                 description: Email address of the user 
+ *                 description: Email address of the user
  *             required:
- *               - email   
+ *               - email
  *     responses:
  *       "200":
  *         description: User token
@@ -115,20 +151,20 @@ individualrouter.route("/register").post(individualUserRegistration);
  *         description: Internal server error
  */
 
-individualrouter.route('/generate/otp').post(generateOTP);
+individualrouter.route("/generate/otp").post(generateOTP);
 
-/** 
+/**
  * @swagger
  * /api/individual/verify-otp:
  *   post:
  *     summary: Verify OTP for password reset
- *     tags: 
+ *     tags:
  *       - Otp
  *     requestBody:
  *       required: true
- *       content: 
+ *       content:
  *         application/json:
- *           schema:   
+ *           schema:
  *              $ref: '#/components/schemas/OTP'
  *
  *     responses:
@@ -144,26 +180,26 @@ individualrouter.route('/generate/otp').post(generateOTP);
  *         description: Internal server error
  */
 
-individualrouter.route('/verify-otp').post(verifyOTP); 
+individualrouter.route("/verify-otp").post(verifyOTP);
 
-/** 
+/**
  * @swagger
  * /api/individual/reset-password:
  *   post:
  *     summary: Reset a user's password
- *     tags: 
+ *     tags:
  *       - Individual
  *     requestBody:
  *       required: true
- *       content: 
+ *       content:
  *         application/json:
- *           schema: 
+ *           schema:
  *             type: object
  *             properties:
  *               email:
  *                 type: string
  *                 description: User's registered email
- *               password: 
+ *               password:
  *                 type: string
  *                 description: User's new password
  *             required:
@@ -182,27 +218,26 @@ individualrouter.route('/verify-otp').post(verifyOTP);
  *         description: Internal server error
  */
 
+individualrouter.route("/reset-password").post(resetIndividualPassword);
 
-individualrouter.route('/reset-password').post(resetIndividualPassword);
-
-/** 
-* @swagger
+/**
+ * @swagger
  * /api/individual/verify-individual-email:
  *   post:
  *     summary: Verify a user's email
- *     tags: 
+ *     tags:
  *       - Individual
  *     requestBody:
  *       required: true
- *       content: 
+ *       content:
  *         application/json:
- *           schema: 
+ *           schema:
  *             type: object
  *             properties:
- *                     email: 
+ *                     email:
  *                      type: string
  *                      description: Registred user email
- *             required: 
+ *             required:
  *                  -email
  *     responses:
  *       "200":
@@ -213,9 +248,11 @@ individualrouter.route('/reset-password').post(resetIndividualPassword);
  *         description: Not found
  *       "403":
  *         description: Unauthorized request
- *       "500": 
+ *       "500":
  *         description: Internal server error
  */
-individualrouter.route('/verify-individual-email').post(verifyIndividualUserEmail)
+individualrouter
+  .route("/verify-individual-email")
+  .post(verifyIndividualUserEmail);
 
-export default individualrouter; 
+export default individualrouter;
