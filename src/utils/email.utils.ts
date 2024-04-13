@@ -51,11 +51,11 @@ export const sendURLEmail = async (email: string, resetURL: string) => {
 
 export const sendRegistrationVerificationEmail = async (
   email: string,
-  otp: string
+  token: string
 ) => {
   const transport = generateMailTransporter();
 
-  const verificationURL = `http://localhost:5000/api/individual/verify-email?email=${email},otp=${otp}`;
+  const verificationURL = `http://localhost:5000/api/individual/verify-email?token=${token}`;
   const supportEmail = "fawazadeniji123@gmail.com";
 
   const emailMessage = `
