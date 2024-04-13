@@ -52,6 +52,7 @@ const individualUserSchema = new Schema<IndividualUserDocument>(
     },
     verificationToken: {
       type: String,
+      select: false,
     },
     passwordChangedAt: Date,
     passwordResetToken: {
