@@ -12,11 +12,12 @@ import googleAuthRoutes from "./modules/authentication/organizationUserAuth/goog
 import googleIndividualUserAuthroute from "./modules/authentication/individualUserAuth/googleIndividualUserAuth.route";
 import { errorHandler } from "./utilities/errorHandler.util";
 import { options } from "./swagger";
-// import { option } from "./swagger";
+import deserializeUser from "./sharedMiddlewares/deserializeUser.middleware";
+import protectRoutes from "./sharedMiddlewares/protectRoutes.middleware";
 
 // const swaggerJsDoc = require("swagger-jsdoc")
 // const swaggerUi = require('swagger-ui-express')
-// const options = require("./modules/authentication/individualUserAuth/individualAuthSwagger");
+// import { options } from "./modules/authentication/individualUserAuth/individualAuthSwagger";
 
 const app = express();
 
@@ -27,6 +28,8 @@ app.use(
     extended: true,
   })
 );
+
+app.use(deserializeUser);
 
 app.get("/", (req: Request, res: Response) => {
   return res.json({ msg: "welcome to doshbox api" });
@@ -43,10 +46,19 @@ app.use(errorHandler);
 const spec = swaggerJSDOC(options);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(spec));
 
-// =======
-// //const swaggerUiSetup = swaggerUi.setup(specs);
+app.get("/api/me", protectRoutes, (req: Request, res: Response) => {
+  console.log(`Logged in user: ${res.locals.user}`);
 
-// //app.use("/api-docs", swaggerUi.serve, swaggerUiSetup);
+  return res.status(200).json({
+    message: "Logged in user profile",
+    data: res.locals.user,
+  });
+});
+
+// =======
+// const swaggerUiSetup = swaggerUi.setup(specs);
+
+// app.use("/api-docs", swaggerUi.serve, swaggerUiSetup);
 
 const PORT = process.env.PORT;
 

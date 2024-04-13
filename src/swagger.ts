@@ -175,25 +175,102 @@ export const options = {
             },
           },
         },
-        IndividualUserSignup: {
+        // IndividualUserSignup: {
+        //   type: "object",
+        //   required: ["name", "email", "password", "confirmPassword"],
+        //   properties: {
+        //     name: {
+        //       type: "string",
+        //       description: "Individual Username",
+        //     },
+        //     email: {
+        //       type: "string",
+        //       description: "User's Email",
+        //     },
+        //     password: {
+        //       type: "string",
+        //       description: "user Password",
+        //     },
+        //     confirmPassword: {
+        //       type: "string",
+        //       description: "user confirm Password",
+        //     },
+        //   },
+        // },
+        GoogleIndividualUser: {
           type: "object",
-          required: ["name", "email", "password", "confirmPassword"],
+          required: ["sub", "name", "email", "email_verified", "picture"],
           properties: {
+            sub: {
+              type: "string",
+              description:
+                "This is the google account unique identifier (id) provided by the google oauth",
+            },
             name: {
               type: "string",
-              description: "Individual Username",
+              description:
+                "This is the  username provided by the google oauth from the google account",
             },
             email: {
               type: "string",
-              description: "User's Email",
+              description:
+                "This is the  email provided by the google oauth from the google account",
+            },
+            email_verified: {
+              type: "string",
+              description:
+                "This is the  email verificatin status provided by the google oauth google account",
+            },
+            picture: {
+              type: "string",
+              description:
+                "This is the picture provided by the google oauth google account",
+            },
+          },
+        },
+        Individual: {
+          type: "object",
+          required: ["email", "password", "phoneNumber"],
+          properties: {
+            email: {
+              type: "string",
+              format: "email",
+              deault: "example@example.com",
+              description: "User's email addess",
+            },
+            phoneNumber: {
+              type: "string",
+              format: "phoneNumber",
+              description: "User's phone number",
+              default: "+11234567890",
             },
             password: {
               type: "string",
-              description: "user Password",
+              format: "password",
+              description: "User's password",
+              default: "examplePassword",
             },
             confirmPassword: {
               type: "string",
-              description: "user confirm Password",
+              format: "password",
+              description: "confirm password",
+              default: "examplePassword",
+            },
+          },
+        },
+        OTP: {
+          type: "object",
+          required: ["token", "email"],
+          properties: {
+            token: {
+              type: "string",
+              description: "Otp token",
+              default: "12345",
+            },
+            email: {
+              type: "string",
+              description: "User's email address",
+              default: "user@gmail.com",
             },
           },
         },
@@ -241,121 +318,122 @@ export const options = {
     "./src/modules/authentication/organizationUserAuth/googleOrganizationUserAuth.route.ts",
     "./src/modules/authentication/organizationUserAuth/organizationAuth.route.ts",
     "./src/modules/authentication/individualUserAuth/individualAuth.route.ts",
+    "./src/modules/authentication/individualUserAuth/googleIndividualUserAuth.route.ts",
   ],
 };
 
 // swagger documentation for google authentication for individual signup
-export const option = {
-  definition: {
-    openapi: "3.0.0",
-    info: {
-      title: "Doshbox API",
-      description: "This is Doshbox API Swagger documentation",
-      version: "1.0.0",
-    },
-    servers: [
-      {
-        url: "http://localhost:5000",
-        description: "This is the server Doshbox API",
-      },
-    ],
-    components: {
-      schemas: {
-        GoogleIndividualUser: {
-          type: "object",
-          required: ["sub", "name", "email", "email_verified", "picture"],
-          properties: {
-            sub: {
-              type: "string",
-              description:
-                "This is the google account unique identifier (id) provided by the google oauth",
-            },
-            name: {
-              type: "string",
-              description:
-                "This is the  username provided by the google oauth from the google account",
-            },
-            email: {
-              type: "string",
-              description:
-                "This is the  email provided by the google oauth from the google account",
-            },
-            email_verified: {
-              type: "string",
-              description:
-                "This is the  email verificatin status provided by the google oauth google account",
-            },
-            picture: {
-              type: "string",
-              description:
-                "This is the picture provided by the google oauth google account",
-            },
-          },
-        },
-        GoogleIndividualAccess: {
-          type: "object",
-          required: ["sub", "name", "email", "email_verified", "picture"],
-          properties: {
-            sub: {
-              type: "string",
-              description:
-                "This is the unique identifier(id) provided by the google oauth from the user's google account",
-            },
-            name: {
-              type: "string",
-              description:
-                "This is the username provided by the google oauth from the user's google account",
-            },
-            email: {
-              type: "string",
-              description:
-                "This is the email provided by the google oauth from the user's google account",
-            },
-            email_verified: {
-              type: "string",
-              description:
-                "This is the email verificatin status provided by the google oauth from the user's google account",
-            },
-            picture: {
-              type: "string",
-              description:
-                "This is the picture provided by the google oauth from the user's google account",
-            },
-          },
-        },
-        GoogleAuthorizedurl: {
-          type: "object",
-          required: ["authorizeUrl"],
-          properties: {
-            authorizeUrl: {
-              type: "string",
-              description:
-                "This is the google authorized url generated from the google oauth api ",
-            },
-          },
-        },
-      },
-      responses: {
-        400: {
-          description: "Please provide all required field",
-          contents: "application/json",
-        },
-        401: {
-          description: "Google user not verified",
-          contents: "application/json",
-        },
-        409: {
-          description: "User with email already exist",
-          contents: "application/json",
-        },
-        200: {
-          description: "Google AuthorizedUrl successful gotten",
-          contents: "application/json",
-        },
-      },
-    },
-  },
-  apis: [
-    "./src/modules/authentication/individualUserAuth/googleIndividualUserAuth.route.ts",
-  ],
-};
+// export const option = {
+//   definition: {
+//     openapi: "3.0.0",
+//     info: {
+//       title: "Doshbox API",
+//       description: "This is Doshbox API Swagger documentation",
+//       version: "1.0.0",
+//     },
+//     servers: [
+//       {
+//         url: "http://localhost:5000",
+//         description: "This is the server Doshbox API",
+//       },
+//     ],
+//     components: {
+//       schemas: {
+//         GoogleIndividualUser: {
+//           type: "object",
+//           required: ["sub", "name", "email", "email_verified", "picture"],
+//           properties: {
+//             sub: {
+//               type: "string",
+//               description:
+//                 "This is the google account unique identifier (id) provided by the google oauth",
+//             },
+//             name: {
+//               type: "string",
+//               description:
+//                 "This is the  username provided by the google oauth from the google account",
+//             },
+//             email: {
+//               type: "string",
+//               description:
+//                 "This is the  email provided by the google oauth from the google account",
+//             },
+//             email_verified: {
+//               type: "string",
+//               description:
+//                 "This is the  email verificatin status provided by the google oauth google account",
+//             },
+//             picture: {
+//               type: "string",
+//               description:
+//                 "This is the picture provided by the google oauth google account",
+//             },
+//           },
+//         },
+//         GoogleIndividualAccess: {
+//           type: "object",
+//           required: ["sub", "name", "email", "email_verified", "picture"],
+//           properties: {
+//             sub: {
+//               type: "string",
+//               description:
+//                 "This is the unique identifier(id) provided by the google oauth from the user's google account",
+//             },
+//             name: {
+//               type: "string",
+//               description:
+//                 "This is the username provided by the google oauth from the user's google account",
+//             },
+//             email: {
+//               type: "string",
+//               description:
+//                 "This is the email provided by the google oauth from the user's google account",
+//             },
+//             email_verified: {
+//               type: "string",
+//               description:
+//                 "This is the email verificatin status provided by the google oauth from the user's google account",
+//             },
+//             picture: {
+//               type: "string",
+//               description:
+//                 "This is the picture provided by the google oauth from the user's google account",
+//             },
+//           },
+//         },
+//         GoogleAuthorizedurl: {
+//           type: "object",
+//           required: ["authorizeUrl"],
+//           properties: {
+//             authorizeUrl: {
+//               type: "string",
+//               description:
+//                 "This is the google authorized url generated from the google oauth api ",
+//             },
+//           },
+//         },
+//       },
+//       responses: {
+//         400: {
+//           description: "Please provide all required field",
+//           contents: "application/json",
+//         },
+//         401: {
+//           description: "Google user not verified",
+//           contents: "application/json",
+//         },
+//         409: {
+//           description: "User with email already exist",
+//           contents: "application/json",
+//         },
+//         200: {
+//           description: "Google AuthorizedUrl successful gotten",
+//           contents: "application/json",
+//         },
+//       },
+//     },
+//   },
+//   apis: [
+//     "./src/modules/authentication/individualUserAuth/googleIndividualUserAuth.route.ts",
+//   ],
+// };

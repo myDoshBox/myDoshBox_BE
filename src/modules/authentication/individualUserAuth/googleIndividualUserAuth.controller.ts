@@ -57,7 +57,7 @@ export const getGoogleUserDetail = async (
     const { name, email, email_verified, picture, sub } = userDetails;
 
     if (!userDetails.email_verified) {
-      return res.status(400).json({
+      return res.status(401).json({
         status: "failed",
         message: "Google user not verified",
       });
