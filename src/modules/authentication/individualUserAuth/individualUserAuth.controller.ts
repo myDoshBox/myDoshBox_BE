@@ -4,16 +4,28 @@ import individualAuthPasswordToken from "./individualAuthPasswordToken";
 import jwt from "jsonwebtoken";
 import { sendOtpEmail } from "../../../utils/email.utils";
 
-const generateAccessToken = (userId: string): string => {
-  return jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET || "secret", {
-    expiresIn: "1h",
-  });
-};
+const generateAccessAndRefreshToken = (
+  userId: string
+): {
+  accessToken: string;
+  refreshToken: string;
+} => {
+  const accessToken = jwt.sign(
+    { userId },
+    process.env.ACCESS_TOKEN_SECRET || "secret",
+    {
+      expiresIn: "1h",
+    }
+  );
+  const refreshToken = jwt.sign(
+    { userId },
+    process.env.REFRESH_TOKEN_SECRET || "secret",
+    {
+      expiresIn: "7d",
+    }
+  );
 
-const generateRefreshToken = (userId: string): string => {
-  return jwt.sign({ userId }, process.env.REFRESH_TOKEN_SECRET || "secret", {
-    expiresIn: "7d",
-  });
+  return { accessToken, refreshToken };
 };
 
 export const individualUserRegistration = async (
@@ -56,8 +68,9 @@ export const individualUserRegistration = async (
     await newUser.save();
 
     // Generate access and refresh token
-    const accessToken = generateAccessToken(newUser._id);
-    const refreshToken = generateRefreshToken(newUser._id);
+    const { accessToken, refreshToken } = generateAccessAndRefreshToken(
+      newUser._id
+    );
 
     // Send a response
     res.status(201).json({
@@ -118,8 +131,9 @@ export const individualUserLogin = async (req: Request, res: Response) => {
     if (!isMatch)
       return res.status(400).json({ message: "Email/Password mismatch!" });
 
-    const accessToken = generateAccessToken(user._id);
-    const refreshToken = generateRefreshToken(user._id);
+    const { accessToken, refreshToken } = generateAccessAndRefreshToken(
+      user._id
+    );
 
     res.status(200).json({
       message: "Login successful",
@@ -164,11 +178,9 @@ export const generateOTP = async (req: Request, res: Response) => {
     res.status(200).json({ token: newToken.token });
   } catch (err) {
     console.error("Error in generateOTP:", err);
-    return res
-      .status(500)
-      .json({
-        message: "There was an error sending the email please try again",
-      });
+    return res.status(500).json({
+      message: "There was an error sending the email please try again",
+    });
   }
 };
 
