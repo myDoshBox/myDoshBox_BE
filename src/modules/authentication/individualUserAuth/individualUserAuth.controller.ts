@@ -1,8 +1,13 @@
+import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import { Request, Response } from "express";
+
 import IndividualUser from "./individualUserAuth.model";
 import individualAuthPasswordToken from "./individualAuthPasswordToken";
-import jwt from "jsonwebtoken";
-import { sendOtpEmail } from "../../../utils/email.utils";
+import {
+  sendOtpEmail,
+  sendVerificationEmail,
+} from "../../../utils/email.utils";
 
 const generateAccessAndRefreshToken = (
   userId: string
@@ -57,15 +62,26 @@ export const individualUserRegistration = async (
       });
     }
 
+    // Generate a verification token
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const hashedVerificationToken = crypto
+      .createHash("sha256")
+      .update(verificationToken)
+      .digest("hex");
+
     // Create a new user
     const newUser = new IndividualUser({
       email,
       phoneNumber,
       password,
+      verificationToken: hashedVerificationToken,
     });
 
     // Save the user to the database
     await newUser.save();
+
+    // Send a verification email
+    await sendVerificationEmail(email, verificationToken);
 
     // Generate access and refresh token
     const { accessToken, refreshToken } = generateAccessAndRefreshToken(
