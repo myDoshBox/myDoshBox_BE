@@ -58,7 +58,7 @@ const individualUserSchema = new Schema<IndividualUserDocument>(
       createdAt: {
         type: Date,
         expires: "1h",
-        default: Date.now,
+        default: Date.now(),
       },
     },
   },
