@@ -77,7 +77,7 @@ export const individualUserRegistration = async (
     await newUser.save();
 
     // Send a verification email
-    await sendVerificationEmail(email, verificationToken)
+    await sendVerificationEmail(email, verificationToken);
 
     // Generate access and refresh token
     const { accessToken, refreshToken } = generateAccessAndRefreshToken(
@@ -114,7 +114,7 @@ export const verifyIndividualUserEmail = async (
     }).select("verificationToken verified");
 
     if (!user) {
-      return res.status(404).json({ message: "Invalid token" });
+      return res.status(400).json({ message: "Invalid token" });
     }
 
     if (user.verified) {
