@@ -1,11 +1,9 @@
 import { Router } from "express";
 import {
-  generateOTP,
   individualUserLogin,
   individualUserRegistration,
   resetIndividualPassword,
   verifyIndividualUserEmail,
-  verifyOTP,
 } from "../individualUserAuth/individualUserAuth.controller";
 
 const individualrouter = Router();
@@ -121,69 +119,6 @@ individualrouter.route("/register").post(individualUserRegistration);
 
 /**
  * @swagger
- * /api/individual/generate/otp:
- *   post:
- *     summary: Generate Otp for password reset
- *     tags:
- *       - Otp
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *                 description: Email address of the user
- *             required:
- *               - email
- *     responses:
- *       "200":
- *         description: User token
- *       "400":
- *         description: Bad request
- *       "404":
- *         description: Not found
- *       "403":
- *         description: Unauthorized request
- *       "500":
- *         description: Internal server error
- */
-
-individualrouter.route("/generate/otp").post(generateOTP);
-
-/**
- * @swagger
- * /api/individual/verify-otp:
- *   post:
- *     summary: Verify OTP for password reset
- *     tags:
- *       - Otp
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *              $ref: '#/components/schemas/OTP'
- *
- *     responses:
- *       "200":
- *         description: User token
- *       "400":
- *         description: Bad request
- *       "404":
- *         description: Not found
- *       "403":
- *         description: Unauthorized request
- *       "500":
- *         description: Internal server error
- */
-
-individualrouter.route("/verify-otp").post(verifyOTP);
-
-/**
- * @swagger
  * /api/individual/reset-password:
  *   post:
  *     summary: Reset a user's password
@@ -251,8 +186,6 @@ individualrouter.route("/reset-password").post(resetIndividualPassword);
  *       "500":
  *         description: Internal server error
  */
-individualrouter
-  .route("/verify-individual-email")
-  .post(verifyIndividualUserEmail);
+individualrouter.route("/verify-email").get(verifyIndividualUserEmail);
 
 export default individualrouter;
