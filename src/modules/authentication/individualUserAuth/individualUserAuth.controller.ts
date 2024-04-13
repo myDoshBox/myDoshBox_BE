@@ -63,18 +63,14 @@ export const individualUserRegistration = async (
     }
 
     // Generate a verification token
-    const verificationToken = crypto.randomBytes(32).toString("hex");
-    const hashedVerificationToken = crypto
-      .createHash("sha256")
-      .update(verificationToken)
-      .digest("hex");
+    const verificationToken = crypto.randomBytes(64).toString("hex");
 
     // Create a new user
     const newUser = new IndividualUser({
       email,
       phoneNumber,
       password,
-      verificationToken: hashedVerificationToken,
+      verificationToken,
     });
 
     // Save the user to the database
@@ -106,20 +102,22 @@ export const verifyIndividualUserEmail = async (
   res: Response
 ) => {
   try {
-    const { email } = req.body;
+    const { token } = req.query;
 
+    if (!token) {
+      return res.status(400).json({ message: "Invalid token" });
+    }
+    
     // Check if the user exists and is verified
-    const user = await IndividualUser.findOne({ email });
+    const user = await IndividualUser.findOne({ verificationToken: token.toString() });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found." });
+      return res.status(404).json({ message: "Invalid token" });
     }
 
     if (user.verified) {
       return res.status(400).json({ message: "User is already verified." });
     }
-
-    // Perform email verification logic here...
 
     // Update user's verification status
     user.verified = true;
