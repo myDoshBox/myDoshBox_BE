@@ -3,11 +3,10 @@ import { emailValidator } from "../../../utils/validator.utils";
 import { hash, compare } from "bcrypt";
 import crypto from "crypto";
 
-interface UserDocument extends Document {
+interface IndividualUserDocument extends Document {
   email: string;
   phoneNumber: string;
   password: string;
-  _confirmPassword: string;
   verified: boolean;
   passwordChangedAt?: Date;
   passwordResetToken?: {
@@ -16,17 +15,17 @@ interface UserDocument extends Document {
   };
 }
 
-export interface UserModel extends Model<UserDocument> {
+export interface IndividualUserModel extends Model<IndividualUserDocument> {
   comparePassword(candidatePassword: string): Promise<boolean>;
   createPasswordResetToken(): string;
   comparePasswordResetToken(token: string): boolean;
 }
 
-const individualUserSchema = new Schema<UserDocument>(
+const individualUserSchema = new Schema<IndividualUserDocument>(
   {
     email: {
       type: String,
-      required: true,
+      required: [true, "Email is required"],
       unique: true,
       lowercase: true,
       trim: true,
@@ -38,12 +37,12 @@ const individualUserSchema = new Schema<UserDocument>(
     },
     phoneNumber: {
       type: String,
-      required: true,
+      required: [true, "Phone number is required"],
       trim: true,
     },
     password: {
       type: String,
-      required: true,
+      required: [true, "Password is required"],
       select: false,
       minlength: [6, "Password must be at least 6 characters"],
     },
@@ -67,29 +66,18 @@ const individualUserSchema = new Schema<UserDocument>(
   { timestamps: true }
 );
 
-individualUserSchema.pre<UserDocument>("save", async function (next) {
+individualUserSchema.pre<IndividualUserDocument>("save", async function (next) {
   if (this.isModified("password")) {
-    const saltRounds = 10;
-    this.password = await hash(this.password, saltRounds);
+    try {
+      const saltRounds = 10;
+      this.password = await hash(this.password, saltRounds);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      return next(err);
+    }
   }
   next();
 });
-
-individualUserSchema.pre("validate", function (next) {
-  if (this.isModified("password") && this.password !== this._confirmPassword) {
-    this.invalidate("confirmPassword", "Passwords do not match");
-  }
-  next();
-});
-
-individualUserSchema
-  .virtual("confirmPassword")
-  .get(function () {
-    return this._confirmPassword;
-  })
-  .set(function (value: string) {
-    this._confirmPassword = value;
-  });
 
 individualUserSchema.methods.comparePassword = async function (
   candidatePassword: string
@@ -109,11 +97,12 @@ individualUserSchema.methods.createPasswordResetToken = function () {
   this.passwordResetToken = {
     token: crypto.createHash("sha256").update(resetToken).digest("hex"),
   };
-  console.log({ resetToken }, this.passwordResetToken);
   return resetToken;
 };
 
-export default model<UserDocument, UserModel>(
+const IndividualUser = model<IndividualUserDocument, IndividualUserModel>(
   "IndividualUser",
   individualUserSchema
 );
+
+export default IndividualUser;
