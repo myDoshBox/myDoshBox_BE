@@ -19,6 +19,7 @@ interface UserDocument extends Document {
 export interface UserModel extends Model<UserDocument> {
   comparePassword(candidatePassword: string): Promise<boolean>;
   createPasswordResetToken(): string;
+  comparePasswordResetToken(token: string): boolean;
 }
 
 const individualUserSchema = new Schema<UserDocument>(
