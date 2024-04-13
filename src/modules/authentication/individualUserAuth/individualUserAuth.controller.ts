@@ -5,30 +5,10 @@ import { Request, Response } from "express";
 import IndividualUser from "./individualUserAuth.model";
 import individualAuthPasswordToken from "./individualAuthPasswordToken";
 import { sendVerificationEmail } from "../../../utils/email.utils";
-
-const generateAccessAndRefreshToken = (
-  userId: string
-): {
-  accessToken: string;
-  refreshToken: string;
-} => {
-  const accessToken = jwt.sign(
-    { userId },
-    process.env.ACCESS_TOKEN_SECRET || "secret",
-    {
-      expiresIn: "1h",
-    }
-  );
-  const refreshToken = jwt.sign(
-    { userId },
-    process.env.REFRESH_TOKEN_SECRET || "secret",
-    {
-      expiresIn: "7d",
-    }
-  );
-
-  return { accessToken, refreshToken };
-};
+import {
+  generateAccessToken,
+  generateAccessAndRefreshToken,
+} from "../../../utils/generateToken";
 
 export const individualUserRegistration = async (
   req: Request,
@@ -130,6 +110,31 @@ export const verifyIndividualUserEmail = async (
   } catch (error: unknown) {
     console.error("Error verifying email:", error);
     res.status(500).json({ message: "Error verifying email" });
+  }
+};
+
+export const refreshAccessToken = (req: Request, res: Response) => {
+  const { refreshToken } = req.body;
+
+  if (!refreshToken) {
+    return res.status(401).json({ message: "No refresh token provided." });
+  }
+
+  try {
+    const decoded = jwt.verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_SECRET as string
+    );
+
+    // Generate a new access token
+    const accessToken = generateAccessToken(decoded as string);
+
+    res.json({ accessToken });
+  } catch (error) {
+    if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(401).json({ message: "Invalid refresh token." });
+    }
+    return res.status(401).json({ message: "Failed to refresh access token." });
   }
 };
 
