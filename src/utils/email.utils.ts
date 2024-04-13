@@ -55,7 +55,7 @@ export const sendRegistrationVerificationEmail = async (
 ) => {
   const transport = generateMailTransporter();
 
-  const verificationURL = `http://localhost:5000/api/individualverify-email?email=${email},otp=${otp}`;
+  const verificationURL = `http://localhost:5000/api/individual/verify-email?email=${email},otp=${otp}`;
   const supportEmail = "fawazadeniji123@gmail.com";
 
   const emailMessage = `
