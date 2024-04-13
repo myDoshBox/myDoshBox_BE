@@ -96,6 +96,13 @@ individualUserSchema.methods.comparePassword = async function (
   return await compare(candidatePassword, this.password);
 };
 
+individualUserSchema.methods.comparePasswordResetToken = function (
+  token: string
+) {
+  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+  return this.passwordResetToken?.token === hashedToken;
+};
+
 individualUserSchema.methods.createPasswordResetToken = function () {
   const resetToken = crypto.randomBytes(32).toString("hex");
   this.passwordResetToken = {
