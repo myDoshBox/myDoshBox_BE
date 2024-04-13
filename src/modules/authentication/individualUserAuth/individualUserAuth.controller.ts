@@ -4,10 +4,7 @@ import { Request, Response } from "express";
 
 import IndividualUser from "./individualUserAuth.model";
 import individualAuthPasswordToken from "./individualAuthPasswordToken";
-import {
-  sendOtpEmail,
-  sendVerificationEmail,
-} from "../../../utils/email.utils";
+import { sendVerificationEmail } from "../../../utils/email.utils";
 
 const generateAccessAndRefreshToken = (
   userId: string
@@ -154,7 +151,7 @@ export const individualUserLogin = async (req: Request, res: Response) => {
       user._id
     );
 
-    user.password = ''
+    user.password = "";
 
     res.status(200).json({
       message: "Login successful",
@@ -165,71 +162,6 @@ export const individualUserLogin = async (req: Request, res: Response) => {
   } catch (error: unknown) {
     console.error("Error Loggin in user:", error);
     res.status(500).json({ message: "Error Loggin in user" });
-  }
-};
-
-export const generateOTP = async (req: Request, res: Response) => {
-  try {
-    // 1) Get user based on POSTed email
-    const { email } = req.body;
-
-    if (!email) {
-      return res.status(400).json({ message: "Please provide an email" });
-    }
-
-    const user = await IndividualUser.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ message: "User not found" });
-    }
-
-    const userId = user._id;
-    const token = "generateToken()"; // Make sure generateToken function exists and generates secure tokens
-
-    await individualAuthPasswordToken.findOneAndDelete({ owner: userId });
-    const newToken = await individualAuthPasswordToken.create({
-      owner: userId,
-      token,
-    });
-
-    // const message = `Forgot your password? Here is a one-time password for resetting your password: ${token}.\nIf you didn't forget your password, please ignore this email.`;
-
-    // sendEmail function needs to be implemented separately
-    sendOtpEmail(token, email);
-
-    res.status(200).json({ token: newToken.token });
-  } catch (err) {
-    console.error("Error in generateOTP:", err);
-    return res.status(500).json({
-      message: "There was an error sending the email please try again",
-    });
-  }
-};
-
-export const verifyOTP = async (req: Request, res: Response) => {
-  const { email, token } = req.body;
-  try {
-    const user = await IndividualUser.findOne({ email });
-
-    if (!user) return res.status(400).json({ message: "Invalid user!" });
-
-    const verifyToken = await individualAuthPasswordToken.findOne({
-      owner: user._id,
-    });
-
-    if (!verifyToken) {
-      return res.status(403).json({ error: "Invalid token!" });
-    }
-
-    const matched = await verifyToken.compareToken(token);
-
-    if (!matched) {
-      return res.status(403).json({ error: "Invalid token!" });
-    }
-
-    return res.json({ message: "Token verified!" });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
