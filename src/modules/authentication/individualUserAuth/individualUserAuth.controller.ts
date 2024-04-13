@@ -1,7 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import IndividualUser, {
-  IndividualUserModel,
-} from "./individualUserAuth.model";
+import IndividualUser from "./individualUserAuth.model";
 import individualAuthPasswordToken from "./individualAuthPasswordToken";
 import jwt from "jsonwebtoken";
 import { sendOtpEmail } from "../../../utils/email.utils";
@@ -19,36 +17,33 @@ export const generateToken = (length = 4) => {
   return otp;
 };
 
-const generateAccessAndRefreshToken = (
-  userId: string
-): { accessToken: string; refreshToken: string } => {
-  const accessToken = jwt.sign(
-    { userId },
-    process.env.ACCESS_TOKEN_SECRET || "secret",
-    { expiresIn: "1h" }
-  );
+const generateAccessToken = (userId: string): string => {
+  return jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET || "secret", {
+    expiresIn: "1h",
+  });
+};
 
-  const refreshToken = jwt.sign(
-    { userId },
-    process.env.REFRESH_TOKEN_SECRET || "secret",
-    { expiresIn: "7d" }
-  );
-
-  return { accessToken, refreshToken };
+const generateRefreshToken = (userId: string): string => {
+  return jwt.sign({ userId }, process.env.REFRESH_TOKEN_SECRET || "secret", {
+    expiresIn: "7d",
+  });
 };
 
 export const individualUserRegistration = async (
   req: Request,
-  res: Response,
-  next: NextFunction
+  res: Response
 ) => {
   try {
     const { email, phoneNumber, password, confirmPassword } = req.body;
 
+    if (!email || !phoneNumber || !password || !confirmPassword) {
+      return res
+        .status(400)
+        .json({ message: "Please provide all required fields" });
+    }
+
     // Check if the user already exists
-    const userExists: IndividualUserModel | null = await IndividualUser.findOne(
-      { email }
-    );
+    const userExists = await IndividualUser.findOne({ email });
 
     if (userExists) {
       return res.status(400).json({
@@ -74,19 +69,19 @@ export const individualUserRegistration = async (
     await newUser.save();
 
     // Generate access and refresh token
-    const { accessToken, refreshToken } = generateAccessAndRefreshToken(
-      newUser._id
-    );
+    const accessToken = generateAccessToken(newUser._id);
+    const refreshToken = generateRefreshToken(newUser._id);
 
     // Send a response
     res.status(201).json({
       message: "User registered successfully",
+      user: newUser,
       accessToken,
       refreshToken,
     });
   } catch (error: unknown) {
     // console.error("Error in individualUserRegistration:", error.name, "HEREEEEEEEEEEEEEEEEEEEEEE");
-    next(error);
+    res.status(500).json({ message: "Internal server error." });
   }
 };
 
@@ -230,7 +225,7 @@ export const individualUserLogin = async (req: Request, res: Response) => {
   const isMatch = await user.comparePassword(password);
   if (!isMatch)
     return res.status(400).json({ message: "Email/Password mismatch!" });
-  const token = Jwt.sign(
+  const token = jwt.sign(
     { userId: user._id },
     process.env.JWT_SECRET || "secret",
     { expiresIn: "1h" }
