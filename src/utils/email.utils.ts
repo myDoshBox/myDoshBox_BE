@@ -49,10 +49,7 @@ export const sendURLEmail = async (email: string, resetURL: string) => {
   });
 };
 
-export const sendRegistrationVerificationEmail = async (
-  email: string,
-  token: string
-) => {
+export const sendVerificationEmail = async (email: string, token: string) => {
   const transport = generateMailTransporter();
 
   const verificationURL = `http://localhost:5000/api/individual/verify-email?token=${token}`;
