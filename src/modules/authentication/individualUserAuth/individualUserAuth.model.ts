@@ -63,6 +63,7 @@ const individualUserSchema = new Schema<IndividualUserDocument>(
         type: Date,
         expires: "1h",
         default: Date.now(),
+        select: false,
       },
     },
   },
