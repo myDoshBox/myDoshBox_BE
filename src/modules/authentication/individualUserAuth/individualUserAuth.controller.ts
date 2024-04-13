@@ -3,7 +3,7 @@ import IndividualUser, {
   IndividualUserModel,
 } from "./individualUserAuth.model";
 import individualAuthPasswordToken from "./individualAuthPasswordToken";
-import Jwt from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import { sendOtpEmail } from "../../../utils/email.utils";
 import catchAsync from "../../../utils/catchAsync";
 import AppError from "../../../utils/appError";
@@ -17,6 +17,24 @@ export const generateToken = (length = 4) => {
     otp += digit;
   }
   return otp;
+};
+
+const generateAccessAndRefreshToken = (
+  userId: string
+): { accessToken: string; refreshToken: string } => {
+  const accessToken = jwt.sign(
+    { userId },
+    process.env.ACCESS_TOKEN_SECRET || "secret",
+    { expiresIn: "1h" }
+  );
+
+  const refreshToken = jwt.sign(
+    { userId },
+    process.env.REFRESH_TOKEN_SECRET || "secret",
+    { expiresIn: "7d" }
+  );
+
+  return { accessToken, refreshToken };
 };
 
 export const individualUserRegistration = async (
@@ -55,9 +73,16 @@ export const individualUserRegistration = async (
     // Save the user to the database
     await newUser.save();
 
+    // Generate access and refresh token
+    const { accessToken, refreshToken } = generateAccessAndRefreshToken(
+      newUser._id
+    );
+
     // Send a response
     res.status(201).json({
       message: "User registered successfully",
+      accessToken,
+      refreshToken,
     });
   } catch (error: unknown) {
     // console.error("Error in individualUserRegistration:", error.name, "HEREEEEEEEEEEEEEEEEEEEEEE");
