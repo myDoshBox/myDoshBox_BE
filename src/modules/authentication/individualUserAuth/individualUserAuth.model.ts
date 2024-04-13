@@ -1,59 +1,108 @@
-import { compare, hash } from "bcrypt";
-import mongoose, { Model, model } from "mongoose";
+import { Document, model, Model, Schema } from "mongoose";
+import { emailValidator } from "../../../utils/validator.utils";
+import { hash, compare } from "bcrypt";
+import crypto from "crypto";
 
-// create a schema for the individual user
-
-export interface IndividaulDocument {
+interface IndividualUserDocument extends Document {
   email: string;
   phoneNumber: string;
   password: string;
-  confirmPassword: string;
   verified: boolean;
+  passwordChangedAt?: Date;
+  passwordResetToken?: {
+    token: string;
+    createdAt?: Date;
+  };
 }
 
-
-interface Methods {
-  comparePassword(password: string): Promise<boolean>;
+export interface IndividualUserModel extends Model<IndividualUserDocument> {
+  comparePassword(candidatePassword: string): Promise<boolean>;
+  createPasswordResetToken(): string;
+  comparePasswordResetToken(token: string): boolean;
 }
 
-const individualUserAuthSchema = new mongoose.Schema({
-  email: {
-    type: String,
-    required: true,
-    unique: true,
+const individualUserSchema = new Schema<IndividualUserDocument>(
+  {
+    email: {
+      type: String,
+      required: [true, "Email is required"],
+      unique: true,
+      lowercase: true,
+      trim: true,
+      minlength: [5, "Email must be at least 5 characters"],
+      validate: {
+        validator: emailValidator,
+        message: "Invalid email format",
+      },
+    },
+    phoneNumber: {
+      type: String,
+      required: [true, "Phone number is required"],
+      trim: true,
+    },
+    password: {
+      type: String,
+      required: [true, "Password is required"],
+      select: false,
+      minlength: [6, "Password must be at least 6 characters"],
+    },
+    verified: {
+      type: Boolean,
+      default: false,
+    },
+    passwordChangedAt: Date,
+    passwordResetToken: {
+      token: {
+        type: String,
+        required: true,
+      },
+      createdAt: {
+        type: Date,
+        expires: "1h",
+        default: Date.now,
+      },
+    },
   },
-  phoneNumber: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  password: {
-    type: String,
-    required: true,
-  },
-  confirmPassword: {
-    type: String,
-  },
-  verified: {
-    type: Boolean,
-    default: false,
-  }
-});
+  { timestamps: true }
+);
 
-individualUserAuthSchema.pre("save", async function (next) {
-  // Hash the token
+individualUserSchema.pre<IndividualUserDocument>("save", async function (next) {
   if (this.isModified("password")) {
-      this.password = await hash(this.password, 10);
+    try {
+      const saltRounds = 10;
+      this.password = await hash(this.password, saltRounds);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      return next(err);
+    }
   }
   next();
 });
 
-individualUserAuthSchema.methods.comparePassword = async function (password: string) {
-  const result = await compare(password, this.password); // Change this.token to this.password
-  return result;
-}
+individualUserSchema.methods.comparePassword = async function (
+  candidatePassword: string
+) {
+  return await compare(candidatePassword, this.password);
+};
 
+individualUserSchema.methods.comparePasswordResetToken = function (
+  token: string
+) {
+  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+  return this.passwordResetToken?.token === hashedToken;
+};
 
-// create a model for the individual user
- 
-export default model("IndividualUser", individualUserAuthSchema) as Model<IndividaulDocument, {}, Methods>
+individualUserSchema.methods.createPasswordResetToken = function () {
+  const resetToken = crypto.randomBytes(32).toString("hex");
+  this.passwordResetToken = {
+    token: crypto.createHash("sha256").update(resetToken).digest("hex"),
+  };
+  return resetToken;
+};
+
+const IndividualUser = model<IndividualUserDocument, IndividualUserModel>(
+  "IndividualUser",
+  individualUserSchema
+);
+
+export default IndividualUser;
