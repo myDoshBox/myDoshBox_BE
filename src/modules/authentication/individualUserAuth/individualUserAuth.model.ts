@@ -3,25 +3,25 @@ import { emailValidator } from "../../../utils/validator.utils";
 import { hash, compare } from "bcrypt";
 import crypto from "crypto";
 
-// Interface representing the individual document
-export interface UserDocument extends Document {
+interface UserDocument extends Document {
   email: string;
   phoneNumber: string;
   password: string;
-  _confirmPassword?: string;
+  _confirmPassword: string;
   verified: boolean;
   passwordChangedAt?: Date;
-  passwordResetToken?: string;
-  passwordResetExpires?: Date;
+  passwordResetToken?: {
+    token: string;
+    createdAt?: Date;
+  };
 }
 
-// Helper functions for user management
 export interface UserModel extends Model<UserDocument> {
   comparePassword(candidatePassword: string): Promise<boolean>;
   createPasswordResetToken(): string;
 }
 
-const individualUserSchema: Schema<UserDocument> = new Schema(
+const individualUserSchema = new Schema<UserDocument>(
   {
     email: {
       type: String,
@@ -46,15 +46,26 @@ const individualUserSchema: Schema<UserDocument> = new Schema(
       select: false,
       minlength: [6, "Password must be at least 6 characters"],
     },
-    verified: { type: Boolean, default: false },
+    verified: {
+      type: Boolean,
+      default: false,
+    },
     passwordChangedAt: Date,
-    passwordResetToken: String,
-    passwordResetExpires: Date,
+    passwordResetToken: {
+      token: {
+        type: String,
+        required: true,
+      },
+      createdAt: {
+        type: Date,
+        expires: "1h",
+        default: Date.now,
+      },
+    },
   },
   { timestamps: true }
 );
 
-// Hash the password before saving it to the database
 individualUserSchema.pre<UserDocument>("save", async function (next) {
   if (this.isModified("password")) {
     const saltRounds = 10;
@@ -63,7 +74,6 @@ individualUserSchema.pre<UserDocument>("save", async function (next) {
   next();
 });
 
-// Middleware to validate confirm password
 individualUserSchema.pre("validate", function (next) {
   if (this.isModified("password") && this.password !== this._confirmPassword) {
     this.invalidate("confirmPassword", "Passwords do not match");
@@ -71,44 +81,31 @@ individualUserSchema.pre("validate", function (next) {
   next();
 });
 
-// Virtual field for confirm password (not stored in the database)
 individualUserSchema
   .virtual("confirmPassword")
-  .get(function (this: { _confirmPassword: string }) {
+  .get(function () {
     return this._confirmPassword;
   })
-  .set(function (this: { _confirmPassword: string }, value: string) {
+  .set(function (value: string) {
     this._confirmPassword = value;
   });
 
-// Compare the password with the hashed password in the database
 individualUserSchema.methods.comparePassword = async function (
   candidatePassword: string
 ) {
   return await compare(candidatePassword, this.password);
 };
 
-individualUserSchema.methods.createPasswordResetToken = function (
-  this: UserDocument
-) {
+individualUserSchema.methods.createPasswordResetToken = function () {
   const resetToken = crypto.randomBytes(32).toString("hex");
-  this.passwordResetToken = crypto
-    .createHash("sha256")
-    .update(resetToken)
-    .digest("hex");
-
+  this.passwordResetToken = {
+    token: crypto.createHash("sha256").update(resetToken).digest("hex"),
+  };
   console.log({ resetToken }, this.passwordResetToken);
-
-  const resetExpires = new Date();
-  resetExpires.setMinutes(resetExpires.getMinutes() + 10); // Add 10 minutes to the current time
-  this.passwordResetExpires = resetExpires;
-
   return resetToken;
 };
 
-// Create a model for the individual user
-export default model("IndividualUser", individualUserSchema) as Model<
-  UserDocument,
-  object,
-  UserModel
->;
+export default model<UserDocument, UserModel>(
+  "IndividualUser",
+  individualUserSchema
+);
