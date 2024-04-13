@@ -1,19 +1,36 @@
+import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import { Request, Response } from "express";
+
 import IndividualUser from "./individualUserAuth.model";
 import individualAuthPasswordToken from "./individualAuthPasswordToken";
-import jwt from "jsonwebtoken";
-import { sendOtpEmail } from "../../../utils/email.utils";
+import {
+  sendOtpEmail,
+  sendVerificationEmail,
+} from "../../../utils/email.utils";
 
-const generateAccessToken = (userId: string): string => {
-  return jwt.sign({ userId }, process.env.ACCESS_TOKEN_SECRET || "secret", {
-    expiresIn: "1h",
-  });
-};
+const generateAccessAndRefreshToken = (
+  userId: string
+): {
+  accessToken: string;
+  refreshToken: string;
+} => {
+  const accessToken = jwt.sign(
+    { userId },
+    process.env.ACCESS_TOKEN_SECRET || "secret",
+    {
+      expiresIn: "1h",
+    }
+  );
+  const refreshToken = jwt.sign(
+    { userId },
+    process.env.REFRESH_TOKEN_SECRET || "secret",
+    {
+      expiresIn: "7d",
+    }
+  );
 
-const generateRefreshToken = (userId: string): string => {
-  return jwt.sign({ userId }, process.env.REFRESH_TOKEN_SECRET || "secret", {
-    expiresIn: "7d",
-  });
+  return { accessToken, refreshToken };
 };
 
 export const individualUserRegistration = async (
@@ -45,19 +62,27 @@ export const individualUserRegistration = async (
       });
     }
 
+    // Generate a verification token
+    const verificationToken = crypto.randomBytes(64).toString("hex");
+
     // Create a new user
     const newUser = new IndividualUser({
       email,
       phoneNumber,
       password,
+      verificationToken,
     });
 
     // Save the user to the database
     await newUser.save();
 
+    // Send a verification email
+    await sendVerificationEmail(email, verificationToken);
+
     // Generate access and refresh token
-    const accessToken = generateAccessToken(newUser._id);
-    const refreshToken = generateRefreshToken(newUser._id);
+    const { accessToken, refreshToken } = generateAccessAndRefreshToken(
+      newUser._id
+    );
 
     // Send a response
     res.status(201).json({
@@ -77,20 +102,22 @@ export const verifyIndividualUserEmail = async (
   res: Response
 ) => {
   try {
-    const { email } = req.body;
+    const { token } = req.query;
 
+    if (!token) {
+      return res.status(400).json({ message: "Invalid token" });
+    }
+    
     // Check if the user exists and is verified
-    const user = await IndividualUser.findOne({ email });
+    const user = await IndividualUser.findOne({ verificationToken: token.toString() });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found." });
+      return res.status(404).json({ message: "Invalid token" });
     }
 
     if (user.verified) {
       return res.status(400).json({ message: "User is already verified." });
     }
-
-    // Perform email verification logic here...
 
     // Update user's verification status
     user.verified = true;
@@ -118,8 +145,9 @@ export const individualUserLogin = async (req: Request, res: Response) => {
     if (!isMatch)
       return res.status(400).json({ message: "Email/Password mismatch!" });
 
-    const accessToken = generateAccessToken(user._id);
-    const refreshToken = generateRefreshToken(user._id);
+    const { accessToken, refreshToken } = generateAccessAndRefreshToken(
+      user._id
+    );
 
     res.status(200).json({
       message: "Login successful",
@@ -164,11 +192,9 @@ export const generateOTP = async (req: Request, res: Response) => {
     res.status(200).json({ token: newToken.token });
   } catch (err) {
     console.error("Error in generateOTP:", err);
-    return res
-      .status(500)
-      .json({
-        message: "There was an error sending the email please try again",
-      });
+    return res.status(500).json({
+      message: "There was an error sending the email please try again",
+    });
   }
 };
 

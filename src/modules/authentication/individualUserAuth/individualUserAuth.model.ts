@@ -8,6 +8,7 @@ export interface IndividualUserDocument extends Document {
   phoneNumber: string;
   password: string;
   verified: boolean;
+  verificationToken: string;
   passwordChangedAt?: Date;
   passwordResetToken?: {
     token: string;
@@ -49,6 +50,9 @@ const individualUserSchema = new Schema<IndividualUserDocument>(
       type: Boolean,
       default: false,
     },
+    verificationToken: {
+      type: String,
+    },
     passwordChangedAt: Date,
     passwordResetToken: {
       token: {
@@ -58,7 +62,7 @@ const individualUserSchema = new Schema<IndividualUserDocument>(
       createdAt: {
         type: Date,
         expires: "1h",
-        default: Date.now,
+        default: Date.now(),
       },
     },
   },

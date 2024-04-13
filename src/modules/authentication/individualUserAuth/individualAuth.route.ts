@@ -252,7 +252,7 @@ individualrouter.route("/reset-password").post(resetIndividualPassword);
  *         description: Internal server error
  */
 individualrouter
-  .route("/verify-individual-email")
-  .post(verifyIndividualUserEmail);
+  .route("/verify-email")
+  .get(verifyIndividualUserEmail);
 
 export default individualrouter;

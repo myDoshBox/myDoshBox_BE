@@ -3,24 +3,23 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const generateMailTransporter = () =>{
+const generateMailTransporter = () => {
   const transport = nodemailer.createTransport({
-      host: "sandbox.smtp.mailtrap.io",
-      port: 2525,
-      auth: {
-        user: process.env.EMAIL_USERNAME,
-        pass: process.env.EMAIL_PASSWORD
-      }
-    });
-    return transport
-}
+    host: "sandbox.smtp.mailtrap.io",
+    port: 2525,
+    auth: {
+      user: process.env.EMAIL_USERNAME,
+      pass: process.env.EMAIL_PASSWORD,
+    },
+  });
+  return transport;
+};
 
 interface EmailOptions {
   email: string;
   subject?: string;
   message: string;
 }
-
 
 export const sendOtpEmail = async (otp: string, email: string) => {
   const transport = generateMailTransporter();
@@ -31,11 +30,10 @@ export const sendOtpEmail = async (otp: string, email: string) => {
   transport.sendMail({
     to: email,
     from: process.env.VERIFICATION_EMAIL,
-    subject: "Reset Password Token", 
+    subject: "Reset Password Token",
     html: emailMessage, // Assign the HTML string directly to the html property
   });
-
-}
+};
 
 export const sendURLEmail = async (email: string, resetURL: string) => {
   const transport = generateMailTransporter();
@@ -47,6 +45,60 @@ export const sendURLEmail = async (email: string, resetURL: string) => {
     to: email,
     from: process.env.VERIFICATION_EMAIL,
     subject: "Reset Password Token",
+    html: emailMessage, // Assign the HTML string directly to the html property
+  });
+};
+
+export const sendVerificationEmail = async (email: string, token: string) => {
+  const transport = generateMailTransporter();
+
+  const verificationURL = `http://localhost:5000/api/individual/verify-email?token=${token}`;
+  const supportEmail = "fawazadeniji123@gmail.com";
+
+  const emailMessage = `
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification</title>
+  </head>
+  <body style="font-family: Arial, sans-serif; margin: 0; padding: 0;">
+
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+      <tr>
+        <td align="center" style="padding: 20px 0;">
+          <h1 style="margin: 0;">Please Verify Your Email Address</h1>
+        </td>
+      </tr>
+      <tr>
+        <td align="center" style="padding: 20px 0;">
+          <p>Dear ${email},</p>
+          <p>Thank you for registering with Doshbox! We're thrilled to have you on board.</p>
+          <p>To ensure the security and integrity of our platform, we require all users to verify their email addresses. This helps us confirm your identity and maintain a safe environment for all community members.</p>
+          <p>Please click on the link below to verify your email address:</p>
+          <p><a href="${verificationURL}" style="text-decoration: none; color: #007bff;">Verify Email Address</a></p>
+          <p>If the link above doesn't work, you can copy and paste the following URL into your browser:</p>
+          <p>${verificationURL}</p>
+          <p>Once you've verified your email address, you'll have full access to all the features and benefits of Doshbox.</p>
+          <p>If you have any questions or need assistance, feel free to reach out to our support team at <a href="mailto:${supportEmail}" style="text-decoration: none; color: #007bff;">${supportEmail}</a>.</p>
+          <p>Thank you for choosing Doshbox. We look forward to having you as an active member of our community!</p>
+          <p>Best regards,<br>
+            Fawaz<br>
+            Dev<br>
+            Doshbox</p>
+        </td>
+      </tr>
+    </table>
+
+  </body>
+  </html>
+  `;
+
+  transport.sendMail({
+    to: email,
+    from: process.env.VERIFICATION_EMAIL,
+    subject: "Please Verify Your Email Address - Doshbox",
     html: emailMessage, // Assign the HTML string directly to the html property
   });
 };
