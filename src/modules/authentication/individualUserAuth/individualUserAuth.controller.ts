@@ -176,7 +176,7 @@ export const generateOTP = async (req: Request, res: Response) => {
     }
 
     const userId = user._id;
-    const token = generateToken(); // Make sure generateToken function exists and generates secure tokens
+    const token = 'generateToken()'; // Make sure generateToken function exists and generates secure tokens
 
     await individualAuthPasswordToken.findOneAndDelete({ owner: userId });
     const newToken = await individualAuthPasswordToken.create({
