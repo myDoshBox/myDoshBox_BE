@@ -44,7 +44,7 @@ export const sendURLEmail = async (email: string, resetURL: string) => {
   transport.sendMail({
     to: email,
     from: process.env.VERIFICATION_EMAIL,
-    subject: "Please Verify Your Email Address - Doshbox",
+    subject: "Reset Password Token",
     html: emailMessage, // Assign the HTML string directly to the html property
   });
 };
@@ -101,7 +101,7 @@ export const sendRegistrationVerificationEmail = async (
   transport.sendMail({
     to: email,
     from: process.env.VERIFICATION_EMAIL,
-    subject: "Reset Password Token",
+    subject: "Please Verify Your Email Address - Doshbox",
     html: emailMessage, // Assign the HTML string directly to the html property
   });
 };
