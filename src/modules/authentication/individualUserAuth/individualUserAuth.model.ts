@@ -3,7 +3,7 @@ import { emailValidator } from "../../../utils/validator.utils";
 import { hash, compare } from "bcrypt";
 import crypto from "crypto";
 
-interface IndividualUserDocument extends Document {
+export interface IndividualUserDocument extends Document {
   email: string;
   phoneNumber: string;
   password: string;
@@ -13,13 +13,12 @@ interface IndividualUserDocument extends Document {
     token: string;
     createdAt?: Date;
   };
-}
-
-export interface IndividualUserModel extends Model<IndividualUserDocument> {
   comparePassword(candidatePassword: string): Promise<boolean>;
   createPasswordResetToken(): string;
   comparePasswordResetToken(token: string): boolean;
 }
+
+export interface IndividualUserModel extends Model<IndividualUserDocument> {}
 
 const individualUserSchema = new Schema<IndividualUserDocument>(
   {
