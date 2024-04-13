@@ -57,7 +57,6 @@ const individualUserSchema = new Schema<IndividualUserDocument>(
     passwordResetToken: {
       token: {
         type: String,
-        required: true,
       },
       createdAt: {
         type: Date,
