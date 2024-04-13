@@ -77,7 +77,7 @@ export const individualUserRegistration = async (
     await newUser.save();
 
     // Send a verification email
-    await sendVerificationEmail(email, verificationToken);
+    await sendVerificationEmail(email, verificationToken)
 
     // Generate access and refresh token
     const { accessToken, refreshToken } = generateAccessAndRefreshToken(
@@ -107,9 +107,11 @@ export const verifyIndividualUserEmail = async (
     if (!token) {
       return res.status(400).json({ message: "Invalid token" });
     }
-    
+
     // Check if the user exists and is verified
-    const user = await IndividualUser.findOne({ verificationToken: token.toString() });
+    const user = await IndividualUser.findOne({
+      verificationToken: token.toString(),
+    }).select("verificationToken verified");
 
     if (!user) {
       return res.status(404).json({ message: "Invalid token" });
@@ -176,7 +178,7 @@ export const generateOTP = async (req: Request, res: Response) => {
     }
 
     const userId = user._id;
-    const token = generateToken(); // Make sure generateToken function exists and generates secure tokens
+    const token = "generateToken()"; // Make sure generateToken function exists and generates secure tokens
 
     await individualAuthPasswordToken.findOneAndDelete({ owner: userId });
     const newToken = await individualAuthPasswordToken.create({
