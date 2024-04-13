@@ -84,6 +84,9 @@ export const individualUserRegistration = async (
       newUser._id
     );
 
+    newUser.password = "";
+    newUser.verificationToken = "";
+
     // Send a response
     res.status(201).json({
       message: "User registered successfully",
@@ -137,7 +140,7 @@ export const individualUserLogin = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
-    const user = await IndividualUser.findOne({ email });
+    const user = await IndividualUser.findOne({ email }).select("+password");
 
     if (!user)
       return res.status(400).json({ message: "Email/Password mismatch!" });
@@ -150,6 +153,8 @@ export const individualUserLogin = async (req: Request, res: Response) => {
     const { accessToken, refreshToken } = generateAccessAndRefreshToken(
       user._id
     );
+
+    user.password = ''
 
     res.status(200).json({
       message: "Login successful",
