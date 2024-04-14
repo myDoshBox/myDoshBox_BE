@@ -9,6 +9,7 @@ import {
   generateAccessToken,
   generateAccessAndRefreshToken,
 } from "../../../utils/generateToken";
+import { createSessionAndSendTokens } from "../../../utilities/createSessionAndSendToken.util";
 
 export const individualUserRegistration = async (
   req: Request,
@@ -60,6 +61,8 @@ export const individualUserRegistration = async (
         userKind: "ind",
         message: "Individual user successfully created",
       });
+    
+    await sendVerificationEmail(email, verificationToken);
 
     // Send a response
     return res.status(201).json({
