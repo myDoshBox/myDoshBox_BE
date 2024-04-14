@@ -284,17 +284,6 @@ export const options = {
             },
           },
         },
-        IndividualUserVerifyEmail: {
-          type: "object",
-          required: ["token"],
-          properties: {
-            token: {
-              type: "string",
-              default: "exampleToken",
-              description: "User's verification token",
-            },
-          },
-        },
         IndividualUserRefreshAccessToken: {
           type: "object",
           required: ["refreshToken"],
