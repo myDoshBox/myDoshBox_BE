@@ -103,15 +103,15 @@ individualrouter.route("/reset-password").post(resetIndividualPassword);
 /**
  * @swagger
  * /api/individual/verify-email:
- *   post:
+ *   get:
  *     summary: Verify a user's email
- *     tags: [IndividualUserAuth]
- *     requestBody:
- *       required: true
- *       content:
- *           application/json:
- *             schema:
- *               $ref: "#/components/schemas/IndividualUserVerifyEmail"
+ *     tags: [IndividualUserAuth] 
+ *     parameters:
+ *       - in: query
+ *         name: token
+ *         description: Token to verify user email
+ *         required: true
+ * 
  *     responses:
  *       "200":
  *         description: User token
