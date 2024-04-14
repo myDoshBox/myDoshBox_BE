@@ -20,7 +20,7 @@ const individualrouter = Router();
  * @swagger
  *   /api/individual/signup:
  *     post:
- *       summary: Sign up an organization user
+ *       summary: Sign up an individual user
  *       description: Sign up a new user for the organization.
  *       tags: [IndividualUserAuth]
  *       requestBody:
@@ -50,8 +50,7 @@ individualrouter.route("/signup").post(individualUserRegistration);
  * /api/individual/login:
  *   post:
  *     summary: Sign in a user
- *     tags:
- *       - Individual
+ *     tags: [IndividualUserAuth]
  *     requestBody:
  *       required: true
  *       content:
@@ -89,8 +88,7 @@ individualrouter.route("/login").post(individualUserLogin);
  * /api/individual/reset-password:
  *   post:
  *     summary: Reset a user's password
- *     tags:
- *       - Individual
+ *     tags: [IndividualUserAuth]
  *     requestBody:
  *       required: true
  *       content:
@@ -127,8 +125,7 @@ individualrouter.route("/reset-password").post(resetIndividualPassword);
  * /api/individual/verify-email:
  *   post:
  *     summary: Verify a user's email
- *     tags:
- *       - Individual
+ *     tags: [IndividualUserAuth]
  *     requestBody:
  *       required: true
  *       content:
@@ -160,8 +157,7 @@ individualrouter.route("/verify-email").get(verifyIndividualUserEmail);
  * /api/individual/refresh/token:
  *   post:
  *     summary: Refresh a user's access token
- *     tags:
- *       - Individual
+ *     tags: [IndividualUserAuth]
  *     requestBody:
  *       required: true
  *       content:
