@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { Document, model, Model, Schema } from "mongoose";
 import { emailValidator } from "../../../utils/validator.utils";
 import { hash, compare } from "bcrypt";
@@ -110,3 +111,5 @@ const IndividualUser = model<IndividualUserDocument, IndividualUserModel>(
 );
 
 export default IndividualUser;
+=======
+>>>>>>> master

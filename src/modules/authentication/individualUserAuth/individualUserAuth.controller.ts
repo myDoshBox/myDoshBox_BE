@@ -1,6 +1,8 @@
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { Request, Response } from "express";
+//import IndividualUser from "./individualUserAuth.model"
+//import Jwt from "jsonwebtoken";
 
 import IndividualUser from "./individualUserAuth.model";
 import individualAuthPasswordToken from "./individualAuthPasswordToken";
@@ -14,6 +16,7 @@ import { createSessionAndSendTokens } from "../../../utilities/createSessionAndS
 export const individualUserRegistration = async (
   req: Request,
   res: Response
+
 ) => {
   try {
     const { email, phoneNumber, password, confirmPassword } = req.body;
@@ -84,7 +87,6 @@ export const verifyIndividualUserEmail = async (
 ) => {
   try {
     const { token } = req.query;
-
     if (!token) {
       return res.status(400).json({ message: "Invalid token" });
     }
@@ -113,6 +115,7 @@ export const verifyIndividualUserEmail = async (
     res.status(500).json({ message: "Error verifying email" });
   }
 };
+//export const individualUserLogin = async (req: Request, res: Response) => {};
 
 export const refreshAccessToken = (req: Request, res: Response) => {
   const { refreshToken } = req.body;
@@ -126,6 +129,7 @@ export const refreshAccessToken = (req: Request, res: Response) => {
       refreshToken,
       process.env.REFRESH_TOKEN_SECRET as string
     );
+//export const resetPassword = async (req: Request, res: Response) => {};   
 
     // Generate a new access token
     const accessToken = generateAccessToken(decoded as string);
