@@ -18,13 +18,6 @@ const individualrouter = Router();
 
 /**
  * @swagger
- * tags:
- *   name: Otp
- *   description: Api endpoint to manage Otp
- */
-
-/**
- * @swagger
  *   /api/individual/signup:
  *     post:
  *       summary: Sign up an organization user
@@ -93,33 +86,6 @@ individualrouter.route("/login").post(individualUserLogin);
 
 /**
  * @swagger
- * /api/individual/register:
- *   post:
- *     summary: Generate otp for password reset
- *     tags:
- *       - Individual
- *     requestBody:
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/Individual'
- *     responses:
- *       "200":
- *         description: User token
- *       "400":
- *         description: Bad request
- *       "404":
- *         description: Not found
- *       "403":
- *         description: Unauthorized request
- *       "500":
- *         description: Internal server error
- */
-
-individualrouter.route("/register").post(individualUserRegistration);
-
-/**
- * @swagger
  * /api/individual/reset-password:
  *   post:
  *     summary: Reset a user's password
@@ -158,7 +124,7 @@ individualrouter.route("/reset-password").post(resetIndividualPassword);
 
 /**
  * @swagger
- * /api/individual/verify-individual-email:
+ * /api/individual/verify-email:
  *   post:
  *     summary: Verify a user's email
  *     tags:
