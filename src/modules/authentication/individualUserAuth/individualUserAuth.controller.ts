@@ -91,7 +91,7 @@ export const verifyIndividualUserEmail = async (
 
     // Check if the user exists and is verified
     const user = await IndividualUser.findOne({
-      verificationToken: token.toString(),
+      verificationToken: token as string,
     }).select("verificationToken verified");
 
     if (!user) {
