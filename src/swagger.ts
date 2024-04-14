@@ -206,7 +206,7 @@ export const options = {
             },
           },
         },
-        IndividualUserAuthSignUp: {
+        IndividualUserSignup: {
           type: "object",
           required: ["email", "password", "phoneNumber", "confirmPassword"],
           properties: {
@@ -236,7 +236,7 @@ export const options = {
             },
           },
         },
-        IndividualUserAuthLogin: {
+        IndividualUserLogin: {
           type: "object",
           required: ["email", "password"],
           properties: {
@@ -254,7 +254,7 @@ export const options = {
             },
           },
         },
-        IndividualUserAuthForgotPassword: {
+        IndividualUserForgotPassword: {
           type: "object",
           required: ["email"],
           properties: {
@@ -266,7 +266,7 @@ export const options = {
             },
           },
         },
-        IndividualUserAuthResetPassword: {
+        IndividualUserResetPassword: {
           type: "object",
           required: ["password", "confirmPassword"],
           properties: {
@@ -284,11 +284,11 @@ export const options = {
             },
           },
         },
-        IndividualUserAuthVerifyEmail: {
+        IndividualUserVerifyEmail: {
           type: "object",
-          required: ["verificationToken"],
+          required: ["token"],
           properties: {
-            verificationToken: {
+            token: {
               type: "string",
               default: "exampleToken",
               description: "User's verification token",

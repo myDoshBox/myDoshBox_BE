@@ -54,19 +54,9 @@ individualrouter.route("/signup").post(individualUserRegistration);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *                 description: Registered user email
- *               password:
- *                 type: string
- *                 description: Registered user password
- *             required:
- *               - email
- *               - password
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/IndividualUserLogin"
  *     responses:
  *       "200":
  *         description: User token
@@ -92,19 +82,9 @@ individualrouter.route("/login").post(individualUserLogin);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *                 description: User's registered email
- *               password:
- *                 type: string
- *                 description: User's new password
- *             required:
- *               - email
- *               - password
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/IndividualUserResetPassword"
  *     responses:
  *       "200":
  *         description: User token
@@ -129,15 +109,9 @@ individualrouter.route("/reset-password").post(resetIndividualPassword);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *                     email:
- *                      type: string
- *                      description: Registred user email
- *             required:
- *                  -email
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/IndividualUserVerifyEmail"
  *     responses:
  *       "200":
  *         description: User token
@@ -161,15 +135,9 @@ individualrouter.route("/verify-email").get(verifyIndividualUserEmail);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               refreshToken:
- *                 type: string
- *                 description: User's refresh token
- *             required:
- *               - refreshToken
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/IndividualUserRefreshAccessToken"
  *     responses:
  *       "200":
  *         description: User token
