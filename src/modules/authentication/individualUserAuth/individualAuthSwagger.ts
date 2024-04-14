@@ -14,9 +14,9 @@ export const options = {
     ],
     components: {
       schemas: {
-        Individual: {
+        IndividualUserAuthSignUp: {
           type: "object",
-          required: ["email", "password", "phoneNumber"],
+          required: ["email", "password", "phoneNumber", "confirmPassword"],
           properties: {
             email: {
               type: "string",
@@ -44,19 +44,72 @@ export const options = {
             },
           },
         },
-        OTP: {
+        IndividualUserAuthLogin: {
           type: "object",
-          required: ["token", "email"],
+          required: ["email", "password"],
           properties: {
-            token: {
-              type: "string",
-              description: "Otp token",
-              default: "12345",
-            },
             email: {
               type: "string",
+              format: "email",
+              default: "example@gmail.com",
               description: "User's email address",
-              default: "user@gmail.com",
+            },
+            password: {
+              type: "string",
+              format: "password",
+              default: "examplePassword",
+              description: "User's password",
+            },
+          },
+        },
+        IndividualUserAuthForgotPassword: {
+          type: "object",
+          required: ["email"],
+          properties: {
+            email: {
+              type: "string",
+              format: "email",
+              default: "example@gmail.com",
+              description: "User's email address",
+            },
+          },
+        },
+        IndividualUserAuthResetPassword: {
+          type: "object",
+          required: ["password", "confirmPassword"],
+          properties: {
+            password: {
+              type: "string",
+              format: "password",
+              default: "examplePassword",
+              description: "User's password",
+            },
+            confirmPassword: {
+              type: "string",
+              format: "password",
+              default: "examplePassword",
+              description: "confirm password",
+            },
+          },
+        },
+        IndividualUserAuthVerifyEmail: {
+          type: "object",
+          required: ["verificationToken"],
+          properties: {
+            verificationToken: {
+              type: "string",
+              default: "exampleToken",
+              description: "User's verification token",
+            },
+          },
+        },
+        IndividualUserRefreshAccessToken: {
+          type: "object",
+          required: ["refreshToken"],
+          properties: {
+            refreshToken: {
+              type: "string",
+              default: "example",
             },
           },
         },
