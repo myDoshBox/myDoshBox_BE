@@ -6,6 +6,7 @@ import swaggerUi from "swagger-ui-express";
 
 import { Request, Response } from "express";
 import connectDB from "./config/dbconn.config";
+
 import organizationRoutes from "./modules/authentication/organizationUserAuth/organizationAuth.route";
 import individualUserRouter from "./modules/authentication/individualUserAuth/individualAuth.route";
 import googleAuthRoutes from "./modules/authentication/organizationUserAuth/googleOrganizationUserAuth.route";
@@ -31,6 +32,19 @@ app.use(
 
 app.use(deserializeUser);
 
+//import organizationRoute from './modules/authentication/organizationUserAuth/individualAuth.route'
+//import individualRoute from './modules/authentication/individualUserAuth/individualAuth.route';
+
+app.use(
+  cors({
+    origin: "*",
+    credentials: false,
+  })
+);
+
+app.use(express.json())
+app.use(express.urlencoded({extended:false}));
+ 
 app.get("/", (req: Request, res: Response) => {
   return res.json({ msg: "welcome to doshbox api" });
 });
