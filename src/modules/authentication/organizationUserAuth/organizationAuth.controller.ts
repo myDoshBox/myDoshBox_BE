@@ -5,6 +5,7 @@ import crypto from "crypto";
 import catchAsync from "../../../utils/catchAsync";
 import AppError from "../../../utils/appError";
 import { sendURLEmail } from "../../../utils/email.utils";
+import { createSessionAndSendTokens } from "../../../utilities/createSessionAndSendToken.util";
 
 interface TokenPayload {
   id: string;
@@ -31,57 +32,122 @@ const createSendToken = (user: any, statusCode: number, res: Response) => {
   });
 };
 
-export const signup = catchAsync(async (req: Request, res: Response) => {
-  const {
-    organization_name,
-    organization_email,
-    user_email,
-    password,
-    password_Confirmation,
-  } = req.body;
+export const signup = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const {
+      organization_name,
+      organization_email,
+      contact_email,
+      contact_number,
+      password,
+      password_confirmation,
+    } = req.body;
 
-  if (password !== password_Confirmation) {
-    res.status(401).json({
-      status: "fail",
-      message: "Password do not match",
+    if (password !== password_confirmation) {
+      res.status(401).json({
+        status: "fail",
+        message: "Password do not match",
+      });
+    }
+
+    const emailAlreadyExist = await OrganizationModel.findOne({
+      organization_email,
     });
-  }
 
-  const org = await OrganizationModel.create({
-    organization_name,
-    organization_email,
-    user_email,
-    password,
-  });
+    if (emailAlreadyExist) {
+      return res.status(409).json({
+        status: "failed",
+        message: "User with email already exist",
+      });
+    }
 
-  createSendToken(org, 201, res);
-});
-
-export const login = catchAsync(async (req: Request, res: Response) => {
-  const { organization_email, password } = req.body;
-
-  if (!organization_email || !password) {
-    res.status(401).json({
-      status: "fail",
-      message: "Password do not match",
+    const org = await OrganizationModel.create({
+      organization_name,
+      organization_email,
+      contact_email,
+      contact_number,
+      password,
+      userKind: "org",
     });
-  }
 
-  // 2) Check if user exists && password is correct
-  const user = await OrganizationModel.findOne({ organization_email }).select(
-    "+password"
-  );
+    const createSessionAndSendTokensOptions = {
+      user: org.toObject(),
+      userAgent: req.get("user-agent") || "",
+      userKind: org.userKind,
+      message: "Organization user sucessfully created and logged in",
+    };
 
-  if (!user || !(await user.correctPassword(password, user.password))) {
-    res.status(401).json({
-      status: "fail",
-      message: "Incorrect details",
+    const { status, message, user, accessToken, refreshToken } =
+      await createSessionAndSendTokens(createSessionAndSendTokensOptions);
+
+    return res.status(201).json({
+      status,
+      message,
+      user,
+      refreshToken,
+      accessToken,
     });
+  } catch (err) {
+    return next(err);
   }
+};
 
-  // 3) If everything ok, send token to client
-  createSendToken(user, 200, res);
-});
+export const login = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { organization_email, password } = req.body;
+
+    if (!organization_email || !password) {
+      res.status(401).json({
+        status: "fail",
+        message: "Password do not match",
+      });
+    }
+
+    // 2) Check if user exists && password is correct
+    const loggedInUser = await OrganizationModel.findOne({
+      organization_email,
+    }).select("+password");
+
+    if (
+      !loggedInUser ||
+      !(await loggedInUser.correctPassword(password, loggedInUser.password))
+    ) {
+      return res.status(401).json({
+        status: "fail",
+        message: "Incorrect details",
+      });
+    }
+
+    // 3) If everything ok, send token to client
+    const createSessionAndSendTokensOptions = {
+      user: loggedInUser.toObject(),
+      userAgent: req.get("user-agent") || "",
+      userKind: loggedInUser.userKind,
+      message: "Organization user sucessfully logged in",
+    };
+
+    const { status, message, user, accessToken, refreshToken } =
+      await createSessionAndSendTokens(createSessionAndSendTokensOptions);
+
+    return res.status(200).json({
+      status,
+      message,
+      user,
+      refreshToken,
+      accessToken,
+    });
+  } catch (err) {
+    return next(err);
+  }
+};
 
 export const forgotPassword = catchAsync(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -129,7 +195,6 @@ export const resetPassword = catchAsync(
       return next(new AppError("Token is invalid or has expired", 400));
     }
     org.password = req.body.password;
-    org.password_Confirmation = req.body.password_Confirmation;
     org.passwordResetToken = undefined;
     org.passwordResetExpires = undefined;
     await org.save();
