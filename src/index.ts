@@ -46,7 +46,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 app.get("/", (req: Request, res: Response) => {
-  return res.json({ msg: "welcome to doshbox api" });
+  return res.json({ msg: "welcome to doshbox api production" });
 });
 
 app.use("/api/organization", organizationRoutes);
@@ -79,7 +79,7 @@ const PORT = process.env.PORT;
 connectDB()
   .then(() => {
     try {
-      console.log("connected to mongoose production");
+      console.log("connected to mongoose");
 
       app.listen(PORT, () => {
         console.log(`server is running on http://localhost:${PORT}`);
