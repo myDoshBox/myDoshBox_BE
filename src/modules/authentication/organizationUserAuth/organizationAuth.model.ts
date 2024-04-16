@@ -6,15 +6,17 @@ import crypto from "crypto";
 // Extend the OrganizationDoc interface to include virtual properties
 interface organizationalDoc extends Document {
   organization_name: string;
-  user_email: string;
   organization_email: string;
-  phoneNumber: string;
+  contact_email: string;
+  contact_number: string;
   password: string;
-  password_Confirmation: string;
   passwordChangedAt?: Date;
   passwordResetToken?: string;
   passwordResetExpires?: Date;
-  active: boolean;
+  email_verified: boolean;
+  sub: string;
+  picture: string;
+  userKind: string;
   correctPassword(
     candidatePassword: string,
     userPassword: string
@@ -29,30 +31,40 @@ const organizationalSchema: Schema<organizationalDoc> = new mongoose.Schema(
       type: String,
       required: [true, "Please tell us your name"],
     },
+    contact_number: {
+      type: String,
+      required: [true, "Please tell us your name"],
+    },
     organization_email: {
       type: String,
       required: [true, "Please tell us your email"],
       lowercase: true,
+      unique: true,
       validate: {
         validator: emailValidator,
         message: "Please provide a valid email address",
       },
     },
-    user_email: {
+    contact_email: {
       type: String,
       required: [true, "Please tell us your email"],
-      unique: true,
       lowercase: true,
       validate: {
         validator: emailValidator,
         message: "Please provide a valid email address",
       },
     },
-    password: {
-      type: String,
-      select: false,
+    email_verified: {
+      type: Boolean,
+      default: false,
     },
-    password_Confirmation: {
+    sub: { type: String },
+    picture: { type: String },
+    userKind: {
+      type: String,
+      required: [true, "Please tell us your email"],
+    },
+    password: {
       type: String,
       select: false,
     },
@@ -65,6 +77,10 @@ const organizationalSchema: Schema<organizationalDoc> = new mongoose.Schema(
 
 // Hash password before saving to the database
 organizationalSchema.pre<organizationalDoc>("save", async function (next) {
+  if (!this.password) {
+    return next();
+  }
+
   if (!this.isModified("password")) return next();
 
   this.password = await bcrypt.hash(this.password, 12);
