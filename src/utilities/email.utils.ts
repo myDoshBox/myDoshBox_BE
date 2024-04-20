@@ -15,11 +15,11 @@ const generateMailTransporter = () => {
   return transport;
 };
 
-interface EmailOptions {
-  email: string;
-  subject?: string;
-  message: string;
-}
+// interface EmailOptions {
+//   email: string;
+//   subject?: string;
+//   message: string;
+// }
 
 export const sendOtpEmail = async (otp: string, email: string) => {
   const transport = generateMailTransporter();

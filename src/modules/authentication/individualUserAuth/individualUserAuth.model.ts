@@ -1,5 +1,5 @@
 import { Document, model, Model, Schema } from "mongoose";
-import { emailValidator } from "../../../utils/validator.utils";
+import { emailValidator } from "../../../utilities/validator.utils";
 import { hash, compare } from "bcrypt";
 import crypto from "crypto";
 
@@ -75,7 +75,7 @@ individualUserSchema.pre<IndividualUserDocument>("save", async function (next) {
     try {
       const saltRounds = 10;
       this.password = await hash(this.password, saltRounds);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       return next(err);
     }
