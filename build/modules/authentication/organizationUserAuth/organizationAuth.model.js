@@ -13,7 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importDefault(require("mongoose"));
-const validator_utils_1 = require("../../../utils/validator.utils");
+const validator_utils_1 = require("../../../utilities/validator.utils");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const crypto_1 = __importDefault(require("crypto"));
 const organizationalSchema = new mongoose_1.default.Schema({

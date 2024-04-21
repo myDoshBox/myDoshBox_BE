@@ -27,6 +27,11 @@ const generateMailTransporter = () => {
     });
     return transport;
 };
+// interface EmailOptions {
+//   email: string;
+//   subject?: string;
+//   message: string;
+// }
 const sendOtpEmail = (otp, email) => __awaiter(void 0, void 0, void 0, function* () {
     const transport = generateMailTransporter();
     // const { email, message: customMessage } = options; // Renamed the variable to avoid conflict

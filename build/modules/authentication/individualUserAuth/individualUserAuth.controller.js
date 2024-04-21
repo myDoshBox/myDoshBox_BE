@@ -19,8 +19,8 @@ const crypto_1 = __importDefault(require("crypto"));
 //import Jwt from "jsonwebtoken";
 const individualUserAuth_model_1 = __importDefault(require("./individualUserAuth.model"));
 const individualAuthPasswordToken_1 = __importDefault(require("./individualAuthPasswordToken"));
-const email_utils_1 = require("../../../utils/email.utils");
-const generateToken_1 = require("../../../utils/generateToken");
+const email_utils_1 = require("../../../utilities/email.utils");
+const generateToken_1 = require("../../../utilities/generateToken");
 const createSessionAndSendToken_util_1 = require("../../../utilities/createSessionAndSendToken.util");
 const individualUserRegistration = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -112,7 +112,7 @@ const refreshAccessToken = (req, res) => {
     }
     try {
         const decoded = jsonwebtoken_1.default.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-        //export const resetPassword = async (req: Request, res: Response) => {};   
+        //export const resetPassword = async (req: Request, res: Response) => {};
         // Generate a new access token
         const accessToken = (0, generateToken_1.generateAccessToken)(decoded);
         res.json({ accessToken });

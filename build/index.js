@@ -15,8 +15,8 @@ const googleOrganizationUserAuth_route_1 = __importDefault(require("./modules/au
 const googleIndividualUserAuth_route_1 = __importDefault(require("./modules/authentication/individualUserAuth/googleIndividualUserAuth.route"));
 const errorHandler_util_1 = require("./utilities/errorHandler.util");
 const swagger_1 = require("./swagger");
-const deserializeUser_middleware_1 = __importDefault(require("./sharedMiddlewares/deserializeUser.middleware"));
-const protectRoutes_middleware_1 = __importDefault(require("./sharedMiddlewares/protectRoutes.middleware"));
+const deserializeUser_middleware_1 = __importDefault(require("./middlewares/deserializeUser.middleware"));
+const protectRoutes_middleware_1 = __importDefault(require("./middlewares/protectRoutes.middleware"));
 // const swaggerJsDoc = require("swagger-jsdoc")
 // const swaggerUi = require('swagger-ui-express')
 // import { options } from "./modules/authentication/individualUserAuth/individualAuthSwagger";
