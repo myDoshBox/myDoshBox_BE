@@ -16,9 +16,9 @@ exports.resetPassword = exports.forgotPassword = exports.login = exports.signup 
 const organizationAuth_model_1 = __importDefault(require("./organizationAuth.model"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const crypto_1 = __importDefault(require("crypto"));
-const catchAsync_1 = __importDefault(require("../../../utils/catchAsync"));
-const appError_1 = __importDefault(require("../../../utils/appError"));
-const email_utils_1 = require("../../../utils/email.utils");
+const catchAsync_1 = __importDefault(require("../../../utilities/catchAsync"));
+const appError_1 = __importDefault(require("../../../utilities/appError"));
+const email_utils_1 = require("../../../utilities/email.utils");
 const createSessionAndSendToken_util_1 = require("../../../utilities/createSessionAndSendToken.util");
 const signToken = (id) => {
     const payload = { id };
