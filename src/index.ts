@@ -13,8 +13,8 @@ import googleAuthRoutes from "./modules/authentication/organizationUserAuth/goog
 import googleIndividualUserAuthroute from "./modules/authentication/individualUserAuth/googleIndividualUserAuth.route";
 import { errorHandler } from "./utilities/errorHandler.util";
 import { options } from "./swagger";
-import deserializeUser from "./sharedMiddlewares/deserializeUser.middleware";
-import protectRoutes from "./sharedMiddlewares/protectRoutes.middleware";
+import deserializeUser from "./middlewares/deserializeUser.middleware";
+import protectRoutes from "./middlewares/protectRoutes.middleware";
 
 // const swaggerJsDoc = require("swagger-jsdoc")
 // const swaggerUi = require('swagger-ui-express')
