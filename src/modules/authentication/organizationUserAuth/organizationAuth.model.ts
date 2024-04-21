@@ -1,5 +1,5 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
-import { emailValidator } from "../../../utils/validator.utils";
+import { emailValidator } from "../../../utilities/validator.utils";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 

@@ -2,9 +2,9 @@ import { Request, Response, NextFunction } from "express";
 import OrganizationModel from "./organizationAuth.model";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import catchAsync from "../../../utils/catchAsync";
-import AppError from "../../../utils/appError";
-import { sendURLEmail } from "../../../utils/email.utils";
+import catchAsync from "../../../utilities/catchAsync";
+import AppError from "../../../utilities/appError";
+import { sendURLEmail } from "../../../utilities/email.utils";
 import { createSessionAndSendTokens } from "../../../utilities/createSessionAndSendToken.util";
 
 interface TokenPayload {

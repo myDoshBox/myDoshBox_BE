@@ -1,6 +1,48 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.options = void 0;
+const organizationUserSchemaProps = {
+    sub: {
+        type: "string",
+        description: "this is the google account unique identifier provided by the google oauth",
+    },
+    organization_name: {
+        type: "string",
+        description: "this is the google account username provided by the google oauth",
+    },
+    organization_email: {
+        type: "string",
+        description: "this is the google account email provided by the google oauth",
+    },
+    email_verified: {
+        type: "string",
+        description: "this is the google account email verificatin status provided by the google oauth",
+    },
+    picture: {
+        type: "string",
+        description: "this is the google account picture provided by the google oauth",
+    },
+    contact_number: {
+        type: "string",
+        description: "this is the organization's contact phone number to be provided by the user after google account verification and access",
+    },
+    contact_email: {
+        type: "string",
+        description: "this is the organization's contact email address to be provided by the user after google account verification and access",
+    },
+    password: {
+        type: "string",
+        description: "organization account password",
+    },
+    password_confirmation: {
+        type: "string",
+        description: "organization account password",
+    },
+    userKind: {
+        type: "string",
+        description: "kind of user, can either be org or g-org",
+    },
+};
 exports.options = {
     definition: {
         openapi: "3.0.0",
@@ -17,129 +59,46 @@ exports.options = {
         ],
         components: {
             schemas: {
-                GoogleOrganizationUser: {
+                GoogleOrganizationAccess: {
                     type: "object",
                     required: [
                         "sub",
-                        "name",
-                        "email",
+                        "organization_name",
+                        "organization_email",
                         "email_verified",
                         "picture",
-                        "contact_phone",
+                    ],
+                    properties: organizationUserSchemaProps,
+                },
+                GoogleOrganizationUserCreate: {
+                    type: "object",
+                    required: [
+                        "sub",
+                        "organization_name",
+                        "organization_email",
+                        "email_verified",
+                        "picture",
+                        "contact_number",
                         "contact_email",
                     ],
-                    properties: {
-                        sub: {
-                            type: "string",
-                            description: "this is the google account unique identifier provided by the google oauth",
-                        },
-                        name: {
-                            type: "string",
-                            description: "this is the google account username provided by the google oauth",
-                        },
-                        email: {
-                            type: "string",
-                            description: "this is the google account email provided by the google oauth",
-                        },
-                        email_verified: {
-                            type: "string",
-                            description: "this is the google account email verificatin status provided by the google oauth",
-                        },
-                        picture: {
-                            type: "string",
-                            description: "this is the google account picture provided by the google oauth",
-                        },
-                        contact_phone: {
-                            type: "string",
-                            description: "this is the organization's contact phone number to be provided by the user after google account verification and access",
-                        },
-                        contact_email: {
-                            type: "string",
-                            description: "this is the organization's contact email address to be provided by the user after google account verification and access",
-                        },
-                    },
-                },
-                GoogleOrganizationAccess: {
-                    type: "object",
-                    required: ["sub", "name", "email", "email_verified", "picture"],
-                    properties: {
-                        sub: {
-                            type: "string",
-                            description: "this is the google account unique identifier provided by the google oauth",
-                        },
-                        name: {
-                            type: "string",
-                            description: "this is the google account username provided by the google oauth",
-                        },
-                        email: {
-                            type: "string",
-                            description: "this is the google account email provided by the google oauth",
-                        },
-                        email_verified: {
-                            type: "string",
-                            description: "this is the google account email verificatin status provided by the google oauth",
-                        },
-                        picture: {
-                            type: "string",
-                            description: "this is the google account picture provided by the google oauth",
-                        },
-                    },
-                },
-                GoogleAuthorizedurl: {
-                    type: "object",
-                    required: ["authorizeUrl"],
-                    properties: {
-                        authorizeUrl: {
-                            type: "string",
-                            description: "this is the google authorized url generated from the google oauth api ",
-                        },
-                    },
+                    properties: organizationUserSchemaProps,
                 },
                 OrganizationUserSignup: {
                     type: "object",
                     required: [
                         "organization_name",
-                        "user_email",
                         "organization_email",
+                        "contact_email",
+                        "contact_number",
                         "password",
-                        "password_Confirmation",
+                        "password_confirmation",
                     ],
-                    properties: {
-                        organization_name: {
-                            type: "string",
-                            description: "Organization Username",
-                        },
-                        organization_email: {
-                            type: "string",
-                            description: "Organization Email",
-                        },
-                        user_email: {
-                            type: "string",
-                            description: "User's Email",
-                        },
-                        password: {
-                            type: "string",
-                            description: "Organization Password",
-                        },
-                        password_Confirmation: {
-                            type: "string",
-                            description: "Organization Password",
-                        },
-                    },
+                    properties: organizationUserSchemaProps,
                 },
                 OrganizationUserLogin: {
                     type: "object",
                     required: ["organization_email", "password"],
-                    properties: {
-                        organization_email: {
-                            type: "string",
-                            description: "Organization Email",
-                        },
-                        password: {
-                            type: "string",
-                            description: "Organization Password",
-                        },
-                    },
+                    properties: organizationUserSchemaProps,
                 },
                 OrganizationUserForgotPassword: {
                     type: "object",

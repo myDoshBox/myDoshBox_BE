@@ -6,17 +6,16 @@ import { Request, Response } from "express";
 
 import IndividualUser from "./individualUserAuth.model";
 import individualAuthPasswordToken from "./individualAuthPasswordToken";
-import { sendVerificationEmail } from "../../../utils/email.utils";
+import { sendVerificationEmail } from "../../../utilities/email.utils";
 import {
   generateAccessToken,
   generateAccessAndRefreshToken,
-} from "../../../utils/generateToken";
+} from "../../../utilities/generateToken";
 import { createSessionAndSendTokens } from "../../../utilities/createSessionAndSendToken.util";
 
 export const individualUserRegistration = async (
   req: Request,
   res: Response
-
 ) => {
   try {
     const { email, phoneNumber, password, confirmPassword } = req.body;
@@ -64,7 +63,7 @@ export const individualUserRegistration = async (
         userKind: "ind",
         message: "Individual user successfully created",
       });
-    
+
     await sendVerificationEmail(email, verificationToken);
 
     // Send a response
@@ -129,7 +128,7 @@ export const refreshAccessToken = (req: Request, res: Response) => {
       refreshToken,
       process.env.REFRESH_TOKEN_SECRET as string
     );
-//export const resetPassword = async (req: Request, res: Response) => {};   
+    //export const resetPassword = async (req: Request, res: Response) => {};
 
     // Generate a new access token
     const accessToken = generateAccessToken(decoded as string);
