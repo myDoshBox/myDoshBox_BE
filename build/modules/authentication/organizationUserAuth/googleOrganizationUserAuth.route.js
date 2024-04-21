@@ -17,10 +17,10 @@ const router = express_1.default.Router();
  *   /api/auth/org/oauth/google:
  *     post:
  *       summary: Get google authorized url; navigate to google consent page; and give google user access
- *       tag: [GoogleOrganizationUserAuth]
+ *       tags: [GoogleOrganizationUserAuth]
  *       responses:
  *         '200':
- *           description: Google AuthorizedUrl successful gotten
+ *           description: User successfully signed in or new user data successfully received
  *           content:
  *             application/json:
  *               schema:
@@ -35,7 +35,7 @@ router.get("/oauth/google/callback", googleOrganizationUserAuth_controller_1.get
  *   /api/auth/org/oauth/google/create-user:
  *     post:
  *       summary: Create google organization user
- *       tag: [GoogleOrganizationUserAuth]
+ *       tags: [GoogleOrganizationUserAuth]
  *       responses:
  *         '201':
  *           description: google user sucessfully created
