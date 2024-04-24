@@ -4,11 +4,14 @@ import { hash, compare } from "bcrypt";
 import crypto from "crypto";
 
 export interface IndividualUserDocument extends Document {
+  name: string;
   email: string;
-  phoneNumber: string;
+  sub: string;
+  picture: string;
+  role: string;
+  phone_number: string;
   password: string;
-  verified: boolean;
-  verificationToken: string;
+  email_verified: boolean;
   passwordChangedAt?: Date;
   passwordResetToken?: {
     token: string;
@@ -23,10 +26,11 @@ export interface IndividualUserModel extends Model<IndividualUserDocument> {}
 
 const individualUserSchema = new Schema<IndividualUserDocument>(
   {
+    name: { type: String, required: [true, "Please tell us your name"] },
     email: {
       type: String,
-      required: [true, "Email is required"],
       unique: true,
+      required: [true, "Please tell us your email"],
       lowercase: true,
       trim: true,
       minlength: [5, "Email must be at least 5 characters"],
@@ -35,22 +39,23 @@ const individualUserSchema = new Schema<IndividualUserDocument>(
         message: "Invalid email format",
       },
     },
-    phoneNumber: {
+    phone_number: {
       type: String,
-      required: [true, "Phone number is required"],
       trim: true,
+      required: [true, "Please provide a contact number"],
     },
-    password: {
-      type: String,
-      required: [true, "Password is required"],
-      select: false,
-      minlength: [6, "Password must be at least 6 characters"],
-    },
-    verified: {
+    email_verified: {
       type: Boolean,
       default: false,
     },
-    verificationToken: {
+    sub: String,
+    role: {
+      type: String,
+      enum: ["ind", "g-ind"],
+      required: [true, "Please provide role"],
+    },
+    picture: String,
+    password: {
       type: String,
       select: false,
     },
