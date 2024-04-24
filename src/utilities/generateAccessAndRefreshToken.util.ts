@@ -11,15 +11,15 @@ import GoogleIndUser from "../modules/authentication/individualUserAuth/googleIn
 export function generateAccessAndRefreshToken(
   userObject: object,
   sessionId: Types.ObjectId,
-  userKind: string
+  role: string
 ): { accessToken: string; refreshToken: string } {
   const accessToken = signJwt(
-    { userData: userObject, session: sessionId, userKind },
+    { userData: userObject, session: sessionId, role },
     { expiresIn: `${process.env.ACCESS_TOKEN_TTL}` }
   );
 
   const refreshToken = signJwt(
-    { userData: userObject, session: sessionId, userKind },
+    { userData: userObject, session: sessionId, role },
     { expiresIn: `${process.env.REFRESH_TOKEN_TTL}` }
   );
 
@@ -41,15 +41,15 @@ export async function reIssueAccessToken({
 
   let user: Document;
 
-  if (session.userKind === "org") {
+  if (session.role === "org") {
     user = (await OrganizationModel.findById({
       _id: session.user,
     })) as Document;
-  } else if (session.userKind === "ind") {
+  } else if (session.role === "ind") {
     user = (await individualUserAuthModel.findById({
       _id: session.user,
     })) as Document;
-  } else if (session.userKind === "g-org") {
+  } else if (session.role === "g-org") {
     user = (await GoogleOrganizationUser.findById({
       _id: session.user,
     })) as Document;
@@ -60,7 +60,7 @@ export async function reIssueAccessToken({
   if (!user) return false;
 
   const accessToken = signJwt(
-    { userData: user, session: session._id, userKind: session.userKind },
+    { userData: user, session: session._id, role: session.role },
     { expiresIn: process.env.ACCESS_TOKEN_TTL as string }
   );
 

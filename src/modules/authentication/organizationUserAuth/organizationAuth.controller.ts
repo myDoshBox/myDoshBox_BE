@@ -71,13 +71,13 @@ export const signup = async (
       contact_email,
       contact_number,
       password,
-      userKind: "org",
+      role: "org",
     });
 
     const createSessionAndSendTokensOptions = {
       user: org.toObject(),
       userAgent: req.get("user-agent") || "",
-      userKind: org.userKind,
+      role: org.role,
       message: "Organization user sucessfully created and logged in",
     };
 
@@ -130,7 +130,7 @@ export const login = async (
     const createSessionAndSendTokensOptions = {
       user: loggedInUser.toObject(),
       userAgent: req.get("user-agent") || "",
-      userKind: loggedInUser.userKind,
+      role: loggedInUser.role,
       message: "Organization user sucessfully logged in",
     };
 

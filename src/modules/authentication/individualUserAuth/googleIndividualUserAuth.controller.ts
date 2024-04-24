@@ -79,7 +79,7 @@ export const getGoogleUserDetail = async (
       const createSessionAndSendTokensOptions = {
         user: newUser.toObject(),
         userAgent: req.get("user-agent") || "",
-        userKind: "g-ind",
+        role: "g-ind",
         message: "Individual google user successfully created",
       };
 
@@ -98,7 +98,7 @@ export const getGoogleUserDetail = async (
     const createSessionAndSendTokensOptions = {
       user: googleUserExist.toObject(),
       userAgent: req.get("user-agent") || "",
-      userKind: "g-ind",
+      role: "g-ind",
       message: "Individual google user successfully logged in",
     };
 
