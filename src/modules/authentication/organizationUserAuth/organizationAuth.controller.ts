@@ -1,11 +1,16 @@
 import { Request, Response, NextFunction } from "express";
 import OrganizationModel from "./organizationAuth.model";
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import crypto from "crypto";
 import catchAsync from "../../../utilities/catchAsync";
 import AppError from "../../../utilities/appError";
-import { sendURLEmail } from "../../../utilities/email.utils";
+import {
+  sendURLEmail,
+  sendVerificationEmail,
+} from "../../../utilities/email.utils";
 import { createSessionAndSendTokens } from "../../../utilities/createSessionAndSendToken.util";
+import { BlacklistedToken } from "../../blacklistedTokens/blacklistedToken.model";
+import IndividualUser from "../individualUserAuth/individualUserAuth.model";
 
 interface TokenPayload {
   id: string;
@@ -18,6 +23,7 @@ const signToken = (id: string): string => {
   });
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const createSendToken = (user: any, statusCode: number, res: Response) => {
   const token = signToken(user._id);
 
@@ -54,11 +60,14 @@ export const signup = async (
       });
     }
 
-    const emailAlreadyExist = await OrganizationModel.findOne({
+    const individualEmailAlreadyExist = await IndividualUser.findOne({
+      email: organization_email,
+    });
+    const organizationEmailAlreadyExist = await OrganizationModel.findOne({
       organization_email,
     });
 
-    if (emailAlreadyExist) {
+    if (organizationEmailAlreadyExist || individualEmailAlreadyExist) {
       return res.status(409).json({
         status: "failed",
         message: "User with email already exist",
@@ -74,22 +83,22 @@ export const signup = async (
       role: "org",
     });
 
-    const createSessionAndSendTokensOptions = {
-      user: org.toObject(),
-      userAgent: req.get("user-agent") || "",
-      role: org.role,
-      message: "Organization user sucessfully created and logged in",
-    };
+    const verificationToken = jwt.sign(
+      {
+        email: org.organization_email,
+      },
+      process.env.JWT_SECRET as string,
+      {
+        expiresIn: 60 * 60,
+      }
+    );
 
-    const { status, message, user, accessToken, refreshToken } =
-      await createSessionAndSendTokens(createSessionAndSendTokensOptions);
+    await sendVerificationEmail(org.organization_email, verificationToken);
 
     return res.status(201).json({
-      status,
-      message,
-      user,
-      refreshToken,
-      accessToken,
+      status: "true",
+      message:
+        "Account successfully created. Verification email sent. Verify account to continue",
     });
   } catch (err) {
     return next(err);
@@ -123,6 +132,30 @@ export const login = async (
       return res.status(401).json({
         status: "fail",
         message: "Incorrect details",
+      });
+    }
+
+    if (!loggedInUser.email_verified) {
+      const verificationToken = jwt.sign(
+        {
+          email: loggedInUser.organization_email,
+        },
+        process.env.JWT_SECRET as string,
+        {
+          expiresIn: 60 * 60,
+        }
+      );
+
+      await sendVerificationEmail(
+        loggedInUser.organization_email,
+        verificationToken
+      );
+
+      // Send a response
+      return res.status(200).json({
+        status: "true",
+        message:
+          "Account is unverified! Verification email sent. Verify account to continue",
       });
     }
 
@@ -204,3 +237,75 @@ export const resetPassword = catchAsync(
     createSendToken(org, 200, res);
   }
 );
+
+export const verifyIndividualUserEmail = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const { token } = req.body;
+
+    const blackListedToken = await BlacklistedToken.findOne({
+      token,
+    });
+
+    if (blackListedToken) {
+      return res.status(400).json({
+        status: false,
+        message:
+          "Link has already been used. Kindly regenerate confirm email link!",
+      });
+    }
+
+    const { email } = jwt.verify(
+      token,
+      process.env.JWT_SECRET as string
+    ) as JwtPayload;
+
+    // Check if the user exists and is verified
+    const user = await OrganizationModel.findOne({
+      organization_email: email,
+    });
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ message: "User with this email does not exist" });
+    }
+
+    if (user.email_verified) {
+      return res.status(400).json({ message: "User is already verified." });
+    }
+
+    await BlacklistedToken.create({
+      token,
+    });
+
+    // Update user's verification status
+    user.email_verified = true;
+    await user.save();
+
+    // Respond with success message
+    return res.status(200).json({
+      message: "Email verified successfully. Kindly go ahead to login",
+      status: "true",
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    console.error("Error verifying email:", error);
+    if (error.name === "TokenExpiredError") {
+      return res.status(400).json({
+        status: false,
+        message:
+          "Your token has expired. Please try to generate link and confirm email again", //expired token
+      });
+    }
+    if (error.name === "JsonWebTokenError") {
+      return res.status(400).json({
+        status: false,
+        message: "Invalid Token!!", // invalid token
+      });
+    }
+    res.status(500).json({ message: "Error verifying email" });
+  }
+};

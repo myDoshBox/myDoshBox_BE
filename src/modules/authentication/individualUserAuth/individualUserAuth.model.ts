@@ -42,7 +42,6 @@ const individualUserSchema = new Schema<IndividualUserDocument>(
     phone_number: {
       type: String,
       trim: true,
-      required: [true, "Please provide a contact number"],
     },
     email_verified: {
       type: Boolean,

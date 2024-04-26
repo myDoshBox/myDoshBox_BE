@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { Credentials, OAuth2Client } from "google-auth-library";
-import GoogleIndividualUser from "./googleIndividualAuth.model";
 import { createSessionAndSendTokens } from "../../../utilities/createSessionAndSendToken.util";
+import IndividualUser from "./individualUserAuth.model";
 
 export const getGoogleUrl = async (req: Request, res: Response) => {
   const oAuth2Client = new OAuth2Client(
@@ -63,23 +63,24 @@ export const getGoogleUserDetail = async (
       });
     }
 
-    const googleUserExist = await GoogleIndividualUser.findOne({
+    const googleUserExist = await IndividualUser.findOne({
       sub: userDetails.sub,
     });
 
     if (!googleUserExist) {
-      const newUser = await GoogleIndividualUser.create({
+      const newUser = await IndividualUser.create({
         name,
         email,
         email_verified,
         picture,
         sub,
+        role: "g-ind",
       });
 
       const createSessionAndSendTokensOptions = {
         user: newUser.toObject(),
         userAgent: req.get("user-agent") || "",
-        role: "g-ind",
+        role: newUser.role,
         message: "Individual google user successfully created",
       };
 

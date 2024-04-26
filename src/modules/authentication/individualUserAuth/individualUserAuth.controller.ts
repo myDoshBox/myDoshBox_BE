@@ -6,6 +6,7 @@ import individualAuthPasswordToken from "./individualAuthPasswordToken";
 import { sendVerificationEmail } from "../../../utilities/email.utils";
 import { createSessionAndSendTokens } from "../../../utilities/createSessionAndSendToken.util";
 import { BlacklistedToken } from "../../blacklistedTokens/blacklistedToken.model";
+import OrganizationModel from "../organizationUserAuth/organizationAuth.model";
 
 export const individualUserRegistration = async (
   req: Request,
@@ -22,10 +23,16 @@ export const individualUserRegistration = async (
     }
 
     // Check if the user already exists
-    const userExists = await IndividualUser.findOne({ email });
+    const individualEmailAlreadyExist = await IndividualUser.findOne({
+      email,
+    });
+    const organizationEmailAlreadyExist = await OrganizationModel.findOne({
+      organization_email: email,
+    });
 
-    if (userExists) {
+    if (individualEmailAlreadyExist || organizationEmailAlreadyExist) {
       return res.status(400).json({
+        status: "false",
         message: "User already exists",
       });
     }
@@ -125,6 +132,7 @@ export const verifyIndividualUserEmail = async (
       message: "Email verified successfully. Kindly go ahead to login",
       status: "true",
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error("Error verifying email:", error);
     if (error.name === "TokenExpiredError") {

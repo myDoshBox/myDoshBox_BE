@@ -17,7 +17,7 @@ const sessionSchema = new Schema<ISession>(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "GoogleOrganizationUser" || "GoogleIndividualUser",
+      ref: "OrganizationUser" || "IndividualUser",
     },
     role: { type: String, enum: ["org", "ind", "g-org", "g-ind"] },
     valid: { type: Boolean, default: true },

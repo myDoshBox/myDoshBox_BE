@@ -3,10 +3,8 @@ import { Types } from "mongoose";
 import { signJwt, verifyJwt } from "./signAndVerifyToken.util";
 
 import { Session } from "../modules/sessions/session.model";
-import GoogleOrganizationUser from "../modules/authentication/organizationUserAuth/googleOrganizationUserAuth.model";
 import OrganizationModel from "../modules/authentication/organizationUserAuth/organizationAuth.model";
 import individualUserAuthModel from "../modules/authentication/individualUserAuth/individualUserAuth.model";
-import GoogleIndUser from "../modules/authentication/individualUserAuth/googleIndividualAuth.model";
 
 export function generateAccessAndRefreshToken(
   userObject: object,
@@ -39,22 +37,18 @@ export async function reIssueAccessToken({
 
   if (!session || !session.valid) return false;
 
-  let user: Document;
+  let user: Document | undefined;
 
-  if (session.role === "org") {
+  if (session.role === "org" || session.role === "g-org") {
     user = (await OrganizationModel.findById({
       _id: session.user,
     })) as Document;
-  } else if (session.role === "ind") {
+  } else if (session.role === "ind" || session.role === "g-ind") {
     user = (await individualUserAuthModel.findById({
       _id: session.user,
     })) as Document;
-  } else if (session.role === "g-org") {
-    user = (await GoogleOrganizationUser.findById({
-      _id: session.user,
-    })) as Document;
   } else {
-    user = (await GoogleIndUser.findById({ _id: session.user })) as Document;
+    user = undefined;
   }
 
   if (!user) return false;
