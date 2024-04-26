@@ -23,18 +23,10 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Session = void 0;
+exports.BlacklistedToken = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
-const sessionSchema = new mongoose_1.Schema({
-    user: {
-        type: mongoose_1.default.Schema.Types.ObjectId,
-        ref: "OrganizationUser" || "IndividualUser",
-    },
-    role: { type: String, enum: ["org", "ind", "g-org", "g-ind"] },
-    valid: { type: Boolean, default: true },
-    userAgent: { type: String },
-}, {
-    timestamps: true,
+const blacklistedTokenSchema = new mongoose_1.Schema({
+    token: { type: String },
 });
-const Session = mongoose_1.default.model("Session", sessionSchema);
-exports.Session = Session;
+const BlacklistedToken = mongoose_1.default.model("BlacklistedToken", blacklistedTokenSchema);
+exports.BlacklistedToken = BlacklistedToken;

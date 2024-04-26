@@ -17,10 +17,11 @@ const validator_utils_1 = require("../../../utilities/validator.utils");
 const bcrypt_1 = require("bcrypt");
 const crypto_1 = __importDefault(require("crypto"));
 const individualUserSchema = new mongoose_1.Schema({
+    name: { type: String, required: [true, "Please tell us your name"] },
     email: {
         type: String,
-        required: [true, "Email is required"],
         unique: true,
+        required: [true, "Please tell us your email"],
         lowercase: true,
         trim: true,
         minlength: [5, "Email must be at least 5 characters"],
@@ -29,22 +30,22 @@ const individualUserSchema = new mongoose_1.Schema({
             message: "Invalid email format",
         },
     },
-    phoneNumber: {
+    phone_number: {
         type: String,
-        required: [true, "Phone number is required"],
         trim: true,
     },
-    password: {
-        type: String,
-        required: [true, "Password is required"],
-        select: false,
-        minlength: [6, "Password must be at least 6 characters"],
-    },
-    verified: {
+    email_verified: {
         type: Boolean,
         default: false,
     },
-    verificationToken: {
+    sub: String,
+    role: {
+        type: String,
+        enum: ["ind", "g-ind"],
+        required: [true, "Please provide role"],
+    },
+    picture: String,
+    password: {
         type: String,
         select: false,
     },

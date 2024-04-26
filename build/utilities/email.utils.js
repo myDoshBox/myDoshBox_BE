@@ -27,11 +27,6 @@ const generateMailTransporter = () => {
     });
     return transport;
 };
-// interface EmailOptions {
-//   email: string;
-//   subject?: string;
-//   message: string;
-// }
 const sendOtpEmail = (otp, email) => __awaiter(void 0, void 0, void 0, function* () {
     const transport = generateMailTransporter();
     // const { email, message: customMessage } = options; // Renamed the variable to avoid conflict
@@ -57,9 +52,12 @@ const sendURLEmail = (email, resetURL) => __awaiter(void 0, void 0, void 0, func
 });
 exports.sendURLEmail = sendURLEmail;
 const sendVerificationEmail = (email, token) => __awaiter(void 0, void 0, void 0, function* () {
-    const verificationURL = `http://localhost:5000/api/individual/verify-email?token=${token}`;
-    const supportEmail = "fawazadeniji123@gmail.com";
-    const emailMessage = `
+    try {
+        const transport = generateMailTransporter();
+        const verificationURL = `http://localhost:3000/auth/verify-email/${token}`;
+        const supportEmail = "mydoshbox@gmail.com";
+        // const { email, message: customMessage } = options; // Renamed the variable to avoid conflict
+        const emailMessage = `
   <!DOCTYPE html>
   <html lang="en">
   <head>
@@ -98,39 +96,19 @@ const sendVerificationEmail = (email, token) => __awaiter(void 0, void 0, void 0
   </body>
   </html>
   `;
-    // Generate SMTP service account from ethereal.email
-    nodemailer_1.default.createTestAccount((err, account) => {
-        if (err) {
-            console.error("Failed to create a testing account. " + err.message);
-            return process.exit(1);
-        }
-        console.log("Credentials obtained, sending message...");
-        // Create a SMTP transporter object
-        const transporter = nodemailer_1.default.createTransport({
-            host: account.smtp.host,
-            port: account.smtp.port,
-            secure: account.smtp.secure,
-            auth: {
-                user: account.user,
-                pass: account.pass,
-            },
+        console.log("here");
+        const info = yield transport.sendMail({
+            to: email,
+            from: process.env.VERIFICATION_EMAIL,
+            subject: "Verify Your Email Address",
+            html: emailMessage, // Assign the HTML string directly to the html property
         });
-        // Message object
-        const message = {
-            from: "Sender Name <sender@example.com>",
-            to: "Recipient <recipient@example.com>",
-            subject: "Please Verify Your Email Address - Doshbox",
-            html: emailMessage,
-        };
-        transporter.sendMail(message, (err, info) => {
-            if (err) {
-                console.log("Error occurred. " + err.message);
-                return process.exit(1);
-            }
-            console.log("Message sent: %s", info.messageId);
-            // Preview only available when sending through an Ethereal account
-            console.log("Preview URL: %s", nodemailer_1.default.getTestMessageUrl(info));
-        });
-    });
+        console.log("info mesage id: " + info.messageId);
+        console.log("info accepted: " + info.accepted);
+        console.log("info rejected: " + info.rejected);
+    }
+    catch (err) {
+        console.log(err);
+    }
 });
 exports.sendVerificationEmail = sendVerificationEmail;

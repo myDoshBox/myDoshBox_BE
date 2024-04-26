@@ -38,7 +38,7 @@ const organizationUserSchemaProps = {
         type: "string",
         description: "organization account password",
     },
-    userKind: {
+    role: {
         type: "string",
         description: "kind of user, can either be org or g-org",
     },
