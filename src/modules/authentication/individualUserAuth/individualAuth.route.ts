@@ -4,7 +4,6 @@ import {
   individualUserRegistration,
   resetIndividualPassword,
   verifyIndividualUserEmail,
-  refreshAccessToken,
 } from "../individualUserAuth/individualUserAuth.controller";
 
 const individualrouter = Router();
@@ -105,13 +104,13 @@ individualrouter.route("/reset-password").post(resetIndividualPassword);
  * /api/individual/verify-email:
  *   get:
  *     summary: Verify a user's email
- *     tags: [IndividualUserAuth] 
+ *     tags: [IndividualUserAuth]
  *     parameters:
  *       - in: query
  *         name: token
  *         description: Token to verify user email
  *         required: true
- * 
+ *
  *     responses:
  *       "200":
  *         description: User token
@@ -124,32 +123,6 @@ individualrouter.route("/reset-password").post(resetIndividualPassword);
  *       "500":
  *         description: Internal server error
  */
-individualrouter.route("/verify-email").get(verifyIndividualUserEmail);
-
-/**
- * @swagger
- * /api/individual/refresh/token:
- *   post:
- *     summary: Refresh a user's access token
- *     tags: [IndividualUserAuth]
- *     requestBody:
- *       required: true
- *       content:
- *           application/json:
- *             schema:
- *               $ref: "#/components/schemas/IndividualUserRefreshAccessToken"
- *     responses:
- *       "200":
- *         description: User token
- *       "400":
- *         description: Bad request
- *       "404":
- *         description: Not found
- *       "403":
- *         description: Unauthorized request
- *       "500":
- *         description: Internal server error
- */
-individualrouter.route("/refresh/token").post(refreshAccessToken);
+individualrouter.route("/verify-email").post(verifyIndividualUserEmail);
 
 export default individualrouter;

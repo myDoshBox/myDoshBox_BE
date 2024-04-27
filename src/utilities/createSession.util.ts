@@ -3,9 +3,9 @@ import { Session } from "../modules/sessions/session.model";
 export async function createSession(
   userId: string,
   userAgent: string,
-  userKind: string
+  role: string
 ) {
-  const session = await Session.create({ user: userId, userAgent, userKind });
+  const session = await Session.create({ user: userId, userAgent, role });
 
   return session.toJSON();
 }

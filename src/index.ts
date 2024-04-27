@@ -15,6 +15,7 @@ import { errorHandler } from "./utilities/errorHandler.util";
 import { options } from "./swagger";
 import deserializeUser from "./middlewares/deserializeUser.middleware";
 import protectRoutes from "./middlewares/protectRoutes.middleware";
+import individualRoutes from "./modules/users/individualUsers/individualUsers.route";
 
 // const swaggerJsDoc = require("swagger-jsdoc")
 // const swaggerUi = require('swagger-ui-express')
@@ -54,6 +55,8 @@ app.use("/api/individual", individualUserRouter);
 
 app.use("/api/auth/org", googleAuthRoutes);
 app.use("/api/auth/ind", googleIndividualUserAuthroute);
+
+app.use("/api/user", protectRoutes, individualRoutes);
 
 app.use(errorHandler);
 

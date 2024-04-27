@@ -1,7 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.errorHandler = void 0;
-const errorHandler = (err, req, res, next) => {
+const errorHandler = (err, req, res, 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+next) => {
     if (err.name === "ValidationError") {
         err.statusCode = 400;
         err.message = "Please provide all required all required field";

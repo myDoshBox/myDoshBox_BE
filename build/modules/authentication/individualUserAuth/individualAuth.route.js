@@ -111,30 +111,5 @@ individualrouter.route("/reset-password").post(individualUserAuth_controller_1.r
  *       "500":
  *         description: Internal server error
  */
-individualrouter.route("/verify-email").get(individualUserAuth_controller_1.verifyIndividualUserEmail);
-/**
- * @swagger
- * /api/individual/refresh/token:
- *   post:
- *     summary: Refresh a user's access token
- *     tags: [IndividualUserAuth]
- *     requestBody:
- *       required: true
- *       content:
- *           application/json:
- *             schema:
- *               $ref: "#/components/schemas/IndividualUserRefreshAccessToken"
- *     responses:
- *       "200":
- *         description: User token
- *       "400":
- *         description: Bad request
- *       "404":
- *         description: Not found
- *       "403":
- *         description: Unauthorized request
- *       "500":
- *         description: Internal server error
- */
-individualrouter.route("/refresh/token").post(individualUserAuth_controller_1.refreshAccessToken);
+individualrouter.route("/verify-email").post(individualUserAuth_controller_1.verifyIndividualUserEmail);
 exports.default = individualrouter;

@@ -11,7 +11,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteIndividualUser = exports.updateIndividualUser = exports.getAllIndividualUsers = exports.getIndividualUser = void 0;
 /** GET: http://localhost:5000/users/user/:user_id */
-const getIndividualUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () { });
+const getIndividualUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log(`Logged in user: ${res.locals.user}`);
+    return res.status(200).json({
+        message: "Logged in user profile",
+        data: res.locals.user,
+    });
+});
 exports.getIndividualUser = getIndividualUser;
 /** GET: http://localhost:5000/users */
 const getAllIndividualUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () { });

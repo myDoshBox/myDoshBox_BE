@@ -23,7 +23,7 @@ const organizationalSchema = new mongoose_1.default.Schema({
     },
     contact_number: {
         type: String,
-        required: [true, "Please tell us your name"],
+        required: [true, "Please provide a contact number"],
     },
     organization_email: {
         type: String,
@@ -37,7 +37,7 @@ const organizationalSchema = new mongoose_1.default.Schema({
     },
     contact_email: {
         type: String,
-        required: [true, "Please tell us your email"],
+        required: [true, "Please provide a contact email"],
         lowercase: true,
         validate: {
             validator: validator_utils_1.emailValidator,
@@ -50,9 +50,10 @@ const organizationalSchema = new mongoose_1.default.Schema({
     },
     sub: { type: String },
     picture: { type: String },
-    userKind: {
+    role: {
         type: String,
-        required: [true, "Please tell us your email"],
+        enum: ["org", "g-org"],
+        required: [true, "Please provide role"],
     },
     password: {
         type: String,

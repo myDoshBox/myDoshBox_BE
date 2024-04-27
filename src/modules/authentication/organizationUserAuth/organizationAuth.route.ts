@@ -120,6 +120,7 @@ router.post("/login", organizationController.login);
  *           $ref: "#/components/responses/400"
  */
 
+router.post("/verify-email", organizationController.verifyIndividualUserEmail);
 router.post("/forgotpassword", organizationController.forgotPassword);
 router.patch("/resetPassword/:token", organizationController.resetPassword);
 

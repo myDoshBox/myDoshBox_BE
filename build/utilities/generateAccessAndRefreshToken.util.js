@@ -20,9 +20,9 @@ const googleOrganizationUserAuth_model_1 = __importDefault(require("../modules/a
 const organizationAuth_model_1 = __importDefault(require("../modules/authentication/organizationUserAuth/organizationAuth.model"));
 const individualUserAuth_model_1 = __importDefault(require("../modules/authentication/individualUserAuth/individualUserAuth.model"));
 const googleIndividualAuth_model_1 = __importDefault(require("../modules/authentication/individualUserAuth/googleIndividualAuth.model"));
-function generateAccessAndRefreshToken(userObject, sessionId, userKind) {
-    const accessToken = (0, signAndVerifyToken_util_1.signJwt)({ userData: userObject, session: sessionId, userKind }, { expiresIn: `${process.env.ACCESS_TOKEN_TTL}` });
-    const refreshToken = (0, signAndVerifyToken_util_1.signJwt)({ userData: userObject, session: sessionId, userKind }, { expiresIn: `${process.env.REFRESH_TOKEN_TTL}` });
+function generateAccessAndRefreshToken(userObject, sessionId, role) {
+    const accessToken = (0, signAndVerifyToken_util_1.signJwt)({ userData: userObject, session: sessionId, role }, { expiresIn: `${process.env.ACCESS_TOKEN_TTL}` });
+    const refreshToken = (0, signAndVerifyToken_util_1.signJwt)({ userData: userObject, session: sessionId, role }, { expiresIn: `${process.env.REFRESH_TOKEN_TTL}` });
     return { accessToken, refreshToken };
 }
 exports.generateAccessAndRefreshToken = generateAccessAndRefreshToken;
@@ -35,17 +35,17 @@ function reIssueAccessToken(_a) {
         if (!session || !session.valid)
             return false;
         let user;
-        if (session.userKind === "org") {
+        if (session.role === "org") {
             user = (yield organizationAuth_model_1.default.findById({
                 _id: session.user,
             }));
         }
-        else if (session.userKind === "ind") {
+        else if (session.role === "ind") {
             user = (yield individualUserAuth_model_1.default.findById({
                 _id: session.user,
             }));
         }
-        else if (session.userKind === "g-org") {
+        else if (session.role === "g-org") {
             user = (yield googleOrganizationUserAuth_model_1.default.findById({
                 _id: session.user,
             }));
@@ -55,7 +55,7 @@ function reIssueAccessToken(_a) {
         }
         if (!user)
             return false;
-        const accessToken = (0, signAndVerifyToken_util_1.signJwt)({ userData: user, session: session._id, userKind: session.userKind }, { expiresIn: process.env.ACCESS_TOKEN_TTL });
+        const accessToken = (0, signAndVerifyToken_util_1.signJwt)({ userData: user, session: session._id, role: session.role }, { expiresIn: process.env.ACCESS_TOKEN_TTL });
         return accessToken;
     });
 }
