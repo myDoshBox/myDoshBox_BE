@@ -12,6 +12,7 @@ export const errorHandler = (
   err: ErrorResponse,
   req: Request,
   res: Response,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   next: NextFunction
 ) => {
   if (err.name === "ValidationError") {

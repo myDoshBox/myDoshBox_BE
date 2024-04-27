@@ -14,8 +14,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getGoogleUserDetail = exports.getUserDetails = exports.getGoogleUrl = void 0;
 const google_auth_library_1 = require("google-auth-library");
-const googleIndividualAuth_model_1 = __importDefault(require("./googleIndividualAuth.model"));
 const createSessionAndSendToken_util_1 = require("../../../utilities/createSessionAndSendToken.util");
+const individualUserAuth_model_1 = __importDefault(require("./individualUserAuth.model"));
 const getGoogleUrl = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const oAuth2Client = new google_auth_library_1.OAuth2Client(process.env.GOOGLE_CLIENT_IDS, process.env.GOOGLE_CLIENT_SECRETS, process.env.GOOGLE_REDIRECT_URI);
     const authorizeUrl = oAuth2Client.generateAuthUrl({
@@ -54,21 +54,22 @@ const getGoogleUserDetail = (req, res, next) => __awaiter(void 0, void 0, void 0
                 message: "Google user not verified",
             });
         }
-        const googleUserExist = yield googleIndividualAuth_model_1.default.findOne({
+        const googleUserExist = yield individualUserAuth_model_1.default.findOne({
             sub: userDetails.sub,
         });
         if (!googleUserExist) {
-            const newUser = yield googleIndividualAuth_model_1.default.create({
+            const newUser = yield individualUserAuth_model_1.default.create({
                 name,
                 email,
                 email_verified,
                 picture,
                 sub,
+                role: "g-ind",
             });
             const createSessionAndSendTokensOptions = {
                 user: newUser.toObject(),
                 userAgent: req.get("user-agent") || "",
-                userKind: "g-ind",
+                role: newUser.role,
                 message: "Individual google user successfully created",
             };
             const { status, message, user, accessToken, refreshToken } = yield (0, createSessionAndSendToken_util_1.createSessionAndSendTokens)(createSessionAndSendTokensOptions);
@@ -83,7 +84,7 @@ const getGoogleUserDetail = (req, res, next) => __awaiter(void 0, void 0, void 0
         const createSessionAndSendTokensOptions = {
             user: googleUserExist.toObject(),
             userAgent: req.get("user-agent") || "",
-            userKind: "g-ind",
+            role: "g-ind",
             message: "Individual google user successfully logged in",
         };
         const { status, message, user, accessToken, refreshToken } = yield (0, createSessionAndSendToken_util_1.createSessionAndSendTokens)(createSessionAndSendTokensOptions);

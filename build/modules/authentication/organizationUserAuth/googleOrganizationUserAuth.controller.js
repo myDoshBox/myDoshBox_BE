@@ -66,7 +66,7 @@ const getGoogleUserDetail = (req, res, next) => __awaiter(void 0, void 0, void 0
         const createSessionAndSendTokensOptions = {
             user: googleUserExist.toObject(),
             userAgent: req.get("user-agent") || "",
-            userKind: "g-org",
+            role: "g-org",
             message: "Google user sucessfully logged in",
         };
         const { status, message, user, accessToken, refreshToken } = yield (0, createSessionAndSendToken_util_1.createSessionAndSendTokens)(createSessionAndSendTokensOptions);
@@ -118,13 +118,13 @@ const createGoogleUser = (req, res) => __awaiter(void 0, void 0, void 0, functio
             sub,
             contact_email,
             contact_number,
-            userKind: "g-org",
+            role: "g-org",
             //g-org, g-ind, org, ind
         });
         const createSessionAndSendTokensOptions = {
             user: newUser.toObject(),
             userAgent: req.get("user-agent") || "",
-            userKind: newUser.userKind,
+            role: newUser.role,
             message: "Google user sucessfully created and logged in",
         };
         const { status, message, user, accessToken, refreshToken } = yield (0, createSessionAndSendToken_util_1.createSessionAndSendTokens)(createSessionAndSendTokensOptions);

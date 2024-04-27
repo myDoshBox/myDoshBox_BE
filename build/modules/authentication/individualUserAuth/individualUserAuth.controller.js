@@ -12,62 +12,62 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resetIndividualPassword = exports.individualUserLogin = exports.refreshAccessToken = exports.verifyIndividualUserEmail = exports.individualUserRegistration = void 0;
+exports.resetIndividualPassword = exports.individualUserLogin = exports.verifyIndividualUserEmail = exports.individualUserRegistration = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const crypto_1 = __importDefault(require("crypto"));
-//import IndividualUser from "./individualUserAuth.model"
-//import Jwt from "jsonwebtoken";
 const individualUserAuth_model_1 = __importDefault(require("./individualUserAuth.model"));
 const individualAuthPasswordToken_1 = __importDefault(require("./individualAuthPasswordToken"));
 const email_utils_1 = require("../../../utilities/email.utils");
-const generateToken_1 = require("../../../utilities/generateToken");
 const createSessionAndSendToken_util_1 = require("../../../utilities/createSessionAndSendToken.util");
+const blacklistedToken_model_1 = require("../../blacklistedTokens/blacklistedToken.model");
+const organizationAuth_model_1 = __importDefault(require("../organizationUserAuth/organizationAuth.model"));
 const individualUserRegistration = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { email, phoneNumber, password, confirmPassword } = req.body;
-        if (!email || !phoneNumber || !password || !confirmPassword) {
+        const { name, email, phone_number, password, confirm_password } = req.body;
+        console.log(name, email, phone_number, password, confirm_password);
+        if (!name || !email || !phone_number || !password || !confirm_password) {
             return res
                 .status(400)
                 .json({ message: "Please provide all required fields" });
         }
         // Check if the user already exists
-        const userExists = yield individualUserAuth_model_1.default.findOne({ email });
-        if (userExists) {
+        const individualEmailAlreadyExist = yield individualUserAuth_model_1.default.findOne({
+            email,
+        });
+        const organizationEmailAlreadyExist = yield organizationAuth_model_1.default.findOne({
+            organization_email: email,
+        });
+        if (individualEmailAlreadyExist || organizationEmailAlreadyExist) {
             return res.status(400).json({
+                status: "false",
                 message: "User already exists",
             });
         }
         // Check if password and confirmPassword match
-        if (password !== confirmPassword) {
+        if (password !== confirm_password) {
             return res.status(400).json({
                 message: "Passwords do not match",
             });
         }
-        // Generate a verification token
-        const verificationToken = crypto_1.default.randomBytes(64).toString("hex");
         // Create a new user
         const newUser = new individualUserAuth_model_1.default({
+            name,
             email,
-            phoneNumber,
+            phone_number,
             password,
-            verificationToken,
+            role: "ind",
         });
         // Save the user to the database
         yield newUser.save();
-        const { user, message, status, accessToken, refreshToken } = yield (0, createSessionAndSendToken_util_1.createSessionAndSendTokens)({
-            user: newUser,
-            userAgent: req.get("user-agent") || "",
-            userKind: "ind",
-            message: "Individual user successfully created",
+        const verificationToken = jsonwebtoken_1.default.sign({
+            email: newUser.email,
+        }, process.env.JWT_SECRET, {
+            expiresIn: 60 * 60,
         });
         yield (0, email_utils_1.sendVerificationEmail)(email, verificationToken);
         // Send a response
         return res.status(201).json({
-            message,
-            status,
-            user,
-            accessToken,
-            refreshToken,
+            status: "true",
+            message: "Account successfully created. Verification email sent. Verify account to continue",
         });
     }
     catch (error) {
@@ -78,69 +78,97 @@ const individualUserRegistration = (req, res) => __awaiter(void 0, void 0, void 
 exports.individualUserRegistration = individualUserRegistration;
 const verifyIndividualUserEmail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { token } = req.query;
-        if (!token) {
-            return res.status(400).json({ message: "Invalid token" });
+        const { token } = req.body;
+        const blackListedToken = yield blacklistedToken_model_1.BlacklistedToken.findOne({
+            token,
+        });
+        if (blackListedToken) {
+            return res.status(400).json({
+                status: false,
+                message: "Link has already been used. Kindly regenerate confirm email link!",
+            });
         }
+        const { email } = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
         // Check if the user exists and is verified
         const user = yield individualUserAuth_model_1.default.findOne({
-            verificationToken: token,
-        }).select("verificationToken verified");
+            email,
+        });
         if (!user) {
-            return res.status(400).json({ message: "Invalid token" });
+            return res
+                .status(400)
+                .json({ message: "User with this email does not exist" });
         }
-        if (user.verified) {
+        if (user.email_verified) {
             return res.status(400).json({ message: "User is already verified." });
         }
+        yield blacklistedToken_model_1.BlacklistedToken.create({
+            token,
+        });
         // Update user's verification status
-        user.verified = true;
+        user.email_verified = true;
         yield user.save();
         // Respond with success message
-        res.status(200).json({ message: "Email verified successfully." });
+        return res.status(200).json({
+            message: "Email verified successfully. Kindly go ahead to login",
+            status: "true",
+        });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     }
     catch (error) {
         console.error("Error verifying email:", error);
+        if (error.name === "TokenExpiredError") {
+            return res.status(400).json({
+                status: false,
+                message: "Your token has expired. Please try to generate link and confirm email again", //expired token
+            });
+        }
+        if (error.name === "JsonWebTokenError") {
+            return res.status(400).json({
+                status: false,
+                message: "Invalid Token!!", // invalid token
+            });
+        }
         res.status(500).json({ message: "Error verifying email" });
     }
 });
 exports.verifyIndividualUserEmail = verifyIndividualUserEmail;
 //export const individualUserLogin = async (req: Request, res: Response) => {};
-const refreshAccessToken = (req, res) => {
-    const { refreshToken } = req.body;
-    if (!refreshToken) {
-        return res.status(401).json({ message: "No refresh token provided." });
-    }
-    try {
-        const decoded = jsonwebtoken_1.default.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
-        //export const resetPassword = async (req: Request, res: Response) => {};
-        // Generate a new access token
-        const accessToken = (0, generateToken_1.generateAccessToken)(decoded);
-        res.json({ accessToken });
-    }
-    catch (error) {
-        if (error instanceof jsonwebtoken_1.default.JsonWebTokenError) {
-            return res.status(401).json({ message: "Invalid refresh token." });
-        }
-        return res.status(401).json({ message: "Failed to refresh access token." });
-    }
-};
-exports.refreshAccessToken = refreshAccessToken;
 const individualUserLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { email, password } = req.body;
-        const user = yield individualUserAuth_model_1.default.findOne({ email }).select("+password");
-        if (!user)
+        const userToLogin = yield individualUserAuth_model_1.default.findOne({ email }).select("+password");
+        if (!userToLogin)
             return res.status(400).json({ message: "Email/Password mismatch!" });
-        const isMatch = yield user.comparePassword(password);
+        const isMatch = yield userToLogin.comparePassword(password);
         if (!isMatch)
             return res.status(400).json({ message: "Email/Password mismatch!" });
-        const { accessToken, refreshToken } = (0, generateToken_1.generateAccessAndRefreshToken)(user._id);
+        if (!userToLogin.email_verified) {
+            const verificationToken = jsonwebtoken_1.default.sign({
+                email: userToLogin.email,
+            }, process.env.JWT_SECRET, {
+                expiresIn: 60 * 60,
+            });
+            yield (0, email_utils_1.sendVerificationEmail)(email, verificationToken);
+            // Send a response
+            return res.status(200).json({
+                status: "true",
+                message: "Account is unverified! Verification email sent. Verify account to continue",
+            });
+        }
+        const createSessionAndSendTokensOptions = {
+            user: userToLogin.toObject(),
+            userAgent: req.get("user-agent") || "",
+            role: userToLogin.role,
+            message: "Individual user successfully logged in",
+        };
+        const { status, message, user, accessToken, refreshToken } = yield (0, createSessionAndSendToken_util_1.createSessionAndSendTokens)(createSessionAndSendTokensOptions);
         user.password = "";
-        res.status(200).json({
-            message: "Login successful",
+        return res.status(200).json({
+            status,
+            message,
             user,
-            accessToken,
             refreshToken,
+            accessToken,
         });
     }
     catch (error) {

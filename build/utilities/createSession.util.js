@@ -11,9 +11,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createSession = void 0;
 const session_model_1 = require("../modules/sessions/session.model");
-function createSession(userId, userAgent, userKind) {
+function createSession(userId, userAgent, role) {
     return __awaiter(this, void 0, void 0, function* () {
-        const session = yield session_model_1.Session.create({ user: userId, userAgent, userKind });
+        const session = yield session_model_1.Session.create({ user: userId, userAgent, role });
         return session.toJSON();
     });
 }

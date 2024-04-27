@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resetPassword = exports.forgotPassword = exports.login = exports.signup = void 0;
+exports.verifyIndividualUserEmail = exports.resetPassword = exports.forgotPassword = exports.login = exports.signup = void 0;
 const organizationAuth_model_1 = __importDefault(require("./organizationAuth.model"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const crypto_1 = __importDefault(require("crypto"));
@@ -20,12 +20,15 @@ const catchAsync_1 = __importDefault(require("../../../utilities/catchAsync"));
 const appError_1 = __importDefault(require("../../../utilities/appError"));
 const email_utils_1 = require("../../../utilities/email.utils");
 const createSessionAndSendToken_util_1 = require("../../../utilities/createSessionAndSendToken.util");
+const blacklistedToken_model_1 = require("../../blacklistedTokens/blacklistedToken.model");
+const individualUserAuth_model_1 = __importDefault(require("../individualUserAuth/individualUserAuth.model"));
 const signToken = (id) => {
     const payload = { id };
     return jsonwebtoken_1.default.sign(payload, process.env.JWT_SECRET, {
         expiresIn: process.env.JWT_EXPIRES_IN,
     });
 };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const createSendToken = (user, statusCode, res) => {
     const token = signToken(user._id);
     user.password = undefined;
@@ -46,10 +49,13 @@ const signup = (req, res, next) => __awaiter(void 0, void 0, void 0, function* (
                 message: "Password do not match",
             });
         }
-        const emailAlreadyExist = yield organizationAuth_model_1.default.findOne({
+        const individualEmailAlreadyExist = yield individualUserAuth_model_1.default.findOne({
+            email: organization_email,
+        });
+        const organizationEmailAlreadyExist = yield organizationAuth_model_1.default.findOne({
             organization_email,
         });
-        if (emailAlreadyExist) {
+        if (organizationEmailAlreadyExist || individualEmailAlreadyExist) {
             return res.status(409).json({
                 status: "failed",
                 message: "User with email already exist",
@@ -61,21 +67,17 @@ const signup = (req, res, next) => __awaiter(void 0, void 0, void 0, function* (
             contact_email,
             contact_number,
             password,
-            userKind: "org",
+            role: "org",
         });
-        const createSessionAndSendTokensOptions = {
-            user: org.toObject(),
-            userAgent: req.get("user-agent") || "",
-            userKind: org.userKind,
-            message: "Organization user sucessfully created and logged in",
-        };
-        const { status, message, user, accessToken, refreshToken } = yield (0, createSessionAndSendToken_util_1.createSessionAndSendTokens)(createSessionAndSendTokensOptions);
+        const verificationToken = jsonwebtoken_1.default.sign({
+            email: org.organization_email,
+        }, process.env.JWT_SECRET, {
+            expiresIn: 60 * 60,
+        });
+        yield (0, email_utils_1.sendVerificationEmail)(org.organization_email, verificationToken);
         return res.status(201).json({
-            status,
-            message,
-            user,
-            refreshToken,
-            accessToken,
+            status: "true",
+            message: "Account successfully created. Verification email sent. Verify account to continue",
         });
     }
     catch (err) {
@@ -103,11 +105,24 @@ const login = (req, res, next) => __awaiter(void 0, void 0, void 0, function* ()
                 message: "Incorrect details",
             });
         }
+        if (!loggedInUser.email_verified) {
+            const verificationToken = jsonwebtoken_1.default.sign({
+                email: loggedInUser.organization_email,
+            }, process.env.JWT_SECRET, {
+                expiresIn: 60 * 60,
+            });
+            yield (0, email_utils_1.sendVerificationEmail)(loggedInUser.organization_email, verificationToken);
+            // Send a response
+            return res.status(200).json({
+                status: "true",
+                message: "Account is unverified! Verification email sent. Verify account to continue",
+            });
+        }
         // 3) If everything ok, send token to client
         const createSessionAndSendTokensOptions = {
             user: loggedInUser.toObject(),
             userAgent: req.get("user-agent") || "",
-            userKind: loggedInUser.userKind,
+            role: loggedInUser.role,
             message: "Organization user sucessfully logged in",
         };
         const { status, message, user, accessToken, refreshToken } = yield (0, createSessionAndSendToken_util_1.createSessionAndSendTokens)(createSessionAndSendTokensOptions);
@@ -167,3 +182,59 @@ exports.resetPassword = (0, catchAsync_1.default)((req, res, next) => __awaiter(
     // 4) Log the org in, send JWT
     createSendToken(org, 200, res);
 }));
+const verifyIndividualUserEmail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { token } = req.body;
+        const blackListedToken = yield blacklistedToken_model_1.BlacklistedToken.findOne({
+            token,
+        });
+        if (blackListedToken) {
+            return res.status(400).json({
+                status: false,
+                message: "Link has already been used. Kindly regenerate confirm email link!",
+            });
+        }
+        const { email } = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
+        // Check if the user exists and is verified
+        const user = yield organizationAuth_model_1.default.findOne({
+            organization_email: email,
+        });
+        if (!user) {
+            return res
+                .status(400)
+                .json({ message: "User with this email does not exist" });
+        }
+        if (user.email_verified) {
+            return res.status(400).json({ message: "User is already verified." });
+        }
+        yield blacklistedToken_model_1.BlacklistedToken.create({
+            token,
+        });
+        // Update user's verification status
+        user.email_verified = true;
+        yield user.save();
+        // Respond with success message
+        return res.status(200).json({
+            message: "Email verified successfully. Kindly go ahead to login",
+            status: "true",
+        });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    }
+    catch (error) {
+        console.error("Error verifying email:", error);
+        if (error.name === "TokenExpiredError") {
+            return res.status(400).json({
+                status: false,
+                message: "Your token has expired. Please try to generate link and confirm email again", //expired token
+            });
+        }
+        if (error.name === "JsonWebTokenError") {
+            return res.status(400).json({
+                status: false,
+                message: "Invalid Token!!", // invalid token
+            });
+        }
+        res.status(500).json({ message: "Error verifying email" });
+    }
+});
+exports.verifyIndividualUserEmail = verifyIndividualUserEmail;
