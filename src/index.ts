@@ -50,7 +50,7 @@ app.get("/", (req: Request, res: Response) => {
   return res.json({ msg: "welcome to doshbox api production" });
 });
 
-app.use("/api/organization", organizationRoutes);
+app.use("/organization", organizationRoutes);
 app.use("/api/individual", individualUserRouter);
 
 app.use("/api/auth/org", googleAuthRoutes);

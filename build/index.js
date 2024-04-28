@@ -39,7 +39,7 @@ app.use(express_1.default.urlencoded({ extended: false }));
 app.get("/", (req, res) => {
     return res.json({ msg: "welcome to doshbox api production" });
 });
-app.use("/api/organization", organizationAuth_route_1.default);
+app.use("/organization", organizationAuth_route_1.default);
 app.use("/api/individual", individualAuth_route_1.default);
 app.use("/api/auth/org", googleOrganizationUserAuth_route_1.default);
 app.use("/api/auth/ind", googleIndividualUserAuth_route_1.default);
