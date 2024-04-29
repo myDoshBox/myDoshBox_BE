@@ -1,16 +1,16 @@
 import { Request, Response, NextFunction } from "express";
-import OrganizationModel from "./organizationAuth.model";
+import OrganizationModel from "../organizationAuth.model";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import crypto from "crypto";
-import catchAsync from "../../../utilities/catchAsync";
-import AppError from "../../../utilities/appError";
+import catchAsync from "../../../../utilities/catchAsync";
+import AppError from "../../../../utilities/appError";
 import {
   sendURLEmail,
   sendVerificationEmail,
-} from "../../../utilities/email.utils";
-import { createSessionAndSendTokens } from "../../../utilities/createSessionAndSendToken.util";
-import { BlacklistedToken } from "../../blacklistedTokens/blacklistedToken.model";
-import IndividualUser from "../individualUserAuth/individualUserAuth.model";
+} from "../../../../utilities/email.utils";
+import { createSessionAndSendTokens } from "../../../../utilities/createSessionAndSendToken.util";
+import { BlacklistedToken } from "../../../blacklistedTokens/blacklistedToken.model";
+import IndividualUser from "../../individualUserAuth/individualUserAuth.model";
 
 interface TokenPayload {
   id: string;
@@ -226,7 +226,7 @@ export const OrganizationUserForgotPassword = catchAsync(
     // 3) Send it to user's email
     const resetURL = `${req.protocol}://${req.get(
       "host"
-    )}/api/organization/resetPassword/${resetToken}`;
+    )}/auth/organization/resetPassword/${resetToken}`;
 
     try {
       sendURLEmail(org.organization_email, resetURL);

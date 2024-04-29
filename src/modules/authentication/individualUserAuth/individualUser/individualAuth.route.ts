@@ -4,7 +4,7 @@ import {
   individualUserRegistration,
   resetIndividualPassword,
   verifyIndividualUserEmail,
-} from "../individualUserAuth/individualUserAuth.controller";
+} from "./individualUserAuth.controller";
 
 const individualrouter = Router();
 
@@ -17,7 +17,7 @@ const individualrouter = Router();
 
 /**
  * @swagger
- *   /api/individual/signup:
+ *   /auth/individual/signup:
  *     post:
  *       summary: Sign up an individual user
  *       description: Sign up a new user for the organization.
@@ -46,7 +46,7 @@ individualrouter.route("/signup").post(individualUserRegistration);
 
 /**
  * @swagger
- * /api/individual/login:
+ * /auth/individual/login:
  *   post:
  *     summary: Sign in a user
  *     tags: [IndividualUserAuth]
@@ -74,7 +74,7 @@ individualrouter.route("/login").post(individualUserLogin);
 
 /**
  * @swagger
- * /api/individual/reset-password:
+ * /auth/individual/reset-password:
  *   post:
  *     summary: Reset a user's password
  *     tags: [IndividualUserAuth]
@@ -101,7 +101,7 @@ individualrouter.route("/reset-password").post(resetIndividualPassword);
 
 /**
  * @swagger
- * /api/individual/verify-email:
+ * /auth/individual/verify-email:
  *   get:
  *     summary: Verify a user's email
  *     tags: [IndividualUserAuth]
