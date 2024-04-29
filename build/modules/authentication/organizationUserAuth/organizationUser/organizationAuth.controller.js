@@ -13,15 +13,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyOrganizationUserEmail = exports.organizationUserResetPassword = exports.OrganizationUserForgotPassword = exports.organizationUserLogin = exports.organizationUserSignup = void 0;
-const organizationAuth_model_1 = __importDefault(require("./organizationAuth.model"));
+const organizationAuth_model_1 = __importDefault(require("../organizationAuth.model"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const crypto_1 = __importDefault(require("crypto"));
-const catchAsync_1 = __importDefault(require("../../../utilities/catchAsync"));
-const appError_1 = __importDefault(require("../../../utilities/appError"));
-const email_utils_1 = require("../../../utilities/email.utils");
-const createSessionAndSendToken_util_1 = require("../../../utilities/createSessionAndSendToken.util");
-const blacklistedToken_model_1 = require("../../blacklistedTokens/blacklistedToken.model");
-const individualUserAuth_model_1 = __importDefault(require("../individualUserAuth/individualUserAuth.model"));
+const catchAsync_1 = __importDefault(require("../../../../utilities/catchAsync"));
+const appError_1 = __importDefault(require("../../../../utilities/appError"));
+const email_utils_1 = require("../../../../utilities/email.utils");
+const createSessionAndSendToken_util_1 = require("../../../../utilities/createSessionAndSendToken.util");
+const blacklistedToken_model_1 = require("../../../blacklistedTokens/blacklistedToken.model");
+const individualUserAuth_model_1 = __importDefault(require("../../individualUserAuth/individualUserAuth.model"));
 const signToken = (id) => {
     const payload = { id };
     return jsonwebtoken_1.default.sign(payload, process.env.JWT_SECRET, {
@@ -176,7 +176,7 @@ exports.OrganizationUserForgotPassword = (0, catchAsync_1.default)((req, res, ne
     const resetToken = org.createPasswordResetToken();
     yield org.save({ validateBeforeSave: false });
     // 3) Send it to user's email
-    const resetURL = `${req.protocol}://${req.get("host")}/api/organization/resetPassword/${resetToken}`;
+    const resetURL = `${req.protocol}://${req.get("host")}/auth/organization/resetPassword/${resetToken}`;
     try {
         (0, email_utils_1.sendURLEmail)(org.organization_email, resetURL);
         res.status(200).json({ message: "success" });

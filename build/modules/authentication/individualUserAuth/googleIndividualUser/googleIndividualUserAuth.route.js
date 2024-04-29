@@ -14,7 +14,7 @@ const router = express_1.default.Router();
  */
 /**
  * @swagger
- *   /api/auth/ind/oauth/google:
+ *   /auth/individual/oauth:
  *     post:
  *       summary: Get google authorized url; navigate to google consent page; and give google user access
  *       tags: [GoogleIndividualUserAuth]
@@ -28,6 +28,6 @@ const router = express_1.default.Router();
  *         '401':
  *           $ref: "#/components/responses/401"
  */
-router.post("/oauth/google", googleIndividualUserAuth_controller_1.getGoogleUrl);
-router.get("/oauth/google/callback", googleIndividualUserAuth_controller_1.getGoogleUserDetail);
+router.post("/oauth", googleIndividualUserAuth_controller_1.getGoogleUrl);
+router.get("/oauth/callback", googleIndividualUserAuth_controller_1.getGoogleUserDetail);
 exports.default = router;

@@ -14,12 +14,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.resetIndividualPassword = exports.individualUserLogin = exports.verifyIndividualUserEmail = exports.individualUserRegistration = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const individualUserAuth_model_1 = __importDefault(require("./individualUserAuth.model"));
+const individualUserAuth_model_1 = __importDefault(require("../individualUserAuth.model"));
 const individualAuthPasswordToken_1 = __importDefault(require("./individualAuthPasswordToken"));
-const email_utils_1 = require("../../../utilities/email.utils");
-const createSessionAndSendToken_util_1 = require("../../../utilities/createSessionAndSendToken.util");
-const blacklistedToken_model_1 = require("../../blacklistedTokens/blacklistedToken.model");
-const organizationAuth_model_1 = __importDefault(require("../organizationUserAuth/organizationAuth.model"));
+const email_utils_1 = require("../../../../utilities/email.utils");
+const createSessionAndSendToken_util_1 = require("../../../../utilities/createSessionAndSendToken.util");
+const blacklistedToken_model_1 = require("../../../blacklistedTokens/blacklistedToken.model");
+const organizationAuth_model_1 = __importDefault(require("../../organizationUserAuth/organizationAuth.model"));
 const individualUserRegistration = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { name, email, phone_number, password, confirm_password } = req.body;

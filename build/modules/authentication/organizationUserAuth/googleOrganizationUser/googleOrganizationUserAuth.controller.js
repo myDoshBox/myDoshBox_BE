@@ -15,8 +15,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.createGoogleUser = exports.getGoogleUserDetail = exports.getUserDetails = exports.getGoogleUrl = void 0;
 const google_auth_library_1 = require("google-auth-library");
 // import GoogleOrganizationUser from "./googleOrganizationUserAuth.model";
-const organizationAuth_model_1 = __importDefault(require("./organizationAuth.model"));
-const createSessionAndSendToken_util_1 = require("../../../utilities/createSessionAndSendToken.util");
+const organizationAuth_model_1 = __importDefault(require("../organizationAuth.model"));
+const createSessionAndSendToken_util_1 = require("../../../../utilities/createSessionAndSendToken.util");
 const getGoogleUrl = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const oAuth2Client = new google_auth_library_1.OAuth2Client(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, process.env.GOOGLE_OAUTH_REDIRECT_URL);
     const authorizeUrl = oAuth2Client.generateAuthUrl({

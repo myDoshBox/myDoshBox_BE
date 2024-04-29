@@ -37,7 +37,7 @@ const router = express_1.default.Router();
  */
 /**
  * @swagger
- *   /organization/organizationUserSignup:
+ *   /auth/organization/organizationUserSignup:
  *     post:
  *       summary: Sign up an organization user
  *       description: Sign up a new user for the organization.
@@ -62,7 +62,7 @@ const router = express_1.default.Router();
  */
 /**
  * @swagger
- *   /organization/organizationUserLogin:
+ *   /auth/organization/organizationUserLogin:
  *     post:
  *       summary: Sign up an organization user
  *       description: Sign up a new user for the organization.
@@ -95,7 +95,7 @@ router.post("/login", organizationController.organizationUserLogin);
  */
 /**
  * @swagger
- *   /organization/OrganizationUserForgotPassword:
+ *   /auth/organization/OrganizationUserForgotPassword:
  *     post:
  *       summary: Request a password reset link
  *       description: Request a password reset link for the organization user.
@@ -116,7 +116,7 @@ router.post("/login", organizationController.organizationUserLogin);
  */
 /**
  * @swagger
- *   /organization/organizationUserResetPassword/{token}:
+ *   /auth/organization/organizationUserResetPassword/{token}:
  *     patch:
  *       summary: Reset user's password
  *       description: Reset user's password using the provided reset token.

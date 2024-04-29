@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const individualUserAuth_controller_1 = require("../individualUserAuth/individualUserAuth.controller");
+const individualUserAuth_controller_1 = require("./individualUserAuth.controller");
 const individualrouter = (0, express_1.Router)();
 /**
  * @swagger
@@ -11,7 +11,7 @@ const individualrouter = (0, express_1.Router)();
  */
 /**
  * @swagger
- *   /api/individual/signup:
+ *   /auth/individual/signup:
  *     post:
  *       summary: Sign up an individual user
  *       description: Sign up a new user for the organization.
@@ -38,7 +38,7 @@ const individualrouter = (0, express_1.Router)();
 individualrouter.route("/signup").post(individualUserAuth_controller_1.individualUserRegistration);
 /**
  * @swagger
- * /api/individual/login:
+ * /auth/individual/login:
  *   post:
  *     summary: Sign in a user
  *     tags: [IndividualUserAuth]
@@ -64,7 +64,7 @@ individualrouter.route("/signup").post(individualUserAuth_controller_1.individua
 individualrouter.route("/login").post(individualUserAuth_controller_1.individualUserLogin);
 /**
  * @swagger
- * /api/individual/reset-password:
+ * /auth/individual/reset-password:
  *   post:
  *     summary: Reset a user's password
  *     tags: [IndividualUserAuth]
@@ -89,7 +89,7 @@ individualrouter.route("/login").post(individualUserAuth_controller_1.individual
 individualrouter.route("/reset-password").post(individualUserAuth_controller_1.resetIndividualPassword);
 /**
  * @swagger
- * /api/individual/verify-email:
+ * /auth/individual/verify-email:
  *   get:
  *     summary: Verify a user's email
  *     tags: [IndividualUserAuth]
