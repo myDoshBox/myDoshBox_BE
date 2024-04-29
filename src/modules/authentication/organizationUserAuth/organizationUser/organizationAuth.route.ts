@@ -12,7 +12,7 @@ const router: Router = express.Router();
 
 /**
  * @swagger
- *   /api/organization/signup:
+ *   /auth/organization/organizationUserSignup:
  *     post:
  *       summary: Sign up an organization user
  *       description: Sign up a new user for the organization.
@@ -38,7 +38,7 @@ const router: Router = express.Router();
 
 /**
  * @swagger
- *   /api/organization/login:
+ *   /auth/organization/organizationUserLogin:
  *     post:
  *       summary: Sign up an organization user
  *       description: Sign up a new user for the organization.
@@ -61,8 +61,8 @@ const router: Router = express.Router();
  *         '401':
  *           $ref: "#/components/responses/401"
  */
-router.post("/signup", organizationController.signup);
-router.post("/login", organizationController.login);
+router.post("/signup", organizationController.organizationUserSignup);
+router.post("/login", organizationController.organizationUserLogin);
 
 /**
  * @swagger
@@ -73,7 +73,7 @@ router.post("/login", organizationController.login);
 
 /**
  * @swagger
- *   /api/organization/forgotpassword:
+ *   /auth/organization/OrganizationUserForgotPassword:
  *     post:
  *       summary: Request a password reset link
  *       description: Request a password reset link for the organization user.
@@ -95,7 +95,7 @@ router.post("/login", organizationController.login);
 
 /**
  * @swagger
- *   /api/organization/resetPassword/{token}:
+ *   /auth/organization/organizationUserResetPassword/{token}:
  *     patch:
  *       summary: Reset user's password
  *       description: Reset user's password using the provided reset token.
@@ -120,8 +120,17 @@ router.post("/login", organizationController.login);
  *           $ref: "#/components/responses/400"
  */
 
-router.post("/verify-email", organizationController.verifyIndividualUserEmail);
-router.post("/forgotpassword", organizationController.forgotPassword);
-router.patch("/resetPassword/:token", organizationController.resetPassword);
+router.post(
+  "/verify-email",
+  organizationController.verifyOrganizationUserEmail
+);
+router.post(
+  "/forgotpassword",
+  organizationController.OrganizationUserForgotPassword
+);
+router.patch(
+  "/resetPassword/:token",
+  organizationController.organizationUserResetPassword
+);
 
 export default router;

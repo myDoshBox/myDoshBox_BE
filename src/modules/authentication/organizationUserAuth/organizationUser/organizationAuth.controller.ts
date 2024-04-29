@@ -1,16 +1,16 @@
 import { Request, Response, NextFunction } from "express";
-import OrganizationModel from "./organizationAuth.model";
+import OrganizationModel from "../organizationAuth.model";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import crypto from "crypto";
-import catchAsync from "../../../utilities/catchAsync";
-import AppError from "../../../utilities/appError";
+import catchAsync from "../../../../utilities/catchAsync";
+import AppError from "../../../../utilities/appError";
 import {
   sendURLEmail,
   sendVerificationEmail,
-} from "../../../utilities/email.utils";
-import { createSessionAndSendTokens } from "../../../utilities/createSessionAndSendToken.util";
-import { BlacklistedToken } from "../../blacklistedTokens/blacklistedToken.model";
-import IndividualUser from "../individualUserAuth/individualUserAuth.model";
+} from "../../../../utilities/email.utils";
+import { createSessionAndSendTokens } from "../../../../utilities/createSessionAndSendToken.util";
+import { BlacklistedToken } from "../../../blacklistedTokens/blacklistedToken.model";
+import IndividualUser from "../../individualUserAuth/individualUserAuth.model";
 
 interface TokenPayload {
   id: string;
@@ -38,7 +38,14 @@ const createSendToken = (user: any, statusCode: number, res: Response) => {
   });
 };
 
-export const signup = async (
+const sendErrorResponse = (res: Response, message: string) => {
+  res.status(404).json({
+    status: "fail",
+    message: message,
+  });
+};
+
+export const organizationUserSignup = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -52,6 +59,26 @@ export const signup = async (
       password,
       password_confirmation,
     } = req.body;
+
+    switch (true) {
+      case !organization_name:
+        sendErrorResponse(res, "Organization name is required");
+        break;
+      case !organization_email:
+        sendErrorResponse(res, "Organization email is required");
+        break;
+      case !contact_email:
+        sendErrorResponse(res, "Contact email is required");
+        break;
+      case !contact_number:
+        sendErrorResponse(res, "Contact number is required");
+        break;
+      case !password:
+        sendErrorResponse(res, "Password is required");
+        break;
+      default:
+        sendErrorResponse(res, "Unexpected error occured");
+    }
 
     if (password !== password_confirmation) {
       res.status(401).json({
@@ -105,7 +132,7 @@ export const signup = async (
   }
 };
 
-export const login = async (
+export const organizationUserLogin = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -116,7 +143,7 @@ export const login = async (
     if (!organization_email || !password) {
       res.status(401).json({
         status: "fail",
-        message: "Password do not match",
+        message: "Password and organization email are required",
       });
     }
 
@@ -182,7 +209,7 @@ export const login = async (
   }
 };
 
-export const forgotPassword = catchAsync(
+export const OrganizationUserForgotPassword = catchAsync(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     // 1) Get user based on POSTed email
     const org = await OrganizationModel.findOne({
@@ -199,7 +226,7 @@ export const forgotPassword = catchAsync(
     // 3) Send it to user's email
     const resetURL = `${req.protocol}://${req.get(
       "host"
-    )}/api/organization/resetPassword/${resetToken}`;
+    )}/auth/organization/resetPassword/${resetToken}`;
 
     try {
       sendURLEmail(org.organization_email, resetURL);
@@ -210,7 +237,7 @@ export const forgotPassword = catchAsync(
   }
 );
 
-export const resetPassword = catchAsync(
+export const organizationUserResetPassword = catchAsync(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     // 1) Get user based on the token
     const hashedToken = crypto
@@ -238,7 +265,7 @@ export const resetPassword = catchAsync(
   }
 );
 
-export const verifyIndividualUserEmail = async (
+export const verifyOrganizationUserEmail = async (
   req: Request,
   res: Response
 ) => {

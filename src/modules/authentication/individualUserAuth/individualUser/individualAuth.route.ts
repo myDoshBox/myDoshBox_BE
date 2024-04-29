@@ -1,17 +1,23 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
-const individualUserAuth_controller_1 = require("../individualUserAuth/individualUserAuth.controller");
-const individualrouter = (0, express_1.Router)();
+import { Router } from "express";
+import {
+  individualUserLogin,
+  individualUserRegistration,
+  resetIndividualPassword,
+  verifyIndividualUserEmail,
+} from "./individualUserAuth.controller";
+
+const individualrouter = Router();
+
 /**
  * @swagger
  * tags:
  *   name: IndividualUserAuth
  *   description: Api endpoint to manage individual auth
  */
+
 /**
  * @swagger
- *   /api/individual/signup:
+ *   /auth/individual/signup:
  *     post:
  *       summary: Sign up an individual user
  *       description: Sign up a new user for the organization.
@@ -35,10 +41,12 @@ const individualrouter = (0, express_1.Router)();
  *           $ref: "#/components/responses/401"
  *
  */
-individualrouter.route("/signup").post(individualUserAuth_controller_1.individualUserRegistration);
+
+individualrouter.route("/signup").post(individualUserRegistration);
+
 /**
  * @swagger
- * /api/individual/login:
+ * /auth/individual/login:
  *   post:
  *     summary: Sign in a user
  *     tags: [IndividualUserAuth]
@@ -60,11 +68,13 @@ individualrouter.route("/signup").post(individualUserAuth_controller_1.individua
  *       "500":
  *         description: Internal server error
  */
+
 // routes
-individualrouter.route("/login").post(individualUserAuth_controller_1.individualUserLogin);
+individualrouter.route("/login").post(individualUserLogin);
+
 /**
  * @swagger
- * /api/individual/reset-password:
+ * /auth/individual/reset-password:
  *   post:
  *     summary: Reset a user's password
  *     tags: [IndividualUserAuth]
@@ -86,10 +96,12 @@ individualrouter.route("/login").post(individualUserAuth_controller_1.individual
  *       "500":
  *         description: Internal server error
  */
-individualrouter.route("/reset-password").post(individualUserAuth_controller_1.resetIndividualPassword);
+
+individualrouter.route("/reset-password").post(resetIndividualPassword);
+
 /**
  * @swagger
- * /api/individual/verify-email:
+ * /auth/individual/verify-email:
  *   get:
  *     summary: Verify a user's email
  *     tags: [IndividualUserAuth]
@@ -111,5 +123,6 @@ individualrouter.route("/reset-password").post(individualUserAuth_controller_1.r
  *       "500":
  *         description: Internal server error
  */
-individualrouter.route("/verify-email").post(individualUserAuth_controller_1.verifyIndividualUserEmail);
-exports.default = individualrouter;
+individualrouter.route("/verify-email").post(verifyIndividualUserEmail);
+
+export default individualrouter;

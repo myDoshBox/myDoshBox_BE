@@ -1,12 +1,12 @@
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { Request, Response } from "express";
 
-import IndividualUser from "./individualUserAuth.model";
+import IndividualUser from "../individualUserAuth.model";
 import individualAuthPasswordToken from "./individualAuthPasswordToken";
-import { sendVerificationEmail } from "../../../utilities/email.utils";
-import { createSessionAndSendTokens } from "../../../utilities/createSessionAndSendToken.util";
-import { BlacklistedToken } from "../../blacklistedTokens/blacklistedToken.model";
-import OrganizationModel from "../organizationUserAuth/organizationAuth.model";
+import { sendVerificationEmail } from "../../../../utilities/email.utils";
+import { createSessionAndSendTokens } from "../../../../utilities/createSessionAndSendToken.util";
+import { BlacklistedToken } from "../../../blacklistedTokens/blacklistedToken.model";
+import OrganizationModel from "../../organizationUserAuth/organizationAuth.model";
 
 export const individualUserRegistration = async (
   req: Request,

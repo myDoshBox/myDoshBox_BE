@@ -14,7 +14,7 @@ const router = express_1.default.Router();
  */
 /**
  * @swagger
- *   /api/auth/org/oauth/google:
+ *   /auth/organization/oauth:
  *     post:
  *       summary: Get google authorized url; navigate to google consent page; and give google user access
  *       tags: [GoogleOrganizationUserAuth]
@@ -28,11 +28,11 @@ const router = express_1.default.Router();
  *         '401':
  *           $ref: "#/components/responses/401"
  */
-router.post("/oauth/google", googleOrganizationUserAuth_controller_1.getGoogleUrl);
-router.get("/oauth/google/callback", googleOrganizationUserAuth_controller_1.getGoogleUserDetail);
+router.post("/oauth", googleOrganizationUserAuth_controller_1.getGoogleUrl);
+router.get("/oauth/callback", googleOrganizationUserAuth_controller_1.getGoogleUserDetail);
 /**
  * @swagger
- *   /api/auth/org/oauth/google/create-user:
+ *   /auth/organization/oauth/create-user:
  *     post:
  *       summary: Create google organization user
  *       tags: [GoogleOrganizationUserAuth]
@@ -48,5 +48,5 @@ router.get("/oauth/google/callback", googleOrganizationUserAuth_controller_1.get
  *         '409':
  *           $ref: "#/components/responses/409"
  */
-router.post("/oauth/google/create-user", googleOrganizationUserAuth_controller_1.createGoogleUser);
+router.post("/oauth/create-user", googleOrganizationUserAuth_controller_1.createGoogleUser);
 exports.default = router;

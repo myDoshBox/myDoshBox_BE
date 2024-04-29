@@ -12,16 +12,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyIndividualUserEmail = exports.resetPassword = exports.forgotPassword = exports.login = exports.signup = void 0;
-const organizationAuth_model_1 = __importDefault(require("./organizationAuth.model"));
+exports.verifyOrganizationUserEmail = exports.organizationUserResetPassword = exports.OrganizationUserForgotPassword = exports.organizationUserLogin = exports.organizationUserSignup = void 0;
+const organizationAuth_model_1 = __importDefault(require("../organizationAuth.model"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const crypto_1 = __importDefault(require("crypto"));
-const catchAsync_1 = __importDefault(require("../../../utilities/catchAsync"));
-const appError_1 = __importDefault(require("../../../utilities/appError"));
-const email_utils_1 = require("../../../utilities/email.utils");
-const createSessionAndSendToken_util_1 = require("../../../utilities/createSessionAndSendToken.util");
-const blacklistedToken_model_1 = require("../../blacklistedTokens/blacklistedToken.model");
-const individualUserAuth_model_1 = __importDefault(require("../individualUserAuth/individualUserAuth.model"));
+const catchAsync_1 = __importDefault(require("../../../../utilities/catchAsync"));
+const appError_1 = __importDefault(require("../../../../utilities/appError"));
+const email_utils_1 = require("../../../../utilities/email.utils");
+const createSessionAndSendToken_util_1 = require("../../../../utilities/createSessionAndSendToken.util");
+const blacklistedToken_model_1 = require("../../../blacklistedTokens/blacklistedToken.model");
+const individualUserAuth_model_1 = __importDefault(require("../../individualUserAuth/individualUserAuth.model"));
 const signToken = (id) => {
     const payload = { id };
     return jsonwebtoken_1.default.sign(payload, process.env.JWT_SECRET, {
@@ -40,9 +40,34 @@ const createSendToken = (user, statusCode, res) => {
         },
     });
 };
-const signup = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+const sendErrorResponse = (res, message) => {
+    res.status(404).json({
+        status: "fail",
+        message: message,
+    });
+};
+const organizationUserSignup = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { organization_name, organization_email, contact_email, contact_number, password, password_confirmation, } = req.body;
+        switch (true) {
+            case !organization_name:
+                sendErrorResponse(res, "Organization name is required");
+                break;
+            case !organization_email:
+                sendErrorResponse(res, "Organization email is required");
+                break;
+            case !contact_email:
+                sendErrorResponse(res, "Contact email is required");
+                break;
+            case !contact_number:
+                sendErrorResponse(res, "Contact number is required");
+                break;
+            case !password:
+                sendErrorResponse(res, "Password is required");
+                break;
+            default:
+                sendErrorResponse(res, "Unexpected error occured");
+        }
         if (password !== password_confirmation) {
             res.status(401).json({
                 status: "fail",
@@ -84,14 +109,14 @@ const signup = (req, res, next) => __awaiter(void 0, void 0, void 0, function* (
         return next(err);
     }
 });
-exports.signup = signup;
-const login = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+exports.organizationUserSignup = organizationUserSignup;
+const organizationUserLogin = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { organization_email, password } = req.body;
         if (!organization_email || !password) {
             res.status(401).json({
                 status: "fail",
-                message: "Password do not match",
+                message: "Password and organization email are required",
             });
         }
         // 2) Check if user exists && password is correct
@@ -138,8 +163,8 @@ const login = (req, res, next) => __awaiter(void 0, void 0, void 0, function* ()
         return next(err);
     }
 });
-exports.login = login;
-exports.forgotPassword = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+exports.organizationUserLogin = organizationUserLogin;
+exports.OrganizationUserForgotPassword = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     // 1) Get user based on POSTed email
     const org = yield organizationAuth_model_1.default.findOne({
         email: req.body.email,
@@ -151,7 +176,7 @@ exports.forgotPassword = (0, catchAsync_1.default)((req, res, next) => __awaiter
     const resetToken = org.createPasswordResetToken();
     yield org.save({ validateBeforeSave: false });
     // 3) Send it to user's email
-    const resetURL = `${req.protocol}://${req.get("host")}/api/organization/resetPassword/${resetToken}`;
+    const resetURL = `${req.protocol}://${req.get("host")}/auth/organization/resetPassword/${resetToken}`;
     try {
         (0, email_utils_1.sendURLEmail)(org.organization_email, resetURL);
         res.status(200).json({ message: "success" });
@@ -160,7 +185,7 @@ exports.forgotPassword = (0, catchAsync_1.default)((req, res, next) => __awaiter
         return next(new appError_1.default("There is an error sending the email.", 500));
     }
 }));
-exports.resetPassword = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+exports.organizationUserResetPassword = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     // 1) Get user based on the token
     const hashedToken = crypto_1.default
         .createHash("sha256")
@@ -182,7 +207,7 @@ exports.resetPassword = (0, catchAsync_1.default)((req, res, next) => __awaiter(
     // 4) Log the org in, send JWT
     createSendToken(org, 200, res);
 }));
-const verifyIndividualUserEmail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const verifyOrganizationUserEmail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { token } = req.body;
         const blackListedToken = yield blacklistedToken_model_1.BlacklistedToken.findOne({
@@ -237,4 +262,4 @@ const verifyIndividualUserEmail = (req, res) => __awaiter(void 0, void 0, void 0
         res.status(500).json({ message: "Error verifying email" });
     }
 });
-exports.verifyIndividualUserEmail = verifyIndividualUserEmail;
+exports.verifyOrganizationUserEmail = verifyOrganizationUserEmail;

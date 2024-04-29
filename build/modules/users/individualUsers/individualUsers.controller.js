@@ -8,12 +8,18 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteIndividualUser = exports.updateIndividualUser = exports.getAllIndividualUsers = exports.getIndividualUser = void 0;
+const individualUserAuth_model_1 = __importDefault(require("../../authentication/individualUserAuth/individualUserAuth.model"));
+const organizationAuth_model_1 = __importDefault(require("../../authentication/organizationUserAuth/organizationAuth.model"));
 /** GET: http://localhost:5000/users/user/:user_id */
 const getIndividualUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(`Logged in user: ${res.locals.user}`);
+    console.log(res.locals.user);
     return res.status(200).json({
+        status: true,
         message: "Logged in user profile",
         data: res.locals.user,
     });
@@ -45,7 +51,30 @@ exports.getAllIndividualUsers = getAllIndividualUsers;
  * "fullname": "Ada Jones"
  * }
  */
-const updateIndividualUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () { });
+const updateIndividualUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { userData } = res.locals.user;
+    const { phone_number, name, contact_email, contact_number } = req.body;
+    if (userData.role === "ind") {
+        const updatedUser = yield individualUserAuth_model_1.default.findOneAndUpdate({ email: userData.email }, { name, phone_number });
+        return res.status(200).json({
+            message: "Individual user sucessfully updated",
+            updatedUser,
+        });
+    }
+    else if (userData.role === "org") {
+        const updatedUser = yield organizationAuth_model_1.default.findOneAndUpdate({ organization_email: userData.organization_email }, { contact_email, contact_number }, { new: true });
+        return res.status(200).json({
+            message: "Organization user sucessfully updated",
+            updatedUser,
+        });
+    }
+    //   const loggedInUser =
+    //     userData.role === "ind" || userData.role === "g-ind"
+    //       ? await IndividualUser.findOne({ email: userData.email })
+    //       : await OrganizationModel.findOne({
+    //           organization_email: userData.organization_email,
+    //         });
+});
 exports.updateIndividualUser = updateIndividualUser;
 /** DELETE: http://localhost:5000/users/deleteuser */
 const deleteIndividualUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () { });
