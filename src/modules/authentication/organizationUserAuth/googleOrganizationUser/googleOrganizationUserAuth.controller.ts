@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { Credentials, OAuth2Client } from "google-auth-library";
 // import GoogleOrganizationUser from "./googleOrganizationUserAuth.model";
-import OrganizationModel from "./organizationAuth.model";
-import { createSessionAndSendTokens } from "../../../utilities/createSessionAndSendToken.util";
+import OrganizationModel from "../organizationAuth.model";
+import { createSessionAndSendTokens } from "../../../../utilities/createSessionAndSendToken.util";
 
 export const getGoogleUrl = async (req: Request, res: Response) => {
   const oAuth2Client = new OAuth2Client(

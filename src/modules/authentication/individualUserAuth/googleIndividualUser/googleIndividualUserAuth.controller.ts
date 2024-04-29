@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { Credentials, OAuth2Client } from "google-auth-library";
-import { createSessionAndSendTokens } from "../../../utilities/createSessionAndSendToken.util";
-import IndividualUser from "./individualUserAuth.model";
+import { createSessionAndSendTokens } from "../../../../utilities/createSessionAndSendToken.util";
+import IndividualUser from "../individualUserAuth.model";
 
 export const getGoogleUrl = async (req: Request, res: Response) => {
   const oAuth2Client = new OAuth2Client(
