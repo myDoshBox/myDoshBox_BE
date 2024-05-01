@@ -278,10 +278,10 @@ exports.options = {
         ],
     },
     apis: [
-        "./src/modules/authentication/organizationUserAuth/googleOrganizationUserAuth.route.ts",
-        "./src/modules/authentication/organizationUserAuth/organizationAuth.route.ts",
-        "./src/modules/authentication/individualUserAuth/individualAuth.route.ts",
-        "./src/modules/authentication/individualUserAuth/googleIndividualUserAuth.route.ts",
+        "./src/modules/authentication/organizationUserAuth/googleOrganizationUser/googleOrganizationUserAuth.route.ts",
+        "./src/modules/authentication/organizationUserAuth/organizationUser/organizationAuth.route.ts",
+        "./src/modules/authentication/individualUserAuth/individualUser/individualAuth.route.ts",
+        "./src/modules/authentication/individualUserAuth/googleIndividualUser/googleIndividualUserAuth.route.ts",
     ],
 };
 // swagger documentation for google authentication for individual signup
