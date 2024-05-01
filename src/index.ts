@@ -40,7 +40,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 app.get("/", (req: Request, res: Response) => {
-  return res.json({ msg: "welcome to doshbox api production" });
+  return res.json({ msg: "welcome to doshbox api test" });
 });
 
 app.use("/auth/organization", organizationUserAuthRouter);

@@ -32,7 +32,7 @@ app.use((0, cors_1.default)({
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: false }));
 app.get("/", (req, res) => {
-    return res.json({ msg: "welcome to doshbox api production" });
+    return res.json({ msg: "welcome to doshbox api test" });
 });
 app.use("/auth/organization", organizationAuth_route_1.default);
 app.use("/auth/individual", individualAuth_route_1.default);
