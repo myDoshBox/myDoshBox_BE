@@ -38,13 +38,6 @@ const createSendToken = (user: any, statusCode: number, res: Response) => {
   });
 };
 
-const sendErrorResponse = (res: Response, message: string) => {
-  res.status(404).json({
-    status: "fail",
-    message: message,
-  });
-};
-
 export const organizationUserSignup = async (
   req: Request,
   res: Response,
@@ -60,28 +53,40 @@ export const organizationUserSignup = async (
       password_confirmation,
     } = req.body;
 
-    switch (true) {
-      case !organization_name:
-        sendErrorResponse(res, "Organization name is required");
-        break;
-      case !organization_email:
-        sendErrorResponse(res, "Organization email is required");
-        break;
-      case !contact_email:
-        sendErrorResponse(res, "Contact email is required");
-        break;
-      case !contact_number:
-        sendErrorResponse(res, "Contact number is required");
-        break;
-      case !password:
-        sendErrorResponse(res, "Password is required");
-        break;
-      default:
-        sendErrorResponse(res, "Unexpected error occured");
+    if (!organization_name) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Organization name is required",
+      });
+    } else if (!organization_email) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Organization email is required",
+      });
+    } else if (!contact_email) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Contact email is required",
+      });
+    } else if (!contact_number) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Contact number is required",
+      });
+    } else if (!password) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Password is required",
+      });
+    } else if (!password_confirmation) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Password confirmation  is required",
+      });
     }
 
     if (password !== password_confirmation) {
-      res.status(401).json({
+      return res.status(401).json({
         status: "fail",
         message: "Password do not match",
       });
@@ -93,6 +98,8 @@ export const organizationUserSignup = async (
     const organizationEmailAlreadyExist = await OrganizationModel.findOne({
       organization_email,
     });
+
+    console.log(individualEmailAlreadyExist, organizationEmailAlreadyExist);
 
     if (organizationEmailAlreadyExist || individualEmailAlreadyExist) {
       return res.status(409).json({
@@ -127,8 +134,9 @@ export const organizationUserSignup = async (
       message:
         "Account successfully created. Verification email sent. Verify account to continue",
     });
-  } catch (err) {
-    return next(err);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
+    next(err);
   }
 };
 
@@ -204,8 +212,9 @@ export const organizationUserLogin = async (
       refreshToken,
       accessToken,
     });
-  } catch (err) {
-    return next(err);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
+    next(err);
   }
 };
 

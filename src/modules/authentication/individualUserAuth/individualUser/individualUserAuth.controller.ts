@@ -14,12 +14,39 @@ export const individualUserRegistration = async (
 ) => {
   try {
     const { name, email, phone_number, password, confirm_password } = req.body;
-    console.log(name, email, phone_number, password, confirm_password);
 
-    if (!name || !email || !phone_number || !password || !confirm_password) {
-      return res
-        .status(400)
-        .json({ message: "Please provide all required fields" });
+    if (!name) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Name is required",
+      });
+    } else if (!email) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Email is required",
+      });
+    } else if (!phone_number) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Phone number is required",
+      });
+    } else if (!password) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Password is required",
+      });
+    } else if (!confirm_password) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Confirm password  is required",
+      });
+    }
+
+    if (password !== confirm_password) {
+      return res.status(401).json({
+        status: "fail",
+        message: "Password do not match",
+      });
     }
 
     // Check if the user already exists
@@ -76,7 +103,7 @@ export const individualUserRegistration = async (
     });
   } catch (error: unknown) {
     console.error("Error registering the user:", error);
-    res.status(500).json({ message: "Error registering the user" });
+    return res.status(500).json({ message: "Error registering the user" });
   }
 };
 
@@ -148,7 +175,7 @@ export const verifyIndividualUserEmail = async (
         message: "Invalid Token!!", // invalid token
       });
     }
-    res.status(500).json({ message: "Error verifying email" });
+    return res.status(500).json({ message: "Error verifying email" });
   }
 };
 //export const individualUserLogin = async (req: Request, res: Response) => {};

@@ -81,7 +81,7 @@ individualUserSchema.pre<IndividualUserDocument>("save", async function (next) {
       this.password = await hash(this.password, saltRounds);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      return next(err);
+      next(err);
     }
   }
   next();
