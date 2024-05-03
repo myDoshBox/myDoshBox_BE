@@ -93,4 +93,4 @@ const options = {
     apis:["./src/modules/authentication/individualUserAuth/individualAuth.route.ts"]
 }
 
-module.exports = options;
+export default options;

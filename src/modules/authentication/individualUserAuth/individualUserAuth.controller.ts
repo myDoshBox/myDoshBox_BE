@@ -1,10 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import IndividualUser, { IndividaulDocument } from "./individualUserAuth.model";
-import individualAuthPasswordToken from "./individualAuthPasswordToken";
+import individualAuthPasswordToken from "./individualAuthPasswordToken.model";
 import Jwt from "jsonwebtoken";
 import { sendOtpEmail } from "../../../utils/email.utils";
 import catchAsync from "../../../utils/catchAsync";
 import AppError from "../../../utils/appError";
+import crypto from "crypto"
 
 export const generateToken = (length = 4) =>{
   // decallar variable 
@@ -70,13 +71,15 @@ export const verifyIndividualUserEmail = async (
     if (!user) {
       return res.status(404).json({ message: "User not found or email does not match." });
     }
+    const token = crypto.randomBytes(36).toString('hex')
+
     if (user.verified) {
       return res.status(400).json({ message: "User is already verified." });
     }
 
-    // Perform email verification logic here...
-    
-    // Update user's verification status
+  const resetLink = `${process.env.PASSWORD_RESET_LINK}?token=${token}&userId=${user._id}`
+  sendVerifyEmailLink({ email:user.email, link:resetLink });
+
     user.verified = true; 
     await user.save();
 

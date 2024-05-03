@@ -13,10 +13,10 @@ import googleIndividualUserAuthroute from "./modules/authentication/individualUs
 import { errorHandler } from "./utilities/errorHandler.util";
 import { options } from "./swagger";
 import { option } from "./swagger";
-
+ 
 const swaggerJsDoc = require("swagger-jsdoc")
-const swaggerUi = require('swagger-ui-express')
-const options = require('./modules/authentication/individualUserAuth/individualAuthSwagger')
+// const swaggerUi = require('swagger-ui-express')
+// const options = require('./modules/authentication/individualUserAuth/individualAuthSwagger.docs')
 const app = express();
 
 app.use(cors());
@@ -42,7 +42,7 @@ app.use(errorHandler);
 
 const spec = swaggerJsDoc(options)
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(spec))
-=======
+
 //const swaggerUiSetup = swaggerUi.setup(specs);
 
 //app.use("/api-docs", swaggerUi.serve, swaggerUiSetup);

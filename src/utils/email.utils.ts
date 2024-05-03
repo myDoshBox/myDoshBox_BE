@@ -50,3 +50,17 @@ export const sendURLEmail = async (email: string, resetURL: string) => {
     html: emailMessage, // Assign the HTML string directly to the html property
   });
 };
+
+export const sendVerifyEmailLink = async (email: string, token: string) => {
+  const transport = generateMailTransporter();
+
+  // const { email, message: customMessage } = options; // Renamed the variable to avoid conflict
+  const emailMessage = `Hello there kindly click on the link to verify your email. you can igore this mail if your account is already verified!`;
+
+  transport.sendMail({
+    to: email,
+    from: process.env.VERIFICATION_EMAIL,
+    subject: "Email Verification Mail",
+    html: emailMessage, // Assign the HTML string directly to the html property
+  });
+};
