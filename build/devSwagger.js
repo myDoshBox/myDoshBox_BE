@@ -1,8 +1,10 @@
 "use strict";
-// import swaggerJSDOC from "swagger-jsdoc";
-// import { individualUserRegistration } from "./modules/authentication/individualUserAuth/individualUser/individualAuth.route";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.options = void 0;
+const swagger_jsdoc_1 = __importDefault(require("swagger-jsdoc"));
+// import { individualUserRegistration } from "./modules/authentication/individualUserAuth/individualUser/individualAuth.route";
 const organizationUserSchemaProps = {
     sub: {
         type: "string",
@@ -45,7 +47,7 @@ const organizationUserSchemaProps = {
         description: "kind of user, can either be org or g-org",
     },
 };
-exports.options = {
+const options = {
     definition: {
         openapi: "3.0.0",
         info: {
@@ -286,5 +288,5 @@ exports.options = {
         "./src/modules/authentication/individualUserAuth/individualUser/individualAuth.route.ts",
     ],
 };
-// const devSpec = swaggerJSDOC(options);
-// export options;
+const devSpec = (0, swagger_jsdoc_1.default)(options);
+exports.default = devSpec;
