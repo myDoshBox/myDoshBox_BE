@@ -1,10 +1,10 @@
 import { Router } from "express";
 import {
-  individualUserLogin,
   individualUserRegistration,
   resetIndividualPassword,
   verifyIndividualUserEmail,
 } from "./individualUserAuth.controller";
+import { UserLogin } from "../../userLoginAndResetPassword";
 
 const individualrouter = Router();
 
@@ -70,7 +70,7 @@ individualrouter.route("/signup").post(individualUserRegistration);
  */
 
 // routes
-individualrouter.route("/login").post(individualUserLogin);
+individualrouter.route("/login").post(UserLogin);
 
 /**
  * @swagger

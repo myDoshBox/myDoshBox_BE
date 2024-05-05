@@ -1,3 +1,6 @@
+import swaggerJSDOC from "swagger-jsdoc";
+// import { individualUserRegistration } from "./modules/authentication/individualUserAuth/individualUser/individualAuth.route";
+
 const organizationUserSchemaProps = {
   sub: {
     type: "string",
@@ -289,9 +292,13 @@ export const options = {
     ],
   },
   apis: [
+    "./src/modules/authentication/individualUserAuth/googleIndividualUser/googleIndividualUserAuth.route.ts",
     "./src/modules/authentication/organizationUserAuth/googleOrganizationUser/googleOrganizationUserAuth.route.ts",
     "./src/modules/authentication/organizationUserAuth/organizationUser/organizationAuth.route.ts",
     "./src/modules/authentication/individualUserAuth/individualUser/individualAuth.route.ts",
-    "./src/modules/authentication/individualUserAuth/googleIndividualUser/googleIndividualUserAuth.route.ts",
   ],
 };
+
+// const devSpec = swaggerJSDOC(options);
+
+// export options;

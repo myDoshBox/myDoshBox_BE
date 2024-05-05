@@ -4,7 +4,6 @@ import { Request, Response } from "express";
 import IndividualUser from "../individualUserAuth.model";
 import individualAuthPasswordToken from "./individualAuthPasswordToken";
 import { sendVerificationEmail } from "../../../../utilities/email.utils";
-import { createSessionAndSendTokens } from "../../../../utilities/createSessionAndSendToken.util";
 import { BlacklistedToken } from "../../../blacklistedTokens/blacklistedToken.model";
 import OrganizationModel from "../../organizationUserAuth/organizationAuth.model";
 
@@ -176,69 +175,6 @@ export const verifyIndividualUserEmail = async (
       });
     }
     return res.status(500).json({ message: "Error verifying email" });
-  }
-};
-//export const individualUserLogin = async (req: Request, res: Response) => {};
-
-export const individualUserLogin = async (req: Request, res: Response) => {
-  try {
-    const { email, password } = req.body;
-
-    const userToLogin = await IndividualUser.findOne({ email }).select(
-      "+password"
-    );
-
-    if (!userToLogin)
-      return res.status(400).json({ message: "Email/Password mismatch!" });
-
-    const isMatch = await userToLogin.comparePassword(password);
-
-    if (!isMatch)
-      return res.status(400).json({ message: "Email/Password mismatch!" });
-
-    if (!userToLogin.email_verified) {
-      const verificationToken = jwt.sign(
-        {
-          email: userToLogin.email,
-        },
-        process.env.JWT_SECRET as string,
-        {
-          expiresIn: 60 * 60,
-        }
-      );
-
-      await sendVerificationEmail(email, verificationToken);
-
-      // Send a response
-      return res.status(200).json({
-        status: "true",
-        message:
-          "Account is unverified! Verification email sent. Verify account to continue",
-      });
-    }
-
-    const createSessionAndSendTokensOptions = {
-      user: userToLogin.toObject(),
-      userAgent: req.get("user-agent") || "",
-      role: userToLogin.role,
-      message: "Individual user successfully logged in",
-    };
-
-    const { status, message, user, accessToken, refreshToken } =
-      await createSessionAndSendTokens(createSessionAndSendTokensOptions);
-
-    user.password = "";
-
-    return res.status(200).json({
-      status,
-      message,
-      user,
-      refreshToken,
-      accessToken,
-    });
-  } catch (error: unknown) {
-    console.error("Error Loggin in user:", error);
-    res.status(500).json({ message: "Error Loggin in user" });
   }
 };
 

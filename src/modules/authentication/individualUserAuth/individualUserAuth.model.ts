@@ -1,6 +1,7 @@
 import { Document, model, Model, Schema } from "mongoose";
 import { emailValidator } from "../../../utilities/validator.utils";
 import { hash, compare } from "bcrypt";
+// import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
 export interface IndividualUserDocument extends Document {
@@ -92,6 +93,14 @@ individualUserSchema.methods.comparePassword = async function (
 ) {
   return await compare(candidatePassword, this.password);
 };
+
+// individualUserSchema.methods.correctPassword = async function (
+//   this: IndividualUserDocument,
+//   candidatePassword: string,
+//   userPassword: string
+// ) {
+//   return await bcrypt.compare(candidatePassword, userPassword);
+// };
 
 individualUserSchema.methods.comparePasswordResetToken = function (
   token: string

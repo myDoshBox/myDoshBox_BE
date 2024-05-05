@@ -8,7 +8,6 @@ import {
   sendURLEmail,
   sendVerificationEmail,
 } from "../../../../utilities/email.utils";
-import { createSessionAndSendTokens } from "../../../../utilities/createSessionAndSendToken.util";
 import { BlacklistedToken } from "../../../blacklistedTokens/blacklistedToken.model";
 import IndividualUser from "../../individualUserAuth/individualUserAuth.model";
 

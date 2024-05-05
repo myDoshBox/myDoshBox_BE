@@ -1,5 +1,6 @@
 import express, { Router } from "express";
 import * as organizationController from "./organizationAuth.controller";
+import { UserLogin } from "../../userLoginAndResetPassword";
 
 const router: Router = express.Router();
 
@@ -62,7 +63,7 @@ const router: Router = express.Router();
  *           $ref: "#/components/responses/401"
  */
 router.post("/signup", organizationController.organizationUserSignup);
-router.post("/login", organizationController.organizationUserLogin);
+router.post("/login", UserLogin);
 
 /**
  * @swagger

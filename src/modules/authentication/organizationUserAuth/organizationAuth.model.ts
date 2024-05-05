@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
 // Extend the OrganizationDoc interface to include virtual properties
-interface organizationalDoc extends Document {
+export interface organizationalDoc extends Document {
   organization_name: string;
   organization_email: string;
   contact_email: string;
