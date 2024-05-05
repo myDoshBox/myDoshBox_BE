@@ -280,11 +280,11 @@ export const verifyOrganizationUserEmail = async (
   try {
     const { token } = req.body;
 
-    const blackListedToken = await BlacklistedToken.findOne({
+    const checkIfBlacklistedToken = await BlacklistedToken.findOne({
       token,
     });
 
-    if (blackListedToken) {
+    if (checkIfBlacklistedToken) {
       return res.status(400).json({
         status: false,
         message:
