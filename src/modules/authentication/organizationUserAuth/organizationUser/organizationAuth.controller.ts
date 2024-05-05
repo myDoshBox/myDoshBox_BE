@@ -139,83 +139,83 @@ export const organizationUserSignup = async (
   }
 };
 
-export const organizationUserLogin = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const { organization_email, password } = req.body;
+// export const organizationUserLogin = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   try {
+//     const { organization_email, password } = req.body;
 
-    if (!organization_email || !password) {
-      res.status(401).json({
-        status: "fail",
-        message: "Password and organization email are required",
-      });
-    }
+//     if (!organization_email || !password) {
+//       res.status(401).json({
+//         status: "fail",
+//         message: "Password and organization email are required",
+//       });
+//     }
 
-    // 2) Check if user exists && password is correct
-    const loggedInUser = await OrganizationModel.findOne({
-      organization_email,
-    }).select("+password");
+//     // 2) Check if user exists && password is correct
+//     const loggedInUser = await OrganizationModel.findOne({
+//       organization_email,
+//     }).select("+password");
 
-    if (
-      !loggedInUser ||
-      !(await loggedInUser.correctPassword(password, loggedInUser.password))
-    ) {
-      return res.status(401).json({
-        status: "fail",
-        message: "Incorrect details",
-      });
-    }
+//     if (
+//       !loggedInUser ||
+//       !(await loggedInUser.correctPassword(password, loggedInUser.password))
+//     ) {
+//       return res.status(401).json({
+//         status: "fail",
+//         message: "Incorrect details",
+//       });
+//     }
 
-    if (!loggedInUser.email_verified) {
-      const verificationToken = jwt.sign(
-        {
-          email: loggedInUser.organization_email,
-        },
-        process.env.JWT_SECRET as string,
-        {
-          expiresIn: 60 * 60,
-        }
-      );
+//     if (!loggedInUser.email_verified) {
+//       const verificationToken = jwt.sign(
+//         {
+//           email: loggedInUser.organization_email,
+//         },
+//         process.env.JWT_SECRET as string,
+//         {
+//           expiresIn: 60 * 60,
+//         }
+//       );
 
-      await sendVerificationEmail(
-        loggedInUser.organization_email,
-        verificationToken
-      );
+//       await sendVerificationEmail(
+//         loggedInUser.organization_email,
+//         verificationToken
+//       );
 
-      // Send a response
-      return res.status(200).json({
-        status: "true",
-        message:
-          "Account is unverified! Verification email sent. Verify account to continue",
-      });
-    }
+//       // Send a response
+//       return res.status(200).json({
+//         status: "true",
+//         message:
+//           "Account is unverified! Verification email sent. Verify account to continue",
+//       });
+//     }
 
-    // 3) If everything ok, send token to client
-    const createSessionAndSendTokensOptions = {
-      user: loggedInUser.toObject(),
-      userAgent: req.get("user-agent") || "",
-      role: loggedInUser.role,
-      message: "Organization user sucessfully logged in",
-    };
+//     // 3) If everything ok, send token to client
+//     const createSessionAndSendTokensOptions = {
+//       user: loggedInUser.toObject(),
+//       userAgent: req.get("user-agent") || "",
+//       role: loggedInUser.role,
+//       message: "Organization user sucessfully logged in",
+//     };
 
-    const { status, message, user, accessToken, refreshToken } =
-      await createSessionAndSendTokens(createSessionAndSendTokensOptions);
+//     const { status, message, user, accessToken, refreshToken } =
+//       await createSessionAndSendTokens(createSessionAndSendTokensOptions);
 
-    return res.status(200).json({
-      status,
-      message,
-      user,
-      refreshToken,
-      accessToken,
-    });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (err: any) {
-    next(err);
-  }
-};
+//     return res.status(200).json({
+//       status,
+//       message,
+//       user,
+//       refreshToken,
+//       accessToken,
+//     });
+//     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//   } catch (err: any) {
+//     next(err);
+//   }
+// };
 
 export const OrganizationUserForgotPassword = catchAsync(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
