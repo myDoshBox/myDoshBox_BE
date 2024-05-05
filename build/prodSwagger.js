@@ -1,6 +1,9 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.options = void 0;
+const swagger_jsdoc_1 = __importDefault(require("swagger-jsdoc"));
 const organizationUserSchemaProps = {
     sub: {
         type: "string",
@@ -43,7 +46,7 @@ const organizationUserSchemaProps = {
         description: "kind of user, can either be org or g-org",
     },
 };
-exports.options = {
+const options = {
     definition: {
         openapi: "3.0.0",
         info: {
@@ -278,9 +281,11 @@ exports.options = {
         ],
     },
     apis: [
-        "./src/modules/authentication/organizationUserAuth/googleOrganizationUser/googleOrganizationUserAuth.route.ts",
-        "./src/modules/authentication/organizationUserAuth/organizationUser/organizationAuth.route.ts",
-        "./src/modules/authentication/individualUserAuth/individualUser/individualAuth.route.ts",
-        "./src/modules/authentication/individualUserAuth/googleIndividualUser/googleIndividualUserAuth.route.ts",
+        "build/modules/authentication/organizationUserAuth/googleOrganizationUser/googleOrganizationUserAuth.route.ts",
+        "build/modules/authentication/organizationUserAuth/organizationUser/organizationAuth.route.ts",
+        "build/modules/authentication/individualUserAuth/individualUser/individualAuth.route.ts",
+        "build/modules/authentication/individualUserAuth/googleIndividualUser/googleIndividualUserAuth.route.ts",
     ],
 };
+const prodSpec = (0, swagger_jsdoc_1.default)(options);
+exports.default = prodSpec;

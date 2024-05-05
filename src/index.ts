@@ -12,7 +12,8 @@ import individualUserAuthRouter from "./modules/authentication/individualUserAut
 import googleOrganizationUserAuthRouter from "./modules/authentication/organizationUserAuth/googleOrganizationUser/googleOrganizationUserAuth.route";
 import googleIndividualUserAuthRouter from "./modules/authentication/individualUserAuth/googleIndividualUser/googleIndividualUserAuth.route";
 import { errorHandler } from "./utilities/errorHandler.util";
-import { options } from "./swagger";
+import prodSpec from "./prodSwagger";
+import { options } from "./devSwagger";
 import deserializeUser from "./middlewares/deserializeUser.middleware";
 import protectRoutes from "./middlewares/protectRoutes.middleware";
 import individualRoutes from "./modules/users/individualUsers/individualUsers.route";
@@ -53,8 +54,34 @@ app.use("/user", protectRoutes, individualRoutes);
 
 app.use(errorHandler);
 
+//
+
+// const swaggerDocumentOne = require("./swagger-one.json");
+// const swaggerDocumentTwo = require("./swagger-two.json");
+
+// var options = {};
+
+// app.use(
+//   "/api-docs-one",
+//   swaggerUi.serveFiles(swaggerDocumentOne, options),
+//   swaggerUi.setup(swaggerDocumentOne)
+// );
+
+// app.use(
+//   "/api-docs-two",
+//   swaggerUi.serveFiles(swaggerDocumentTwo, options),
+//   swaggerUi.setup(swaggerDocumentTwo)
+// );
+
+//
+
+// let options = {};
+
 const spec = swaggerJSDOC(options);
+// const prodSpec = swaggerJSDOC(prodOptions);
+
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(spec));
+// app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(prodSpec));
 
 const PORT = process.env.PORT;
 

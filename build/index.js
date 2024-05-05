@@ -14,7 +14,7 @@ const individualAuth_route_1 = __importDefault(require("./modules/authentication
 const googleOrganizationUserAuth_route_1 = __importDefault(require("./modules/authentication/organizationUserAuth/googleOrganizationUser/googleOrganizationUserAuth.route"));
 const googleIndividualUserAuth_route_1 = __importDefault(require("./modules/authentication/individualUserAuth/googleIndividualUser/googleIndividualUserAuth.route"));
 const errorHandler_util_1 = require("./utilities/errorHandler.util");
-const swagger_1 = require("./swagger");
+const devSwagger_1 = require("./devSwagger");
 const deserializeUser_middleware_1 = __importDefault(require("./middlewares/deserializeUser.middleware"));
 const protectRoutes_middleware_1 = __importDefault(require("./middlewares/protectRoutes.middleware"));
 const individualUsers_route_1 = __importDefault(require("./modules/users/individualUsers/individualUsers.route"));
@@ -40,8 +40,26 @@ app.use("/auth/organization", googleOrganizationUserAuth_route_1.default);
 app.use("/auth/individual", googleIndividualUserAuth_route_1.default);
 app.use("/user", protectRoutes_middleware_1.default, individualUsers_route_1.default);
 app.use(errorHandler_util_1.errorHandler);
-const spec = (0, swagger_jsdoc_1.default)(swagger_1.options);
+//
+// const swaggerDocumentOne = require("./swagger-one.json");
+// const swaggerDocumentTwo = require("./swagger-two.json");
+// var options = {};
+// app.use(
+//   "/api-docs-one",
+//   swaggerUi.serveFiles(swaggerDocumentOne, options),
+//   swaggerUi.setup(swaggerDocumentOne)
+// );
+// app.use(
+//   "/api-docs-two",
+//   swaggerUi.serveFiles(swaggerDocumentTwo, options),
+//   swaggerUi.setup(swaggerDocumentTwo)
+// );
+//
+// let options = {};
+const spec = (0, swagger_jsdoc_1.default)(devSwagger_1.options);
+// const prodSpec = swaggerJSDOC(prodOptions);
 app.use("/api-docs", swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(spec));
+// app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(prodSpec));
 const PORT = process.env.PORT;
 (0, dbconn_config_1.default)()
     .then(() => {
