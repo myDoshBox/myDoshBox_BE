@@ -12,8 +12,8 @@ import individualUserAuthRouter from "./modules/authentication/individualUserAut
 import googleOrganizationUserAuthRouter from "./modules/authentication/organizationUserAuth/googleOrganizationUser/googleOrganizationUserAuth.route";
 import googleIndividualUserAuthRouter from "./modules/authentication/individualUserAuth/googleIndividualUser/googleIndividualUserAuth.route";
 import { errorHandler } from "./utilities/errorHandler.util";
-// import prodSpec from "./prodSwagger";
-import { options } from "./devSwagger";
+import { options } from "./prodSwagger";
+// import devSpec from "./devSwagger";
 import deserializeUser from "./middlewares/deserializeUser.middleware";
 import protectRoutes from "./middlewares/protectRoutes.middleware";
 import individualRoutes from "./modules/users/individualUsers/individualUsers.route";
@@ -80,11 +80,11 @@ app.use(errorHandler);
 
 // let options = {};
 
-const devSpec = swaggerJSDOC(options);
-// const prodSpec = swaggerJSDOC(prodOptions);
+// const devSpec = swaggerJSDOC(options);
+const prodSpec = swaggerJSDOC(options);
 
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(devSpec));
-// app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(prodSpec));
+// app.use("/dev-api-docs", swaggerUi.serve, swaggerUi.setup(devSpec));
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(prodSpec));
 
 const PORT = process.env.PORT;
 
