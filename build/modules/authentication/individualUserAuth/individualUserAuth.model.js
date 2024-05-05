@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
 const validator_utils_1 = require("../../../utilities/validator.utils");
 const bcrypt_1 = require("bcrypt");
+// import bcrypt from "bcryptjs";
 const crypto_1 = __importDefault(require("crypto"));
 const individualUserSchema = new mongoose_1.Schema({
     name: { type: String, required: [true, "Please tell us your name"] },
@@ -71,7 +72,7 @@ individualUserSchema.pre("save", function (next) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
             }
             catch (err) {
-                return next(err);
+                next(err);
             }
         }
         next();
@@ -82,6 +83,13 @@ individualUserSchema.methods.comparePassword = function (candidatePassword) {
         return yield (0, bcrypt_1.compare)(candidatePassword, this.password);
     });
 };
+// individualUserSchema.methods.correctPassword = async function (
+//   this: IndividualUserDocument,
+//   candidatePassword: string,
+//   userPassword: string
+// ) {
+//   return await bcrypt.compare(candidatePassword, userPassword);
+// };
 individualUserSchema.methods.comparePasswordResetToken = function (token) {
     var _a;
     const hashedToken = crypto_1.default.createHash("sha256").update(token).digest("hex");

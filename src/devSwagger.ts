@@ -1,4 +1,4 @@
-import swaggerJSDOC from "swagger-jsdoc";
+// import swaggerJSDOC from "swagger-jsdoc";
 // import { individualUserRegistration } from "./modules/authentication/individualUserAuth/individualUser/individualAuth.route";
 
 const organizationUserSchemaProps = {
