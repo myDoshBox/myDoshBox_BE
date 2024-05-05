@@ -280,15 +280,15 @@ export const verifyOrganizationUserEmail = async (
   try {
     const { token } = req.body;
 
-    const blackListedToken = await BlacklistedToken.findOne({
+    const checkIfBlacklistedToken = await BlacklistedToken.findOne({
       token,
     });
 
-    if (blackListedToken) {
+    if (checkIfBlacklistedToken) {
       return res.status(400).json({
         status: false,
         message:
-          "Link has already been used. Kindly regenerate confirm email link!",
+          "Link has already been used. Kindly attempt login to regenerate confirm email link!",
       });
     }
 
@@ -321,10 +321,7 @@ export const verifyOrganizationUserEmail = async (
     await user.save();
 
     // Respond with success message
-    return res.status(200).json({
-      message: "Email verified successfully. Kindly go ahead to login",
-      status: "true",
-    });
+    return res.redirect("https://www.google.com");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error("Error verifying email:", error);
@@ -332,7 +329,7 @@ export const verifyOrganizationUserEmail = async (
       return res.status(400).json({
         status: false,
         message:
-          "Your token has expired. Please try to generate link and confirm email again", //expired token
+          "Your token has expired. Kindly attempt login to regenerate confirm email link!", //expired token
       });
     }
     if (error.name === "JsonWebTokenError") {

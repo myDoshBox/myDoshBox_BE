@@ -287,5 +287,5 @@ const options = {
         "build/modules/authentication/individualUserAuth/googleIndividualUser/googleIndividualUserAuth.route.ts",
     ],
 };
-const prodSpec = (0, swagger_jsdoc_1.default)(options);
-exports.default = prodSpec;
+const spec = (0, swagger_jsdoc_1.default)(options);
+exports.default = spec;

@@ -298,6 +298,6 @@ const options = {
   ],
 };
 
-const prodSpec = swaggerJSDOC(options);
+const spec = swaggerJSDOC(options);
 
-export default prodSpec;
+export default spec;

@@ -1,7 +1,8 @@
 "use strict";
+// import swaggerJSDOC from "swagger-jsdoc";
+// import { individualUserRegistration } from "./modules/authentication/individualUserAuth/individualUser/individualAuth.route";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.options = void 0;
-// import { individualUserRegistration } from "./modules/authentication/individualUserAuth/individualUser/individualAuth.route";
 const organizationUserSchemaProps = {
     sub: {
         type: "string",
