@@ -17,7 +17,6 @@ export const errorHandler = (
 ) => {
   if (err.name === "ValidationError") {
     err.statusCode = 400;
-    err.message = "Please provide all required all required field";
     err.status = "fail";
   }
 

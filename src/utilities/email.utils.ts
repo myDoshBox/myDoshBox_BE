@@ -5,8 +5,10 @@ dotenv.config();
 
 const generateMailTransporter = () => {
   const transport = nodemailer.createTransport({
-    host: "sandbox.smtp.mailtrap.io",
-    port: 2525,
+    service: "Gmail",
+    host: "smtp.gmail.com",
+    port: 456,
+    secure: true,
     auth: {
       user: process.env.EMAIL_USERNAME,
       pass: process.env.EMAIL_PASSWORD,
@@ -81,9 +83,6 @@ export const sendVerificationEmail = async (email: string, token: string) => {
           <p>If you have any questions or need assistance, feel free to reach out to our support team at <a href="mailto:${supportEmail}" style="text-decoration: none; color: #007bff;">${supportEmail}</a>.</p>
           <p>Thank you for choosing Doshbox. We look forward to having you as an active member of our community!</p>
           <p>Best regards,<br>
-            Fawaz<br>
-            Dev<br>
-            Doshbox</p>
         </td>
       </tr>
     </table>
