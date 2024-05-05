@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { Credentials, OAuth2Client } from "google-auth-library";
-import GoogleOrganizationUser from "./googleOrganizationUserAuth.model";
-import { createSessionAndSendTokens } from "../../../utilities/createSessionAndSendToken.util";
+// import GoogleOrganizationUser from "./googleOrganizationUserAuth.model";
+import OrganizationModel from "../organizationAuth.model";
+import { createSessionAndSendTokens } from "../../../../utilities/createSessionAndSendToken.util";
 
 export const getGoogleUrl = async (req: Request, res: Response) => {
   const oAuth2Client = new OAuth2Client(
@@ -56,7 +57,7 @@ export const getGoogleUserDetail = async (
       });
     }
 
-    const googleUserExist = await GoogleOrganizationUser.findOne({
+    const googleUserExist = await OrganizationModel.findOne({
       sub: userDetails.sub,
     });
 
@@ -64,8 +65,8 @@ export const getGoogleUserDetail = async (
       return res.status(200).json({
         status: "success",
         data: {
-          name: userDetails.name,
-          email: userDetails.email,
+          organization_name: userDetails.name,
+          organization_email: userDetails.email,
           email_verified: userDetails.email_verified,
           picture: userDetails.picture,
           sub: userDetails.sub,
@@ -76,7 +77,7 @@ export const getGoogleUserDetail = async (
     const createSessionAndSendTokensOptions = {
       user: googleUserExist.toObject(),
       userAgent: req.get("user-agent") || "",
-      userKind: "g-org",
+      role: "g-org",
       message: "Google user sucessfully logged in",
     };
 
@@ -99,23 +100,23 @@ export const getGoogleUserDetail = async (
 export const createGoogleUser = async (req: Request, res: Response) => {
   try {
     const {
-      name,
-      email,
+      organization_name,
+      organization_email,
       email_verified,
       picture,
       sub,
       contact_email,
-      contact_phone,
+      contact_number,
     } = req.body;
 
     if (
-      !name ||
-      !email ||
+      !organization_name ||
+      !organization_email ||
       !email_verified ||
       !picture ||
       !sub ||
       !contact_email ||
-      !contact_phone
+      !contact_number
     ) {
       return res.status(400).json({
         status: "failed",
@@ -123,8 +124,8 @@ export const createGoogleUser = async (req: Request, res: Response) => {
       });
     }
 
-    const emailAlreadyExist = await GoogleOrganizationUser.findOne({
-      email,
+    const emailAlreadyExist = await OrganizationModel.findOne({
+      organization_email,
     });
     //const emailAlreadyExist = await OtherUserModels.findOne({ email: userDetails.email });
     //const emailAlreadyExist = await OtherUserModels.findOne({ email: userDetails.email });
@@ -136,20 +137,22 @@ export const createGoogleUser = async (req: Request, res: Response) => {
       });
     }
 
-    const newUser = await GoogleOrganizationUser.create({
-      name,
-      email,
+    const newUser = await OrganizationModel.create({
+      organization_name,
+      organization_email,
       email_verified,
       picture,
       sub,
       contact_email,
-      contact_phone,
+      contact_number,
+      role: "g-org",
+      //g-org, g-ind, org, ind
     });
 
     const createSessionAndSendTokensOptions = {
       user: newUser.toObject(),
       userAgent: req.get("user-agent") || "",
-      userKind: "g-org",
+      role: newUser.role,
       message: "Google user sucessfully created and logged in",
     };
 

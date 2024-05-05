@@ -1,20 +1,22 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
-import { emailValidator } from "../../../utils/validator.utils";
+import { emailValidator } from "../../../utilities/validator.utils";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
 // Extend the OrganizationDoc interface to include virtual properties
 interface organizationalDoc extends Document {
-  name: string;
-  email: string;
-  org_Email: string;
-  phoneNumber: string;
+  organization_name: string;
+  organization_email: string;
+  contact_email: string;
+  contact_number: string;
   password: string;
-  password_Confirmation: string;
   passwordChangedAt?: Date;
   passwordResetToken?: string;
   passwordResetExpires?: Date;
-  active: boolean;
+  email_verified: boolean;
+  sub: string;
+  picture: string;
+  role: string;
   correctPassword(
     candidatePassword: string,
     userPassword: string
@@ -25,34 +27,45 @@ interface organizationalDoc extends Document {
 
 const organizationalSchema: Schema<organizationalDoc> = new mongoose.Schema(
   {
-    name: {
+    organization_name: {
       type: String,
       required: [true, "Please tell us your name"],
     },
-    org_Email: {
+    contact_number: {
+      type: String,
+      required: [true, "Please provide a contact number"],
+    },
+    organization_email: {
       type: String,
       required: [true, "Please tell us your email"],
+      lowercase: true,
+      unique: true,
+      validate: {
+        validator: emailValidator,
+        message: "Please provide a valid email address",
+      },
+    },
+    contact_email: {
+      type: String,
+      required: [true, "Please provide a contact email"],
       lowercase: true,
       validate: {
         validator: emailValidator,
         message: "Please provide a valid email address",
       },
     },
-    email: {
+    email_verified: {
+      type: Boolean,
+      default: false,
+    },
+    sub: { type: String },
+    picture: { type: String },
+    role: {
       type: String,
-      required: [true, "Please tell us your email"],
-      unique: true,
-      lowercase: true,
-      validate: {
-        validator: emailValidator,
-        message: "Please provide a valid email address",
-      },
+      enum: ["org", "g-org"],
+      required: [true, "Please provide role"],
     },
     password: {
-      type: String,
-      select: false,
-    },
-    password_Confirmation: {
       type: String,
       select: false,
     },
@@ -65,6 +78,10 @@ const organizationalSchema: Schema<organizationalDoc> = new mongoose.Schema(
 
 // Hash password before saving to the database
 organizationalSchema.pre<organizationalDoc>("save", async function (next) {
+  if (!this.password) {
+    return next();
+  }
+
   if (!this.isModified("password")) return next();
 
   this.password = await bcrypt.hash(this.password, 12);

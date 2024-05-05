@@ -1,22 +1,25 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import express from "express";
 import cors from "cors";
-import swaggerJSDOC from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 
 import { Request, Response } from "express";
 import connectDB from "./config/dbconn.config";
-import organizationRoutes from "./modules/authentication/organizationUserAuth/organizationAuth.route";
-import individualUserRouter from "./modules/authentication/individualUserAuth/individualAuth.route";
-import googleAuthRoutes from "./modules/authentication/organizationUserAuth/googleOrganizationUserAuth.route";
-import googleIndividualUserAuthroute from "./modules/authentication/individualUserAuth/googleIndividualUserAuth.route";
+
+import organizationUserAuthRouter from "./modules/authentication/organizationUserAuth/organizationUser/organizationAuth.route";
+import individualUserAuthRouter from "./modules/authentication/individualUserAuth/individualUser/individualAuth.route";
+import googleOrganizationUserAuthRouter from "./modules/authentication/organizationUserAuth/googleOrganizationUser/googleOrganizationUserAuth.route";
+import googleIndividualUserAuthRouter from "./modules/authentication/individualUserAuth/googleIndividualUser/googleIndividualUserAuth.route";
 import { errorHandler } from "./utilities/errorHandler.util";
 import { options } from "./swagger";
-import { option } from "./swagger";
  
 const swaggerJsDoc = require("swagger-jsdoc")
 // const swaggerUi = require('swagger-ui-express')
 // const options = require('./modules/authentication/individualUserAuth/individualAuthSwagger.docs')
+import deserializeUser from "./middlewares/deserializeUser.middleware";
+import protectRoutes from "./middlewares/protectRoutes.middleware";
+import individualRoutes from "./modules/users/individualUsers/individualUsers.route";
+
 const app = express();
 
 app.use(cors());
@@ -27,15 +30,29 @@ app.use(
   })
 );
 
+app.use(deserializeUser);
+
+app.use(
+  cors({
+    origin: "*",
+    credentials: false,
+  })
+);
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+
 app.get("/", (req: Request, res: Response) => {
-  return res.json({ msg: "welcome to doshbox api" });
+  return res.json({ msg: "welcome to doshbox api test" });
 });
 
-app.use("/api/organization", organizationRoutes);
-app.use("/api/individual", individualUserRouter);
+app.use("/auth/organization", organizationUserAuthRouter);
+app.use("/auth/individual", individualUserAuthRouter);
 
-app.use("/api/auth/org", googleAuthRoutes);
-app.use("/api/auth/ind", googleIndividualUserAuthroute);
+app.use("/auth/organization", googleOrganizationUserAuthRouter);
+app.use("/auth/individual", googleIndividualUserAuthRouter);
+
+app.use("/user", protectRoutes, individualRoutes);
 
 app.use(errorHandler);
 
@@ -46,7 +63,6 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(spec))
 //const swaggerUiSetup = swaggerUi.setup(specs);
 
 //app.use("/api-docs", swaggerUi.serve, swaggerUiSetup);
-
 
 const PORT = process.env.PORT;
 
@@ -66,8 +82,3 @@ connectDB()
   .catch((error: any) => {
     throw new Error(error);
   });
-
-// app.listen(`${PORT}`, () =>{
-//     console.log(`listening on port ${PORT}`);
-
-// })

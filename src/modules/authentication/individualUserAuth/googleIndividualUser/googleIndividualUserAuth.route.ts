@@ -5,16 +5,16 @@ import {
 } from "./googleIndividualUserAuth.controller";
 
 const router = express.Router();
-/**  
+/**
  * @swagger
  * tags:
  *  name: GoogleIndividualUserAuth
  * description: To signup and login google individual user
-*/
+ */
 
 /**
  * @swagger
- *   /api/auth/ind/oauth/google:
+ *   /auth/individual/oauth:
  *     post:
  *       summary: Get google authorized url; navigate to google consent page; and give google user access
  *       tags: [GoogleIndividualUserAuth]
@@ -29,27 +29,7 @@ const router = express.Router();
  *           $ref: "#/components/responses/401"
  */
 
-router.post("/oauth/google", getGoogleUrl);
-router.get("/oauth/google/callback", getGoogleUserDetail);
-
-/** 
- * @swagger
- *  /api/auth/ind/oauth/google/create-user:
- *   post:
- *     summary: Create google individual user
- *     tags: [GoogleIndividualUserAuth]
- *     responses:
- *        '201':
- *         description: google user sucessfully created
- *        content:
- *          application/json:
- *            schema:
- *             $ref: "#/components/schemas/GoogleIndividualUser"
- *       '400':
- *         $ref: "#/components/responses/400"
- *      '409':
- *        $ref: "#/components/responses/409"
- * 
-*/
+router.post("/oauth", getGoogleUrl);
+router.get("/oauth/callback", getGoogleUserDetail);
 
 export default router;

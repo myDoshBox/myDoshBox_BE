@@ -1,5 +1,6 @@
 import express, { Router } from "express";
 import * as organizationController from "./organizationAuth.controller";
+import * as userController from "../../userLoginAndResetPassword";
 
 const router: Router = express.Router();
 
@@ -12,7 +13,7 @@ const router: Router = express.Router();
 
 /**
  * @swagger
- *   /api/organization/signup
+ *   /auth/organization/organizationUserSignup:
  *     post:
  *       summary: Sign up an organization user
  *       description: Sign up a new user for the organization.
@@ -29,7 +30,7 @@ const router: Router = express.Router();
  *           content:
  *             application/json:
  *               schema:
- *                 $ref: "#/components/schemas/OrganizationUser"
+ *                 $ref: "#/components/schemas/OrganizationUserSignup"
  *         '400':
  *           $ref: "#/components/responses/400"
  *         '401':
@@ -38,32 +39,31 @@ const router: Router = express.Router();
 
 /**
  * @swagger
- *   /api/organization/login:
+ *   /auth/organization/organizationUserLogin:
  *     post:
- *       summary: Login as an organization user
- *       description: Log in an existing organization user.
+ *       summary: Sign up an organization user
+ *       description: Sign up a new user for the organization.
  *       tags: [OrganizationUserAuth]
  *       requestBody:
  *         required: true
  *         content:
  *           application/json:
  *             schema:
- *               $ref: "#/components/schemas/LoginRequest"
+ *               $ref: "#/components/schemas/OrganizationUserLogin"
  *       responses:
  *         '200':
- *           description: User successfully logged in
+ *           description: User successfully login
  *           content:
  *             application/json:
  *               schema:
- *                 $ref: "#/components/schemas/LoginResponse"
+ *                 $ref: "#/components/schemas/OrganizationUserLogin"
  *         '400':
  *           $ref: "#/components/responses/400"
  *         '401':
  *           $ref: "#/components/responses/401"
  */
-
-router.post("/signup", organizationController.signup);
-router.post("/login", organizationController.login);
+router.post("/signup", organizationController.organizationUserSignup);
+router.post("/login", organizationController.organizationUserLogin);
 
 /**
  * @swagger
@@ -74,7 +74,7 @@ router.post("/login", organizationController.login);
 
 /**
  * @swagger
- *   /api/organization/forgotpassword:
+ *   /auth/organization/OrganizationUserForgotPassword:
  *     post:
  *       summary: Request a password reset link
  *       description: Request a password reset link for the organization user.
@@ -84,7 +84,7 @@ router.post("/login", organizationController.login);
  *         content:
  *           application/json:
  *             schema:
- *               $ref: "#/components/schemas/ForgotPasswordRequest"
+ *               $ref: "#/components/schemas/OrganizationUserForgotPassword"
  *       responses:
  *         '200':
  *           description: Password reset link sent successfully
@@ -96,14 +96,14 @@ router.post("/login", organizationController.login);
 
 /**
  * @swagger
- *   /api/organization/resetPassword/{resetToken}:
- *     post:
+ *   /auth/organization/organizationUserResetPassword/{token}:
+ *     patch:
  *       summary: Reset user's password
  *       description: Reset user's password using the provided reset token.
  *       tags: [OrganizationUserAuth]
  *       parameters:
  *         - in: path
- *           name: resetToken
+ *           name: token
  *           required: true
  *           schema:
  *             type: string
@@ -113,17 +113,26 @@ router.post("/login", organizationController.login);
  *         content:
  *           application/json:
  *             schema:
- *               $ref: "#/components/schemas/ResetPasswordRequest"
+ *               $ref: "#/components/schemas/OrganizationUserResetPassword"
  *       responses:
  *         '200':
  *           description: Password successfully reset
  *         '400':
  *           $ref: "#/components/responses/400"
- *         '404':
- *           $ref: "#/components/responses/404"
  */
 
-router.post("/forgotPassword", organizationController.forgotPassword);
-router.patch("/resetPassword/:token", organizationController.resetPassword);
+router.post(
+  "/verify-email",
+  organizationController.verifyOrganizationUserEmail
+);
+
+router.post(
+  "/forgotpassword",
+  userController.OrganizationUserForgotPassword
+);
+router.patch(
+  "/resetPassword/:token", 
+  userController.organizationUserResetPassword
+);
 
 export default router;
