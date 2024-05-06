@@ -12,14 +12,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyOrganizationUserEmail = exports.organizationUserResetPassword = exports.OrganizationUserForgotPassword = exports.organizationUserLogin = exports.organizationUserSignup = void 0;
+exports.verifyOrganizationUserEmail = exports.organizationUserResetPassword = exports.OrganizationUserForgotPassword = exports.organizationUserSignup = void 0;
 const organizationAuth_model_1 = __importDefault(require("../organizationAuth.model"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const crypto_1 = __importDefault(require("crypto"));
 const catchAsync_1 = __importDefault(require("../../../../utilities/catchAsync"));
 const appError_1 = __importDefault(require("../../../../utilities/appError"));
 const email_utils_1 = require("../../../../utilities/email.utils");
-const createSessionAndSendToken_util_1 = require("../../../../utilities/createSessionAndSendToken.util");
 const blacklistedToken_model_1 = require("../../../blacklistedTokens/blacklistedToken.model");
 const individualUserAuth_model_1 = __importDefault(require("../../individualUserAuth/individualUserAuth.model"));
 const signToken = (id) => {
@@ -40,36 +39,47 @@ const createSendToken = (user, statusCode, res) => {
         },
     });
 };
-const sendErrorResponse = (res, message) => {
-    res.status(404).json({
-        status: "fail",
-        message: message,
-    });
-};
 const organizationUserSignup = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { organization_name, organization_email, contact_email, contact_number, password, password_confirmation, } = req.body;
-        switch (true) {
-            case !organization_name:
-                sendErrorResponse(res, "Organization name is required");
-                break;
-            case !organization_email:
-                sendErrorResponse(res, "Organization email is required");
-                break;
-            case !contact_email:
-                sendErrorResponse(res, "Contact email is required");
-                break;
-            case !contact_number:
-                sendErrorResponse(res, "Contact number is required");
-                break;
-            case !password:
-                sendErrorResponse(res, "Password is required");
-                break;
-            default:
-                sendErrorResponse(res, "Unexpected error occured");
+        if (!organization_name) {
+            return res.status(400).json({
+                status: "fail",
+                message: "Organization name is required",
+            });
+        }
+        else if (!organization_email) {
+            return res.status(400).json({
+                status: "fail",
+                message: "Organization email is required",
+            });
+        }
+        else if (!contact_email) {
+            return res.status(400).json({
+                status: "fail",
+                message: "Contact email is required",
+            });
+        }
+        else if (!contact_number) {
+            return res.status(400).json({
+                status: "fail",
+                message: "Contact number is required",
+            });
+        }
+        else if (!password) {
+            return res.status(400).json({
+                status: "fail",
+                message: "Password is required",
+            });
+        }
+        else if (!password_confirmation) {
+            return res.status(400).json({
+                status: "fail",
+                message: "Password confirmation  is required",
+            });
         }
         if (password !== password_confirmation) {
-            res.status(401).json({
+            return res.status(401).json({
                 status: "fail",
                 message: "Password do not match",
             });
@@ -80,6 +90,7 @@ const organizationUserSignup = (req, res, next) => __awaiter(void 0, void 0, voi
         const organizationEmailAlreadyExist = yield organizationAuth_model_1.default.findOne({
             organization_email,
         });
+        console.log(individualEmailAlreadyExist, organizationEmailAlreadyExist);
         if (organizationEmailAlreadyExist || individualEmailAlreadyExist) {
             return res.status(409).json({
                 status: "failed",
@@ -104,66 +115,81 @@ const organizationUserSignup = (req, res, next) => __awaiter(void 0, void 0, voi
             status: "true",
             message: "Account successfully created. Verification email sent. Verify account to continue",
         });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     }
     catch (err) {
-        return next(err);
+        next(err);
     }
 });
 exports.organizationUserSignup = organizationUserSignup;
-const organizationUserLogin = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { organization_email, password } = req.body;
-        if (!organization_email || !password) {
-            res.status(401).json({
-                status: "fail",
-                message: "Password and organization email are required",
-            });
-        }
-        // 2) Check if user exists && password is correct
-        const loggedInUser = yield organizationAuth_model_1.default.findOne({
-            organization_email,
-        }).select("+password");
-        if (!loggedInUser ||
-            !(yield loggedInUser.correctPassword(password, loggedInUser.password))) {
-            return res.status(401).json({
-                status: "fail",
-                message: "Incorrect details",
-            });
-        }
-        if (!loggedInUser.email_verified) {
-            const verificationToken = jsonwebtoken_1.default.sign({
-                email: loggedInUser.organization_email,
-            }, process.env.JWT_SECRET, {
-                expiresIn: 60 * 60,
-            });
-            yield (0, email_utils_1.sendVerificationEmail)(loggedInUser.organization_email, verificationToken);
-            // Send a response
-            return res.status(200).json({
-                status: "true",
-                message: "Account is unverified! Verification email sent. Verify account to continue",
-            });
-        }
-        // 3) If everything ok, send token to client
-        const createSessionAndSendTokensOptions = {
-            user: loggedInUser.toObject(),
-            userAgent: req.get("user-agent") || "",
-            role: loggedInUser.role,
-            message: "Organization user sucessfully logged in",
-        };
-        const { status, message, user, accessToken, refreshToken } = yield (0, createSessionAndSendToken_util_1.createSessionAndSendTokens)(createSessionAndSendTokensOptions);
-        return res.status(200).json({
-            status,
-            message,
-            user,
-            refreshToken,
-            accessToken,
-        });
-    }
-    catch (err) {
-        return next(err);
-    }
-});
-exports.organizationUserLogin = organizationUserLogin;
+// export const organizationUserLogin = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   try {
+//     const { organization_email, password } = req.body;
+//     if (!organization_email || !password) {
+//       res.status(401).json({
+//         status: "fail",
+//         message: "Password and organization email are required",
+//       });
+//     }
+//     // 2) Check if user exists && password is correct
+//     const loggedInUser = await OrganizationModel.findOne({
+//       organization_email,
+//     }).select("+password");
+//     if (
+//       !loggedInUser ||
+//       !(await loggedInUser.correctPassword(password, loggedInUser.password))
+//     ) {
+//       return res.status(401).json({
+//         status: "fail",
+//         message: "Incorrect details",
+//       });
+//     }
+//     if (!loggedInUser.email_verified) {
+//       const verificationToken = jwt.sign(
+//         {
+//           email: loggedInUser.organization_email,
+//         },
+//         process.env.JWT_SECRET as string,
+//         {
+//           expiresIn: 60 * 60,
+//         }
+//       );
+//       await sendVerificationEmail(
+//         loggedInUser.organization_email,
+//         verificationToken
+//       );
+//       // Send a response
+//       return res.status(200).json({
+//         status: "true",
+//         message:
+//           "Account is unverified! Verification email sent. Verify account to continue",
+//       });
+//     }
+//     // 3) If everything ok, send token to client
+//     const createSessionAndSendTokensOptions = {
+//       user: loggedInUser.toObject(),
+//       userAgent: req.get("user-agent") || "",
+//       role: loggedInUser.role,
+//       message: "Organization user sucessfully logged in",
+//     };
+//     const { status, message, user, accessToken, refreshToken } =
+//       await createSessionAndSendTokens(createSessionAndSendTokensOptions);
+//     return res.status(200).json({
+//       status,
+//       message,
+//       user,
+//       refreshToken,
+//       accessToken,
+//     });
+//     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//   } catch (err: any) {
+//     next(err);
+//   }
+// };
 exports.OrganizationUserForgotPassword = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     // 1) Get user based on POSTed email
     const org = yield organizationAuth_model_1.default.findOne({

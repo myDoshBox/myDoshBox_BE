@@ -217,33 +217,33 @@ export const organizationUserSignup = async (
 //   }
 // };
 
-export const OrganizationUserForgotPassword = catchAsync(
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    // 1) Get user based on POSTed email
-    const org = await OrganizationModel.findOne({
-      email: req.body.email,
-    });
-    if (!org) {
-      return next(new AppError("There is no user with email address.", 404));
-    }
+// export const OrganizationUserForgotPassword = catchAsync(
+//   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+//     // 1) Get user based on POSTed email
+//     const org = await OrganizationModel.findOne({
+//       email: req.body.email,
+//     });
+//     if (!org) {
+//       return next(new AppError("There is no user with email address.", 404));
+//     }
 
-    // 2) Generate the random reset token
-    const resetToken = org.createPasswordResetToken();
-    await org.save({ validateBeforeSave: false });
+//     // 2) Generate the random reset token
+//     const resetToken = org.createPasswordResetToken();
+//     await org.save({ validateBeforeSave: false });
 
-    // 3) Send it to user's email
-    const resetURL = `${req.protocol}://${req.get(
-      "host"
-    )}/auth/organization/resetPassword/${resetToken}`;
+//     // 3) Send it to user's email
+//     const resetURL = `${req.protocol}://${req.get(
+//       "host"
+//     )}/auth/organization/resetPassword/${resetToken}`;
 
-    try {
-      sendURLEmail(org.organization_email, resetURL);
-      res.status(200).json({ message: "success" });
-    } catch (err) {
-      return next(new AppError("There is an error sending the email.", 500));
-    }
-  }
-);
+//     try {
+//       sendURLEmail([org.organization_email], resetURL);
+//       res.status(200).json({ message: "success" });
+//     } catch (err) {
+//       return next(new AppError("There is an error sending the email.", 500));
+//     }
+//   }
+// );
 
 export const organizationUserResetPassword = catchAsync(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {

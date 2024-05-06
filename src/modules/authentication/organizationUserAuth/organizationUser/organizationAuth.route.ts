@@ -1,6 +1,8 @@
 import express, { Router } from "express";
 import * as organizationController from "./organizationAuth.controller";
 import { UserLogin } from "../../userLoginAndResetPassword";
+import * as userController from "../../userLoginAndResetPassword";
+
 
 const router: Router = express.Router();
 
@@ -125,13 +127,22 @@ router.post(
   "/verify-email",
   organizationController.verifyOrganizationUserEmail
 );
+// router.post(
+//   "/forgotpassword",
+//   organizationController.OrganizationUserForgotPassword
+// );
+// router.patch(
+//   "/resetPassword/:token",
+//   organizationController.organizationUserResetPassword
+// );
+
 router.post(
   "/forgotpassword",
-  organizationController.OrganizationUserForgotPassword
+  userController.OrganizationUserForgotPassword
 );
 router.patch(
-  "/resetPassword/:token",
-  organizationController.organizationUserResetPassword
+  "/resetPassword/:token", 
+  userController.organizationUserResetPassword
 );
 
 export default router;

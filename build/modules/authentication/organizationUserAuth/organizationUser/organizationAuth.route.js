@@ -28,6 +28,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const organizationController = __importStar(require("./organizationAuth.controller"));
+const userLoginAndResetPassword_1 = require("../../userLoginAndResetPassword");
 const router = express_1.default.Router();
 /**
  * @swagger
@@ -86,7 +87,7 @@ const router = express_1.default.Router();
  *           $ref: "#/components/responses/401"
  */
 router.post("/signup", organizationController.organizationUserSignup);
-router.post("/login", organizationController.organizationUserLogin);
+router.post("/login", userLoginAndResetPassword_1.UserLogin);
 /**
  * @swagger
  * tags:

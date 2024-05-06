@@ -12,22 +12,51 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resetIndividualPassword = exports.individualUserLogin = exports.verifyIndividualUserEmail = exports.individualUserRegistration = void 0;
+exports.resetIndividualPassword = exports.verifyIndividualUserEmail = exports.individualUserRegistration = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const individualUserAuth_model_1 = __importDefault(require("../individualUserAuth.model"));
 const individualAuthPasswordToken_1 = __importDefault(require("./individualAuthPasswordToken"));
 const email_utils_1 = require("../../../../utilities/email.utils");
-const createSessionAndSendToken_util_1 = require("../../../../utilities/createSessionAndSendToken.util");
 const blacklistedToken_model_1 = require("../../../blacklistedTokens/blacklistedToken.model");
 const organizationAuth_model_1 = __importDefault(require("../../organizationUserAuth/organizationAuth.model"));
 const individualUserRegistration = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { name, email, phone_number, password, confirm_password } = req.body;
-        console.log(name, email, phone_number, password, confirm_password);
-        if (!name || !email || !phone_number || !password || !confirm_password) {
-            return res
-                .status(400)
-                .json({ message: "Please provide all required fields" });
+        if (!name) {
+            return res.status(400).json({
+                status: "fail",
+                message: "Name is required",
+            });
+        }
+        else if (!email) {
+            return res.status(400).json({
+                status: "fail",
+                message: "Email is required",
+            });
+        }
+        else if (!phone_number) {
+            return res.status(400).json({
+                status: "fail",
+                message: "Phone number is required",
+            });
+        }
+        else if (!password) {
+            return res.status(400).json({
+                status: "fail",
+                message: "Password is required",
+            });
+        }
+        else if (!confirm_password) {
+            return res.status(400).json({
+                status: "fail",
+                message: "Confirm password  is required",
+            });
+        }
+        if (password !== confirm_password) {
+            return res.status(401).json({
+                status: "fail",
+                message: "Password do not match",
+            });
         }
         // Check if the user already exists
         const individualEmailAlreadyExist = yield individualUserAuth_model_1.default.findOne({
@@ -72,7 +101,7 @@ const individualUserRegistration = (req, res) => __awaiter(void 0, void 0, void 
     }
     catch (error) {
         console.error("Error registering the user:", error);
-        res.status(500).json({ message: "Error registering the user" });
+        return res.status(500).json({ message: "Error registering the user" });
     }
 });
 exports.individualUserRegistration = individualUserRegistration;
@@ -128,55 +157,10 @@ const verifyIndividualUserEmail = (req, res) => __awaiter(void 0, void 0, void 0
                 message: "Invalid Token!!", // invalid token
             });
         }
-        res.status(500).json({ message: "Error verifying email" });
+        return res.status(500).json({ message: "Error verifying email" });
     }
 });
 exports.verifyIndividualUserEmail = verifyIndividualUserEmail;
-//export const individualUserLogin = async (req: Request, res: Response) => {};
-const individualUserLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { email, password } = req.body;
-        const userToLogin = yield individualUserAuth_model_1.default.findOne({ email }).select("+password");
-        if (!userToLogin)
-            return res.status(400).json({ message: "Email/Password mismatch!" });
-        const isMatch = yield userToLogin.comparePassword(password);
-        if (!isMatch)
-            return res.status(400).json({ message: "Email/Password mismatch!" });
-        if (!userToLogin.email_verified) {
-            const verificationToken = jsonwebtoken_1.default.sign({
-                email: userToLogin.email,
-            }, process.env.JWT_SECRET, {
-                expiresIn: 60 * 60,
-            });
-            yield (0, email_utils_1.sendVerificationEmail)(email, verificationToken);
-            // Send a response
-            return res.status(200).json({
-                status: "true",
-                message: "Account is unverified! Verification email sent. Verify account to continue",
-            });
-        }
-        const createSessionAndSendTokensOptions = {
-            user: userToLogin.toObject(),
-            userAgent: req.get("user-agent") || "",
-            role: userToLogin.role,
-            message: "Individual user successfully logged in",
-        };
-        const { status, message, user, accessToken, refreshToken } = yield (0, createSessionAndSendToken_util_1.createSessionAndSendTokens)(createSessionAndSendTokensOptions);
-        user.password = "";
-        return res.status(200).json({
-            status,
-            message,
-            user,
-            refreshToken,
-            accessToken,
-        });
-    }
-    catch (error) {
-        console.error("Error Loggin in user:", error);
-        res.status(500).json({ message: "Error Loggin in user" });
-    }
-});
-exports.individualUserLogin = individualUserLogin;
 const resetIndividualPassword = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password } = req.body;
     try {

@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const individualUserAuth_controller_1 = require("./individualUserAuth.controller");
+const userLoginAndResetPassword_1 = require("../../userLoginAndResetPassword");
 const individualrouter = (0, express_1.Router)();
 /**
  * @swagger
@@ -61,7 +62,7 @@ individualrouter.route("/signup").post(individualUserAuth_controller_1.individua
  *         description: Internal server error
  */
 // routes
-individualrouter.route("/login").post(individualUserAuth_controller_1.individualUserLogin);
+individualrouter.route("/login").post(userLoginAndResetPassword_1.UserLogin);
 /**
  * @swagger
  * /auth/individual/reset-password:

@@ -31,7 +31,9 @@ export const sendOtpEmail = async (otp: string, email: string) => {
   });
 };
 
-export const sendURLEmail = async (email: string, resetURL: string) => {
+export const sendURLEmail = async (email: string[], resetURL: string) => {
+  const validEmails = email.filter(Boolean) as string[];
+
   const transport = generateMailTransporter();
 
   // const { email, message: customMessage } = options; // Renamed the variable to avoid conflict
