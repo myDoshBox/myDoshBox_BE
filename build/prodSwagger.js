@@ -1,5 +1,6 @@
 "use strict";
 // import swaggerJSDOC from "swagger-jsdoc";
+// import { individualUserRegistration } from "./modules/authentication/individualUserAuth/individualUser/individualAuth.route";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.options = void 0;
 const organizationUserSchemaProps = {
@@ -54,7 +55,7 @@ exports.options = {
         },
         servers: [
             {
-                url: "https://mydoshbox-be-test.onrender.com/",
+                url: "https://mydoshbox-be-test.onrender.com",
                 description: "This is the Doshbox API server",
             },
         ],
@@ -279,11 +280,9 @@ exports.options = {
         ],
     },
     apis: [
-        "./build/modules/authentication/individualUserAuth/googleIndividualUser/googleIndividualUserAuth.route.ts",
-        "./build/modules/authentication/organizationUserAuth/googleOrganizationUser/googleOrganizationUserAuth.route.ts",
-        "./build/modules/authentication/organizationUserAuth/organizationUser/organizationAuth.route.ts",
-        "./build/modules/authentication/individualUserAuth/individualUser/individualAuth.route.ts",
+        "./build/modules/authentication/individualUserAuth/googleIndividualUser/googleIndividualUserAuth.route.js",
+        "./build/modules/authentication/organizationUserAuth/googleOrganizationUser/googleOrganizationUserAuth.route.js",
+        "./build/modules/authentication/organizationUserAuth/organizationUser/organizationAuth.route.js",
+        "./build/modules/authentication/individualUserAuth/individualUser/individualAuth.route.js",
     ],
 };
-// const spec = swaggerJSDOC(options);
-// export default spec;
