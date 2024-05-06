@@ -236,13 +236,13 @@ exports.organizationUserResetPassword = (0, catchAsync_1.default)((req, res, nex
 const verifyOrganizationUserEmail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { token } = req.body;
-        const blackListedToken = yield blacklistedToken_model_1.BlacklistedToken.findOne({
+        const checkIfBlacklistedToken = yield blacklistedToken_model_1.BlacklistedToken.findOne({
             token,
         });
-        if (blackListedToken) {
+        if (checkIfBlacklistedToken) {
             return res.status(400).json({
                 status: false,
-                message: "Link has already been used. Kindly regenerate confirm email link!",
+                message: "Link has already been used. Kindly attempt login to regenerate confirm email link!",
             });
         }
         const { email } = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
@@ -265,10 +265,7 @@ const verifyOrganizationUserEmail = (req, res) => __awaiter(void 0, void 0, void
         user.email_verified = true;
         yield user.save();
         // Respond with success message
-        return res.status(200).json({
-            message: "Email verified successfully. Kindly go ahead to login",
-            status: "true",
-        });
+        return res.redirect("https://www.google.com");
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
     }
     catch (error) {
@@ -276,7 +273,7 @@ const verifyOrganizationUserEmail = (req, res) => __awaiter(void 0, void 0, void
         if (error.name === "TokenExpiredError") {
             return res.status(400).json({
                 status: false,
-                message: "Your token has expired. Please try to generate link and confirm email again", //expired token
+                message: "Your token has expired. Kindly attempt login to regenerate confirm email link!", //expired token
             });
         }
         if (error.name === "JsonWebTokenError") {

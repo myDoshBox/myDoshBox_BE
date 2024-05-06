@@ -23,12 +23,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+<<<<<<< HEAD
 exports.organizationUserResetPassword = exports.OrganizationUserForgotPassword = exports.UserLogin = void 0;
+=======
+exports.UserLogin = void 0;
+>>>>>>> 03c02c2c38e806bd214f91bbc87767a9abb9459c
 const organizationAuth_model_1 = __importDefault(require("./organizationUserAuth/organizationAuth.model"));
 const individualUserAuth_model_1 = __importDefault(require("./individualUserAuth/individualUserAuth.model"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const email_utils_1 = require("../../utilities/email.utils");
 const createSessionAndSendToken_util_1 = require("../../utilities/createSessionAndSendToken.util");
+<<<<<<< HEAD
 const appError_1 = __importDefault(require("../../utilities/appError"));
 const catchAsync_1 = __importDefault(require("../../utilities/catchAsync"));
 const signToken = (id) => {
@@ -48,6 +53,8 @@ const createSendToken = (user, statusCode, res) => {
         },
     });
 };
+=======
+>>>>>>> 03c02c2c38e806bd214f91bbc87767a9abb9459c
 const UserLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, user_password } = req.body;
     if (!email || !user_password) {
@@ -198,6 +205,7 @@ exports.UserLogin = UserLogin;
 //     }
 //   }
 // );
+<<<<<<< HEAD
 exports.OrganizationUserForgotPassword = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     // 1) Get user based on POSTed email
     const { email } = req.body;
@@ -268,3 +276,5 @@ exports.organizationUserResetPassword = (0, catchAsync_1.default)((req, res, nex
         createSendToken(user, 200, res);
     }
 }));
+=======
+>>>>>>> 03c02c2c38e806bd214f91bbc87767a9abb9459c

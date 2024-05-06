@@ -113,15 +113,15 @@ export const verifyIndividualUserEmail = async (
   try {
     const { token } = req.body;
 
-    const blackListedToken = await BlacklistedToken.findOne({
+    const checkIfBlacklistedToken = await BlacklistedToken.findOne({
       token,
     });
 
-    if (blackListedToken) {
+    if (checkIfBlacklistedToken) {
       return res.status(400).json({
         status: false,
         message:
-          "Link has already been used. Kindly regenerate confirm email link!",
+          "Link has already been used. Kindly attempt login to regenerate confirm email link!",
       });
     }
 
@@ -165,7 +165,7 @@ export const verifyIndividualUserEmail = async (
       return res.status(400).json({
         status: false,
         message:
-          "Your token has expired. Please try to generate link and confirm email again", //expired token
+          "Your token has expired. Kindly attempt login to regenerate confirm email link!", //expired token
       });
     }
     if (error.name === "JsonWebTokenError") {
