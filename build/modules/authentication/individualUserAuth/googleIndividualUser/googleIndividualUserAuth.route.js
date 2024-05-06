@@ -24,7 +24,7 @@ const router = express_1.default.Router();
  *           content:
  *             application/json:
  *               schema:
- *                 $ref: "#/components/schemas/GoogleAuthorizedurl"
+ *                 $ref: "#/components/schemas/GoogleOrganizationAccess"
  *         '401':
  *           $ref: "#/components/responses/401"
  */

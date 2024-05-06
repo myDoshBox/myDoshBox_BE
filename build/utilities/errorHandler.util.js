@@ -6,7 +6,6 @@ const errorHandler = (err, req, res,
 next) => {
     if (err.name === "ValidationError") {
         err.statusCode = 400;
-        err.message = "Please provide all required all required field";
         err.status = "fail";
     }
     return res.status(err.statusCode || 500).json({

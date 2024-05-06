@@ -10,14 +10,19 @@ const swagger_jsdoc_1 = __importDefault(require("swagger-jsdoc"));
 const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
 const dbconn_config_1 = __importDefault(require("./config/dbconn.config"));
 const organizationAuth_route_1 = __importDefault(require("./modules/authentication/organizationUserAuth/organizationUser/organizationAuth.route"));
+// import UserAuthRouter from "./modules/authentication/organizationUserAuth/organizationUser/organizationAuth.route";
 const individualAuth_route_1 = __importDefault(require("./modules/authentication/individualUserAuth/individualUser/individualAuth.route"));
 const googleOrganizationUserAuth_route_1 = __importDefault(require("./modules/authentication/organizationUserAuth/googleOrganizationUser/googleOrganizationUserAuth.route"));
 const googleIndividualUserAuth_route_1 = __importDefault(require("./modules/authentication/individualUserAuth/googleIndividualUser/googleIndividualUserAuth.route"));
 const errorHandler_util_1 = require("./utilities/errorHandler.util");
-const swagger_1 = require("./swagger");
+const prodSwagger_1 = require("./prodSwagger");
+const devSwagger_1 = require("./devSwagger");
 const deserializeUser_middleware_1 = __importDefault(require("./middlewares/deserializeUser.middleware"));
 const protectRoutes_middleware_1 = __importDefault(require("./middlewares/protectRoutes.middleware"));
 const individualUsers_route_1 = __importDefault(require("./modules/users/individualUsers/individualUsers.route"));
+const userAuth_route_1 = __importDefault(require("./modules/authentication/userAuth.route"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
@@ -32,16 +37,35 @@ app.use((0, cors_1.default)({
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: false }));
 app.get("/", (req, res) => {
-    return res.json({ msg: "welcome to doshbox api production" });
+    return res.json({ msg: "welcome to doshbox api test" });
 });
 app.use("/auth/organization", organizationAuth_route_1.default);
 app.use("/auth/individual", individualAuth_route_1.default);
+app.use("/auth", userAuth_route_1.default);
 app.use("/auth/organization", googleOrganizationUserAuth_route_1.default);
 app.use("/auth/individual", googleIndividualUserAuth_route_1.default);
 app.use("/user", protectRoutes_middleware_1.default, individualUsers_route_1.default);
 app.use(errorHandler_util_1.errorHandler);
-const spec = (0, swagger_jsdoc_1.default)(swagger_1.options);
-app.use("/api-docs", swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(spec));
+//
+// const swaggerDocumentOne = require("./swagger-one.json");
+// const swaggerDocumentTwo = require("./swagger-two.json");
+// var options = {};
+// app.use(
+//   "/api-docs-one",
+//   swaggerUi.serveFiles(swaggerDocumentOne, options),
+//   swaggerUi.setup(swaggerDocumentOne)
+// );
+// app.use(
+//   "/api-docs-two",
+//   swaggerUi.serveFiles(swaggerDocumentTwo, options),
+//   swaggerUi.setup(swaggerDocumentTwo)
+// );
+//
+// let options = {};
+const devSpec = (0, swagger_jsdoc_1.default)(devSwagger_1.options);
+const prodSpec = (0, swagger_jsdoc_1.default)(prodSwagger_1.options);
+app.use("/dev-api-docs", swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(devSpec));
+app.use("/api-docs", swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(prodSpec));
 const PORT = process.env.PORT;
 (0, dbconn_config_1.default)()
     .then(() => {

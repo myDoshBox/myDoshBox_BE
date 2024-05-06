@@ -5,9 +5,9 @@ import IndividualUser from "../individualUserAuth.model";
 
 export const getGoogleUrl = async (req: Request, res: Response) => {
   const oAuth2Client = new OAuth2Client(
-    process.env.GOOGLE_CLIENT_IDS,
-    process.env.GOOGLE_CLIENT_SECRETS,
-    process.env.GOOGLE_REDIRECT_URI
+    process.env.GOOGLE_CLIENT_ID_INDIVIDUAL,
+    process.env.GOOGLE_CLIENT_SECRET_INDIVIDUAL,
+    process.env.GOOGLE_REDIRECT_URL_INDIVIDUAL
   );
 
   const authorizeUrl = oAuth2Client.generateAuthUrl({
@@ -44,9 +44,9 @@ export const getGoogleUserDetail = async (
     const { code } = req.query;
 
     const oAuth2Client = new OAuth2Client(
-      process.env.GOOGLE_CLIENT_IDS,
-      process.env.GOOGLE_CLIENT_SECRETS,
-      process.env.GOOGLE_REDIRECT_URI
+      process.env.GOOGLE_CLIENT_ID_INDIVIDUAL,
+      process.env.GOOGLE_CLIENT_SECRET_INDIVIDUAL,
+      process.env.GOOGLE_REDIRECT_URL_INDIVIDUAL
     );
 
     const response = await oAuth2Client.getToken(code as string);
@@ -113,7 +113,8 @@ export const getGoogleUserDetail = async (
       accessToken,
       refreshToken,
     });
-  } catch (err: unknown) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
     // console.log(err.stack);
     next(err);
   }
