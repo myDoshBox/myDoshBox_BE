@@ -12,14 +12,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyOrganizationUserEmail = exports.organizationUserResetPassword = exports.OrganizationUserForgotPassword = exports.organizationUserSignup = void 0;
+exports.organizationUserResetPassword = exports.organizationUserSignup = void 0;
 const organizationAuth_model_1 = __importDefault(require("../organizationAuth.model"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const crypto_1 = __importDefault(require("crypto"));
 const catchAsync_1 = __importDefault(require("../../../../utilities/catchAsync"));
 const appError_1 = __importDefault(require("../../../../utilities/appError"));
 const email_utils_1 = require("../../../../utilities/email.utils");
-const blacklistedToken_model_1 = require("../../../blacklistedTokens/blacklistedToken.model");
 const individualUserAuth_model_1 = __importDefault(require("../../individualUserAuth/individualUserAuth.model"));
 const signToken = (id) => {
     const payload = { id };
@@ -90,7 +89,6 @@ const organizationUserSignup = (req, res, next) => __awaiter(void 0, void 0, voi
         const organizationEmailAlreadyExist = yield organizationAuth_model_1.default.findOne({
             organization_email,
         });
-        console.log(individualEmailAlreadyExist, organizationEmailAlreadyExist);
         if (organizationEmailAlreadyExist || individualEmailAlreadyExist) {
             return res.status(409).json({
                 status: "failed",
@@ -190,27 +188,30 @@ exports.organizationUserSignup = organizationUserSignup;
 //     next(err);
 //   }
 // };
-exports.OrganizationUserForgotPassword = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    // 1) Get user based on POSTed email
-    const org = yield organizationAuth_model_1.default.findOne({
-        email: req.body.email,
-    });
-    if (!org) {
-        return next(new appError_1.default("There is no user with email address.", 404));
-    }
-    // 2) Generate the random reset token
-    const resetToken = org.createPasswordResetToken();
-    yield org.save({ validateBeforeSave: false });
-    // 3) Send it to user's email
-    const resetURL = `${req.protocol}://${req.get("host")}/auth/organization/resetPassword/${resetToken}`;
-    try {
-        (0, email_utils_1.sendURLEmail)(org.organization_email, resetURL);
-        res.status(200).json({ message: "success" });
-    }
-    catch (err) {
-        return next(new appError_1.default("There is an error sending the email.", 500));
-    }
-}));
+// export const OrganizationUserForgotPassword = catchAsync(
+//   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+//     // 1) Get user based on POSTed email
+//     const org = await OrganizationModel.findOne({
+//       email: req.body.email,
+//     });
+//     if (!org) {
+//       return next(new AppError("There is no user with email address.", 404));
+//     }
+//     // 2) Generate the random reset token
+//     const resetToken = org.createPasswordResetToken();
+//     await org.save({ validateBeforeSave: false });
+//     // 3) Send it to user's email
+//     const resetURL = `${req.protocol}://${req.get(
+//       "host"
+//     )}/auth/organization/resetPassword/${resetToken}`;
+//     try {
+//       sendURLEmail([org.organization_email], resetURL);
+//       res.status(200).json({ message: "success" });
+//     } catch (err) {
+//       return next(new AppError("There is an error sending the email.", 500));
+//     }
+//   }
+// );
 exports.organizationUserResetPassword = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     // 1) Get user based on the token
     const hashedToken = crypto_1.default
@@ -233,56 +234,3 @@ exports.organizationUserResetPassword = (0, catchAsync_1.default)((req, res, nex
     // 4) Log the org in, send JWT
     createSendToken(org, 200, res);
 }));
-const verifyOrganizationUserEmail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { token } = req.body;
-        const checkIfBlacklistedToken = yield blacklistedToken_model_1.BlacklistedToken.findOne({
-            token,
-        });
-        if (checkIfBlacklistedToken) {
-            return res.status(400).json({
-                status: false,
-                message: "Link has already been used. Kindly attempt login to regenerate confirm email link!",
-            });
-        }
-        const { email } = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
-        // Check if the user exists and is verified
-        const user = yield organizationAuth_model_1.default.findOne({
-            organization_email: email,
-        });
-        if (!user) {
-            return res
-                .status(400)
-                .json({ message: "User with this email does not exist" });
-        }
-        if (user.email_verified) {
-            return res.status(400).json({ message: "User is already verified." });
-        }
-        yield blacklistedToken_model_1.BlacklistedToken.create({
-            token,
-        });
-        // Update user's verification status
-        user.email_verified = true;
-        yield user.save();
-        // Respond with success message
-        return res.redirect("https://www.google.com");
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    }
-    catch (error) {
-        console.error("Error verifying email:", error);
-        if (error.name === "TokenExpiredError") {
-            return res.status(400).json({
-                status: false,
-                message: "Your token has expired. Kindly attempt login to regenerate confirm email link!", //expired token
-            });
-        }
-        if (error.name === "JsonWebTokenError") {
-            return res.status(400).json({
-                status: false,
-                message: "Invalid Token!!", // invalid token
-            });
-        }
-        res.status(500).json({ message: "Error verifying email" });
-    }
-});
-exports.verifyOrganizationUserEmail = verifyOrganizationUserEmail;

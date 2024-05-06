@@ -56,7 +56,7 @@ exports.options = {
         servers: [
             {
                 url: "https://mydoshbox-be-test.onrender.com",
-                description: "This is the Doshbox API server",
+                description: "This is the Doshbox API test server",
             },
         ],
         components: {
@@ -284,5 +284,6 @@ exports.options = {
         "./build/modules/authentication/organizationUserAuth/googleOrganizationUser/googleOrganizationUserAuth.route.js",
         "./build/modules/authentication/organizationUserAuth/organizationUser/organizationAuth.route.js",
         "./build/modules/authentication/individualUserAuth/individualUser/individualAuth.route.js",
+        "./build/modules/authentication/userAuth.route.js",
     ],
 };

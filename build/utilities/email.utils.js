@@ -42,6 +42,7 @@ const sendOtpEmail = (otp, email) => __awaiter(void 0, void 0, void 0, function*
 });
 exports.sendOtpEmail = sendOtpEmail;
 const sendURLEmail = (email, resetURL) => __awaiter(void 0, void 0, void 0, function* () {
+    const validEmails = email.filter(Boolean);
     const transport = generateMailTransporter();
     // const { email, message: customMessage } = options; // Renamed the variable to avoid conflict
     const emailMessage = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetURL}.\nIf you didn't forget your password, please ignore this email!`;

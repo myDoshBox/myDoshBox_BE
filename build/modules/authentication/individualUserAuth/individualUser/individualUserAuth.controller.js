@@ -12,12 +12,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resetIndividualPassword = exports.verifyIndividualUserEmail = exports.individualUserRegistration = void 0;
+exports.resetIndividualPassword = exports.individualUserRegistration = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const individualUserAuth_model_1 = __importDefault(require("../individualUserAuth.model"));
 const individualAuthPasswordToken_1 = __importDefault(require("./individualAuthPasswordToken"));
 const email_utils_1 = require("../../../../utilities/email.utils");
-const blacklistedToken_model_1 = require("../../../blacklistedTokens/blacklistedToken.model");
 const organizationAuth_model_1 = __importDefault(require("../../organizationUserAuth/organizationAuth.model"));
 const individualUserRegistration = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -105,62 +104,6 @@ const individualUserRegistration = (req, res) => __awaiter(void 0, void 0, void 
     }
 });
 exports.individualUserRegistration = individualUserRegistration;
-const verifyIndividualUserEmail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { token } = req.body;
-        const checkIfBlacklistedToken = yield blacklistedToken_model_1.BlacklistedToken.findOne({
-            token,
-        });
-        if (checkIfBlacklistedToken) {
-            return res.status(400).json({
-                status: false,
-                message: "Link has already been used. Kindly attempt login to regenerate confirm email link!",
-            });
-        }
-        const { email } = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
-        // Check if the user exists and is verified
-        const user = yield individualUserAuth_model_1.default.findOne({
-            email,
-        });
-        if (!user) {
-            return res
-                .status(400)
-                .json({ message: "User with this email does not exist" });
-        }
-        if (user.email_verified) {
-            return res.status(400).json({ message: "User is already verified." });
-        }
-        yield blacklistedToken_model_1.BlacklistedToken.create({
-            token,
-        });
-        // Update user's verification status
-        user.email_verified = true;
-        yield user.save();
-        // Respond with success message
-        return res.status(200).json({
-            message: "Email verified successfully. Kindly go ahead to login",
-            status: "true",
-        });
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    }
-    catch (error) {
-        console.error("Error verifying email:", error);
-        if (error.name === "TokenExpiredError") {
-            return res.status(400).json({
-                status: false,
-                message: "Your token has expired. Kindly attempt login to regenerate confirm email link!", //expired token
-            });
-        }
-        if (error.name === "JsonWebTokenError") {
-            return res.status(400).json({
-                status: false,
-                message: "Invalid Token!!", // invalid token
-            });
-        }
-        return res.status(500).json({ message: "Error verifying email" });
-    }
-});
-exports.verifyIndividualUserEmail = verifyIndividualUserEmail;
 const resetIndividualPassword = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password } = req.body;
     try {
