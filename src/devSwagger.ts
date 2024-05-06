@@ -1,4 +1,4 @@
-import swaggerJSDOC from "swagger-jsdoc";
+// import swaggerJSDOC from "swagger-jsdoc";
 // import { individualUserRegistration } from "./modules/authentication/individualUserAuth/individualUser/individualAuth.route";
 
 const organizationUserSchemaProps = {
@@ -51,7 +51,7 @@ const organizationUserSchemaProps = {
   },
 };
 
-const options = {
+export const options = {
   definition: {
     openapi: "3.0.0",
     info: {
@@ -298,7 +298,3 @@ const options = {
     "./src/modules/authentication/individualUserAuth/individualUser/individualAuth.route.ts",
   ],
 };
-
-const devSpec = swaggerJSDOC(options);
-
-export default devSpec;

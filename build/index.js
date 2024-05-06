@@ -15,7 +15,7 @@ const googleOrganizationUserAuth_route_1 = __importDefault(require("./modules/au
 const googleIndividualUserAuth_route_1 = __importDefault(require("./modules/authentication/individualUserAuth/googleIndividualUser/googleIndividualUserAuth.route"));
 const errorHandler_util_1 = require("./utilities/errorHandler.util");
 const prodSwagger_1 = require("./prodSwagger");
-// import devSpec from "./devSwagger";
+const devSwagger_1 = require("./devSwagger");
 const deserializeUser_middleware_1 = __importDefault(require("./middlewares/deserializeUser.middleware"));
 const protectRoutes_middleware_1 = __importDefault(require("./middlewares/protectRoutes.middleware"));
 const individualUsers_route_1 = __importDefault(require("./modules/users/individualUsers/individualUsers.route"));
@@ -59,9 +59,9 @@ app.use(errorHandler_util_1.errorHandler);
 // );
 //
 // let options = {};
-// const devSpec = swaggerJSDOC(options);
+const devSpec = (0, swagger_jsdoc_1.default)(devSwagger_1.options);
 const prodSpec = (0, swagger_jsdoc_1.default)(prodSwagger_1.options);
-// app.use("/dev-api-docs", swaggerUi.serve, swaggerUi.setup(devSpec));
+app.use("/dev-api-docs", swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(devSpec));
 app.use("/api-docs", swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(prodSpec));
 const PORT = process.env.PORT;
 (0, dbconn_config_1.default)()
