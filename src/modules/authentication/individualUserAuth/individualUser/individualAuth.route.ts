@@ -2,9 +2,7 @@ import { Router } from "express";
 import {
   individualUserRegistration,
   resetIndividualPassword,
-  verifyIndividualUserEmail,
 } from "./individualUserAuth.controller";
-import { UserLogin } from "../../userLoginAndResetPassword";
 
 const individualrouter = Router();
 
@@ -46,34 +44,6 @@ individualrouter.route("/signup").post(individualUserRegistration);
 
 /**
  * @swagger
- * /auth/individual/login:
- *   post:
- *     summary: Sign in a user
- *     tags: [IndividualUserAuth]
- *     requestBody:
- *       required: true
- *       content:
- *           application/json:
- *             schema:
- *               $ref: "#/components/schemas/IndividualUserLogin"
- *     responses:
- *       "200":
- *         description: User token
- *       "400":
- *         description: Bad request
- *       "404":
- *         description: Not found
- *       "403":
- *         description: Unauthorized request
- *       "500":
- *         description: Internal server error
- */
-
-// routes
-individualrouter.route("/login").post(UserLogin);
-
-/**
- * @swagger
  * /auth/individual/reset-password:
  *   post:
  *     summary: Reset a user's password
@@ -98,31 +68,5 @@ individualrouter.route("/login").post(UserLogin);
  */
 
 individualrouter.route("/reset-password").post(resetIndividualPassword);
-
-/**
- * @swagger
- * /auth/individual/verify-email:
- *   get:
- *     summary: Verify a user's email
- *     tags: [IndividualUserAuth]
- *     parameters:
- *       - in: query
- *         name: token
- *         description: Token to verify user email
- *         required: true
- *
- *     responses:
- *       "200":
- *         description: User token
- *       "400":
- *         description: Bad request
- *       "404":
- *         description: Not found
- *       "403":
- *         description: Unauthorized request
- *       "500":
- *         description: Internal server error
- */
-individualrouter.route("/verify-email").post(verifyIndividualUserEmail);
 
 export default individualrouter;

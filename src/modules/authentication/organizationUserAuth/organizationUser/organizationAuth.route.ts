@@ -1,6 +1,6 @@
 import express, { Router } from "express";
 import * as organizationController from "./organizationAuth.controller";
-import { UserLogin } from "../../userLoginAndResetPassword";
+import * as userController from "../../userAuth.controller";
 
 const router: Router = express.Router();
 
@@ -36,34 +36,7 @@ const router: Router = express.Router();
  *         '401':
  *           $ref: "#/components/responses/401"
  */
-
-/**
- * @swagger
- *   /auth/organization/organizationUserLogin:
- *     post:
- *       summary: Sign up an organization user
- *       description: Sign up a new user for the organization.
- *       tags: [OrganizationUserAuth]
- *       requestBody:
- *         required: true
- *         content:
- *           application/json:
- *             schema:
- *               $ref: "#/components/schemas/OrganizationUserLogin"
- *       responses:
- *         '200':
- *           description: User successfully login
- *           content:
- *             application/json:
- *               schema:
- *                 $ref: "#/components/schemas/OrganizationUserLogin"
- *         '400':
- *           $ref: "#/components/responses/400"
- *         '401':
- *           $ref: "#/components/responses/401"
- */
 router.post("/signup", organizationController.organizationUserSignup);
-router.post("/login", UserLogin);
 
 /**
  * @swagger
@@ -121,17 +94,10 @@ router.post("/login", UserLogin);
  *           $ref: "#/components/responses/400"
  */
 
-router.post(
-  "/verify-email",
-  organizationController.verifyOrganizationUserEmail
+router.post("/forgotpassword", userController.OrganizationUserForgotPassword);
+router.patch(
+  "/resetPassword/:token",
+  userController.organizationUserResetPassword
 );
-// router.post(
-//   "/forgotpassword",
-//   organizationController.OrganizationUserForgotPassword
-// );
-// router.patch(
-//   "/resetPassword/:token",
-//   organizationController.organizationUserResetPassword
-// );
 
 export default router;

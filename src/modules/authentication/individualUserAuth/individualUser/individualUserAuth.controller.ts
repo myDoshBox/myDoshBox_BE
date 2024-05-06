@@ -1,10 +1,9 @@
-import jwt, { JwtPayload } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import { Request, Response } from "express";
 
 import IndividualUser from "../individualUserAuth.model";
 import individualAuthPasswordToken from "./individualAuthPasswordToken";
 import { sendVerificationEmail } from "../../../../utilities/email.utils";
-import { BlacklistedToken } from "../../../blacklistedTokens/blacklistedToken.model";
 import OrganizationModel from "../../organizationUserAuth/organizationAuth.model";
 
 export const individualUserRegistration = async (
@@ -103,78 +102,6 @@ export const individualUserRegistration = async (
   } catch (error: unknown) {
     console.error("Error registering the user:", error);
     return res.status(500).json({ message: "Error registering the user" });
-  }
-};
-
-export const verifyIndividualUserEmail = async (
-  req: Request,
-  res: Response
-) => {
-  try {
-    const { token } = req.body;
-
-    const blackListedToken = await BlacklistedToken.findOne({
-      token,
-    });
-
-    if (blackListedToken) {
-      return res.status(400).json({
-        status: false,
-        message:
-          "Link has already been used. Kindly regenerate confirm email link!",
-      });
-    }
-
-    const { email } = jwt.verify(
-      token,
-      process.env.JWT_SECRET as string
-    ) as JwtPayload;
-
-    // Check if the user exists and is verified
-    const user = await IndividualUser.findOne({
-      email,
-    });
-
-    if (!user) {
-      return res
-        .status(400)
-        .json({ message: "User with this email does not exist" });
-    }
-
-    if (user.email_verified) {
-      return res.status(400).json({ message: "User is already verified." });
-    }
-
-    await BlacklistedToken.create({
-      token,
-    });
-
-    // Update user's verification status
-    user.email_verified = true;
-    await user.save();
-
-    // Respond with success message
-    return res.status(200).json({
-      message: "Email verified successfully. Kindly go ahead to login",
-      status: "true",
-    });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    console.error("Error verifying email:", error);
-    if (error.name === "TokenExpiredError") {
-      return res.status(400).json({
-        status: false,
-        message:
-          "Your token has expired. Please try to generate link and confirm email again", //expired token
-      });
-    }
-    if (error.name === "JsonWebTokenError") {
-      return res.status(400).json({
-        status: false,
-        message: "Invalid Token!!", // invalid token
-      });
-    }
-    return res.status(500).json({ message: "Error verifying email" });
   }
 };
 

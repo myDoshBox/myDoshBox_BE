@@ -1,9 +1,8 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
+// import swaggerJSDOC from "swagger-jsdoc";
+// import { individualUserRegistration } from "./modules/authentication/individualUserAuth/individualUser/individualAuth.route";
 Object.defineProperty(exports, "__esModule", { value: true });
-const swagger_jsdoc_1 = __importDefault(require("swagger-jsdoc"));
+exports.options = void 0;
 const organizationUserSchemaProps = {
     sub: {
         type: "string",
@@ -46,7 +45,7 @@ const organizationUserSchemaProps = {
         description: "kind of user, can either be org or g-org",
     },
 };
-const options = {
+exports.options = {
     definition: {
         openapi: "3.0.0",
         info: {
@@ -56,8 +55,8 @@ const options = {
         },
         servers: [
             {
-                url: "http://localhost:5000",
-                description: "This is the Doshbox API server",
+                url: "https://mydoshbox-be-test.onrender.com",
+                description: "This is the Doshbox API test server",
             },
         ],
         components: {
@@ -281,11 +280,10 @@ const options = {
         ],
     },
     apis: [
-        "build/modules/authentication/organizationUserAuth/googleOrganizationUser/googleOrganizationUserAuth.route.ts",
-        "build/modules/authentication/organizationUserAuth/organizationUser/organizationAuth.route.ts",
-        "build/modules/authentication/individualUserAuth/individualUser/individualAuth.route.ts",
-        "build/modules/authentication/individualUserAuth/googleIndividualUser/googleIndividualUserAuth.route.ts",
+        "./build/modules/authentication/individualUserAuth/googleIndividualUser/googleIndividualUserAuth.route.js",
+        "./build/modules/authentication/organizationUserAuth/googleOrganizationUser/googleOrganizationUserAuth.route.js",
+        "./build/modules/authentication/organizationUserAuth/organizationUser/organizationAuth.route.js",
+        "./build/modules/authentication/individualUserAuth/individualUser/individualAuth.route.js",
+        "./build/modules/authentication/userAuth.route.js",
     ],
 };
-const prodSpec = (0, swagger_jsdoc_1.default)(options);
-exports.default = prodSpec;
