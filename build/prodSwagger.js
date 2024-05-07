@@ -55,12 +55,30 @@ exports.options = {
         },
         servers: [
             {
-                url: "https://mydoshbox-be-test.onrender.com",
-                description: "This is the Doshbox API test server",
+                url: "http://localhost:5000",
+                description: "This is the Doshbox API dev server",
             },
         ],
         components: {
             schemas: {
+                UserLogin: {
+                    type: "object",
+                    required: ["email", "user_password"],
+                    properties: {
+                        email: {
+                            type: "string",
+                            format: "email",
+                            default: "example@gmail.com",
+                            description: "User's email address",
+                        },
+                        user_password: {
+                            type: "string",
+                            format: "password",
+                            default: "examplePassword",
+                            description: "User's password",
+                        },
+                    },
+                },
                 GoogleOrganizationAccess: {
                     type: "object",
                     required: [
@@ -95,11 +113,6 @@ exports.options = {
                         "password",
                         "password_confirmation",
                     ],
-                    properties: organizationUserSchemaProps,
-                },
-                OrganizationUserLogin: {
-                    type: "object",
-                    required: ["organization_email", "password"],
                     properties: organizationUserSchemaProps,
                 },
                 OrganizationUserForgotPassword: {
@@ -179,24 +192,6 @@ exports.options = {
                             format: "password",
                             description: "confirm password",
                             default: "examplePassword",
-                        },
-                    },
-                },
-                IndividualUserLogin: {
-                    type: "object",
-                    required: ["email", "password"],
-                    properties: {
-                        email: {
-                            type: "string",
-                            format: "email",
-                            default: "example@gmail.com",
-                            description: "User's email address",
-                        },
-                        password: {
-                            type: "string",
-                            format: "password",
-                            default: "examplePassword",
-                            description: "User's password",
                         },
                     },
                 },

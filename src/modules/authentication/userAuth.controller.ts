@@ -124,6 +124,12 @@ export const UserLogin = async (req: Request, res: Response) => {
     }).select("+password");
 
     if (individualUserToLogin) {
+      if (individualUserToLogin.role === "g-ind") {
+        res.status(400).json({
+          message: "Your account was created with Google. Kindly login Google.",
+        });
+      }
+
       if (!individualUserToLogin.email_verified) {
         const verificationToken = jwt.sign(
           { email },
@@ -173,6 +179,11 @@ export const UserLogin = async (req: Request, res: Response) => {
     }).select("+password");
 
     if (organizationUserToLogin) {
+      if (organizationUserToLogin.role === "g-org") {
+        return res.status(400).json({
+          message: "Your account was created with Google. Kindly login Google.",
+        });
+      }
       if (!organizationUserToLogin.email_verified) {
         const verificationToken = jwt.sign(
           { email: organizationUserToLogin.organization_email },
@@ -221,6 +232,10 @@ export const UserLogin = async (req: Request, res: Response) => {
         accessToken,
       });
     }
+
+    return res.status(400).json({
+      message: "Invalid email or password",
+    });
   } catch (error) {
     console.error("Error Logging in user:", error);
     res.status(500).json({ message: "Error Logging in user" });

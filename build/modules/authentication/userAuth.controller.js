@@ -137,6 +137,11 @@ const UserLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             email,
         }).select("+password");
         if (individualUserToLogin) {
+            if (individualUserToLogin.role === "g-ind") {
+                res.status(400).json({
+                    message: "Your account was created with Google. Kindly login Google.",
+                });
+            }
             if (!individualUserToLogin.email_verified) {
                 const verificationToken = jsonwebtoken_1.default.sign({ email }, process.env.JWT_SECRET, { expiresIn: 60 * 60 });
                 yield (0, email_utils_1.sendVerificationEmail)(email, verificationToken);
@@ -168,6 +173,11 @@ const UserLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             organization_email: email,
         }).select("+password");
         if (organizationUserToLogin) {
+            if (organizationUserToLogin.role === "g-org") {
+                return res.status(400).json({
+                    message: "Your account was created with Google. Kindly login Google.",
+                });
+            }
             if (!organizationUserToLogin.email_verified) {
                 const verificationToken = jsonwebtoken_1.default.sign({ email: organizationUserToLogin.organization_email }, process.env.JWT_SECRET, { expiresIn: 60 * 60 });
                 yield (0, email_utils_1.sendVerificationEmail)(organizationUserToLogin.organization_email, verificationToken);
@@ -196,6 +206,9 @@ const UserLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 accessToken,
             });
         }
+        return res.status(400).json({
+            message: "Invalid email or password",
+        });
     }
     catch (error) {
         console.error("Error Logging in user:", error);

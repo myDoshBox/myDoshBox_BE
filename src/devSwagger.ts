@@ -77,7 +77,7 @@ export const options = {
               default: "example@gmail.com",
               description: "User's email address",
             },
-            password: {
+            user_password: {
               type: "string",
               format: "password",
               default: "examplePassword",
