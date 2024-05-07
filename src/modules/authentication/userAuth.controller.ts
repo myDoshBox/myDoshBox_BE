@@ -126,8 +126,7 @@ export const UserLogin = async (req: Request, res: Response) => {
     if (individualUserToLogin) {
       if (individualUserToLogin.role === "g-ind") {
         res.status(400).json({
-          message:
-            "Login using Google since you already signed in with Google.",
+          message: "Your account was created with Google. Kindly login Google.",
         });
       }
 
@@ -181,9 +180,8 @@ export const UserLogin = async (req: Request, res: Response) => {
 
     if (organizationUserToLogin) {
       if (organizationUserToLogin.role === "g-org") {
-        res.status(400).json({
-          message:
-            "Login using Google since you already signed in with Google.",
+        return res.status(400).json({
+          message: "Your account was created with Google. Kindly login Google.",
         });
       }
       if (!organizationUserToLogin.email_verified) {
@@ -235,11 +233,9 @@ export const UserLogin = async (req: Request, res: Response) => {
       });
     }
 
-    if (!individualUserToLogin || !organizationUserToLogin) {
-      res.status(400).json({
-        message: "This user does not exists",
-      });
-    }
+    return res.status(400).json({
+      message: "Invalid email or password",
+    });
   } catch (error) {
     console.error("Error Logging in user:", error);
     res.status(500).json({ message: "Error Logging in user" });
