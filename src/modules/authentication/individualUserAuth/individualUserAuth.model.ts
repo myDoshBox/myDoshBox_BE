@@ -15,14 +15,10 @@ export interface IndividualUserDocument extends Document {
   email_verified: boolean; 
   passwordChangedAt?: Date;
   passwordResetExpires?: Date;
-  passwordResetToken?: {
-    token: string;
-    createdAt?: Date;
-  };
+  passwordResetToken?: string;
   comparePassword(candidatePassword: string): Promise<boolean>;
   createPasswordResetToken(): string;
   comparePasswordResetToken(token: string): boolean;
-  createPasswordResetToken(): string;
 
 }
 
@@ -63,18 +59,9 @@ const individualUserSchema = new Schema<IndividualUserDocument>(
       select: false,
     },
     passwordChangedAt: Date,
+    passwordResetToken: String,
     passwordResetExpires: Date,
-    passwordResetToken: {
-      token: {
-        type: String,
-      },
-      createdAt: {
-        type: Date,
-        expires: "1h",
-        default: Date.now(),
-        select: false,
-      },
-    },
+    
   },
   { timestamps: true }
 );
@@ -98,44 +85,29 @@ individualUserSchema.methods.comparePassword = async function (
   return await compare(candidatePassword, this.password);
 };
 
-// individualUserSchema.methods.correctPassword = async function (
-//   this: IndividualUserDocument,
-//   candidatePassword: string,
-//   userPassword: string
-// ) {
-//   return await bcrypt.compare(candidatePassword, userPassword);
-// };
+individualUserSchema.methods.createPasswordResetToken = function (
+  this: IndividualUserDocument
+) {
+  const resetToken = crypto.randomBytes(32).toString("hex");
+  this.passwordResetToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+  console.log({ resetToken }, this.passwordResetToken);
 
-// individualUserSchema.methods.createPasswordResetToken = function (
-//   this: IndividualUserDocument
-// ) {
-//   const resetToken = crypto.randomBytes(32).toString("hex");
-//   this.passwordResetToken = crypto
-//     .createHash("sha256")
-//     .update(resetToken)
-//     .digest("hex");
-//   console.log({ resetToken }, this.passwordResetToken);
+  const resetExpires = new Date();
+  resetExpires.setMinutes(resetExpires.getMinutes() + 10); // Add 10 minutes to the current time
+  this.passwordResetExpires = resetExpires;
 
-//   const resetExpires = new Date();
-//   resetExpires.setMinutes(resetExpires.getMinutes() + 10); // Add 10 minutes to the current time
-//   this.passwordResetExpires = resetExpires;
+  return resetToken;
+};
 
-//   return resetToken;
-// };
 
 individualUserSchema.methods.comparePasswordResetToken = function (
   token: string
 ) {
   const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
   return this.passwordResetToken?.token === hashedToken;
-};
-
-individualUserSchema.methods.createPasswordResetToken = function () {
-  const resetToken = crypto.randomBytes(32).toString("hex");
-  this.passwordResetToken = {
-    token: crypto.createHash("sha256").update(resetToken).digest("hex"),
-  };
-  return resetToken;
 };
 
 const IndividualUser = model<IndividualUserDocument, IndividualUserModel>(

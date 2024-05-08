@@ -76,7 +76,7 @@ router.post("/login", UserLogin);
 
 /**
  * @swagger
- *   /auth/organization/OrganizationUserForgotPassword:
+ *   /auth/ForgotPassword:
  *     post:
  *       summary: Request a password reset link
  *       description: Request a password reset link for the organization user.
@@ -98,7 +98,7 @@ router.post("/login", UserLogin);
 
 /**
  * @swagger
- *   /auth/organization/organizationUserResetPassword/{token}:
+ *   /auth/ResetPassword/{token}:
  *     patch:
  *       summary: Reset user's password
  *       description: Reset user's password using the provided reset token.
@@ -127,22 +127,14 @@ router.post(
   "/verify-email",
   organizationController.verifyOrganizationUserEmail
 );
-// router.post(
-//   "/forgotpassword",
-//   organizationController.OrganizationUserForgotPassword
-// );
-// router.patch(
-//   "/resetPassword/:token",
-//   organizationController.organizationUserResetPassword
-// );
 
 router.post(
   "/forgotpassword",
-  userController.OrganizationUserForgotPassword
+  userController.ForgotPassword
 );
 router.patch(
   "/resetPassword/:token", 
-  userController.organizationUserResetPassword
+  userController.ResetPassword
 );
 
-export default router;
+export default router; 
