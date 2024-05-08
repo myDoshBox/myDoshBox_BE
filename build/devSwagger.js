@@ -242,7 +242,11 @@ exports.options = {
                     contents: "application/json",
                 },
                 401: {
-                    description: "Google user not verified",
+                    description: "User not verified",
+                    contents: "application/json",
+                },
+                404: {
+                    description: "Resource not found",
                     contents: "application/json",
                 },
                 409: {
@@ -250,7 +254,7 @@ exports.options = {
                     contents: "application/json",
                 },
                 200: {
-                    description: "Google AuthorizedUrl successful gotten",
+                    description: "Response successfully gotten",
                     contents: "application/json",
                 },
                 201: {

@@ -1,6 +1,6 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 import { emailValidator } from "../../../utilities/validator.utils";
-import bcrypt from "bcryptjs";
+import bcrypt, { compare, hash } from "bcryptjs";
 import crypto from "crypto";
 
 // Extend the OrganizationDoc interface to include virtual properties
@@ -24,6 +24,7 @@ export interface organizationalDoc extends Document {
   changedPasswordAfter(JWTTimestamp: number): boolean;
   createPasswordResetToken(): string;
 }
+
 
 const organizationalSchema: Schema<organizationalDoc> = new mongoose.Schema(
   {
@@ -112,6 +113,7 @@ organizationalSchema.methods.createPasswordResetToken = function (
 
   return resetToken;
 };
+
 
 const OrganizationModel: Model<organizationalDoc> =
   mongoose.model<organizationalDoc>("OrganizationUser", organizationalSchema);

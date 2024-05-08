@@ -51,18 +51,8 @@ const individualUserSchema = new mongoose_1.Schema({
         select: false,
     },
     passwordChangedAt: Date,
+    passwordResetToken: String,
     passwordResetExpires: Date,
-    passwordResetToken: {
-        token: {
-            type: String,
-        },
-        createdAt: {
-            type: Date,
-            expires: "1h",
-            default: Date.now(),
-            select: false,
-        },
-    },
 }, { timestamps: true });
 individualUserSchema.pre("save", function (next) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -84,38 +74,22 @@ individualUserSchema.methods.comparePassword = function (candidatePassword) {
         return yield (0, bcrypt_1.compare)(candidatePassword, this.password);
     });
 };
-// individualUserSchema.methods.correctPassword = async function (
-//   this: IndividualUserDocument,
-//   candidatePassword: string,
-//   userPassword: string
-// ) {
-//   return await bcrypt.compare(candidatePassword, userPassword);
-// };
-// individualUserSchema.methods.createPasswordResetToken = function (
-//   this: IndividualUserDocument
-// ) {
-//   const resetToken = crypto.randomBytes(32).toString("hex");
-//   this.passwordResetToken = crypto
-//     .createHash("sha256")
-//     .update(resetToken)
-//     .digest("hex");
-//   console.log({ resetToken }, this.passwordResetToken);
-//   const resetExpires = new Date();
-//   resetExpires.setMinutes(resetExpires.getMinutes() + 10); // Add 10 minutes to the current time
-//   this.passwordResetExpires = resetExpires;
-//   return resetToken;
-// };
+individualUserSchema.methods.createPasswordResetToken = function () {
+    const resetToken = crypto_1.default.randomBytes(32).toString("hex");
+    this.passwordResetToken = crypto_1.default
+        .createHash("sha256")
+        .update(resetToken)
+        .digest("hex");
+    console.log({ resetToken }, this.passwordResetToken);
+    const resetExpires = new Date();
+    resetExpires.setMinutes(resetExpires.getMinutes() + 10); // Add 10 minutes to the current time
+    this.passwordResetExpires = resetExpires;
+    return resetToken;
+};
 individualUserSchema.methods.comparePasswordResetToken = function (token) {
     var _a;
     const hashedToken = crypto_1.default.createHash("sha256").update(token).digest("hex");
     return ((_a = this.passwordResetToken) === null || _a === void 0 ? void 0 : _a.token) === hashedToken;
-};
-individualUserSchema.methods.createPasswordResetToken = function () {
-    const resetToken = crypto_1.default.randomBytes(32).toString("hex");
-    this.passwordResetToken = {
-        token: crypto_1.default.createHash("sha256").update(resetToken).digest("hex"),
-    };
-    return resetToken;
 };
 const IndividualUser = (0, mongoose_1.model)("IndividualUser", individualUserSchema);
 exports.default = IndividualUser;

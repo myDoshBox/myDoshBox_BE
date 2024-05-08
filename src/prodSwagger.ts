@@ -61,8 +61,8 @@ export const options = {
     },
     servers: [
       {
-        url: "http://localhost:5000",
-        description: "This is the Doshbox API dev server",
+        url: "https://mydoshbox-be.onrender.com",
+        description: "This is the Doshbox API server",
       },
     ],
     components: {

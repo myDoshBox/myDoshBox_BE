@@ -10,7 +10,6 @@ const swagger_jsdoc_1 = __importDefault(require("swagger-jsdoc"));
 const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
 const dbconn_config_1 = __importDefault(require("./config/dbconn.config"));
 const organizationAuth_route_1 = __importDefault(require("./modules/authentication/organizationUserAuth/organizationUser/organizationAuth.route"));
-// import UserAuthRouter from "./modules/authentication/organizationUserAuth/organizationUser/organizationAuth.route";
 const individualAuth_route_1 = __importDefault(require("./modules/authentication/individualUserAuth/individualUser/individualAuth.route"));
 const googleOrganizationUserAuth_route_1 = __importDefault(require("./modules/authentication/organizationUserAuth/googleOrganizationUser/googleOrganizationUserAuth.route"));
 const googleIndividualUserAuth_route_1 = __importDefault(require("./modules/authentication/individualUserAuth/googleIndividualUser/googleIndividualUserAuth.route"));
