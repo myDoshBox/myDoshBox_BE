@@ -1,13 +1,20 @@
-import { Request, NextFunction, Response, RequestHandler } from "express";
-import OrganizationModel from "./organizationUserAuth/organizationAuth.model";
-import IndividualUser from "./individualUserAuth/individualUserAuth.model";
-import jwt from "jsonwebtoken";
-import { sendURLEmail, sendVerificationEmail } from "../../utilities/email.utils";
+import { Request, NextFunction, Response } from "express";
+import jwt, { JwtPayload } from "jsonwebtoken";
+import {
+  sendURLEmail,
+  sendVerificationEmail,
+} from "../../utilities/email.utils";
 import { createSessionAndSendTokens } from "../../utilities/createSessionAndSendToken.util";
 import AppError from "../../utilities/appError";
 import catchAsync from "../../utilities/catchAsync";
-import * as crypto from "crypto"
-import PasswordTokenSchema from "../authentication/individualUserAuth/individualUser/individualAuthPasswordToken";
+import { BlacklistedToken } from "../blacklistedTokens/blacklistedToken.model";
+import IndividualUser, {
+  IndividualUserDocument,
+} from "./individualUserAuth/individualUserAuth.model";
+import OrganizationModel, {
+  organizationalDoc,
+} from "./organizationUserAuth/organizationAuth.model";
+import * as crypto from "crypto";
 
 interface TokenPayload {
   id: string;
@@ -34,6 +41,72 @@ const createSendToken = (user: any, statusCode: number, res: Response) => {
   });
 };
 
+export const verifyUserEmail = async (req: Request, res: Response) => {
+  try {
+    const { token } = req.body;
+
+    const checkIfBlacklistedToken = await BlacklistedToken.findOne({
+      token,
+    });
+
+    if (checkIfBlacklistedToken) {
+      return res.status(400).json({
+        status: false,
+        message:
+          "Link has already been used. Kindly attempt login to regenerate confirm email link!",
+      });
+    }
+
+    const { email } = jwt.verify(
+      token,
+      process.env.JWT_SECRET as string
+    ) as JwtPayload;
+
+    // Check if the user exists and is verified
+    const user = await checkIfUserExist(email);
+
+    if (!user)
+      return res
+        .status(400)
+        .json({ message: "User with this email does not exist" });
+
+    if (user.email_verified) {
+      return res.status(400).json({ message: "User is already verified." });
+    }
+
+    await BlacklistedToken.create({
+      token,
+    });
+
+    // Update user's verification status
+    user.email_verified = true;
+    await user.save();
+
+    // Respond with success message
+    return res.status(200).json({
+      message: "Email verified successfully. Kindly go ahead to login",
+      status: "true",
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    console.error("Error verifying email:", error);
+    if (error.name === "TokenExpiredError") {
+      return res.status(400).json({
+        status: false,
+        message:
+          "Your token has expired. Kindly attempt login to regenerate confirm email link!", //expired token
+      });
+    }
+    if (error.name === "JsonWebTokenError") {
+      return res.status(400).json({
+        status: false,
+        message: "Invalid Token!!", // invalid token
+      });
+    }
+    res.status(500).json({ message: "Error verifying email" });
+  }
+};
+
 export const UserLogin = async (req: Request, res: Response) => {
   const { email, user_password } = req.body as {
     email: string;
@@ -51,6 +124,12 @@ export const UserLogin = async (req: Request, res: Response) => {
     }).select("+password");
 
     if (individualUserToLogin) {
+      if (individualUserToLogin.role === "g-ind") {
+        res.status(400).json({
+          message: "Your account was created with Google. Kindly login Google.",
+        });
+      }
+
       if (!individualUserToLogin.email_verified) {
         const verificationToken = jwt.sign(
           { email },
@@ -100,6 +179,11 @@ export const UserLogin = async (req: Request, res: Response) => {
     }).select("+password");
 
     if (organizationUserToLogin) {
+      if (organizationUserToLogin.role === "g-org") {
+        return res.status(400).json({
+          message: "Your account was created with Google. Kindly login Google.",
+        });
+      }
       if (!organizationUserToLogin.email_verified) {
         const verificationToken = jwt.sign(
           { email: organizationUserToLogin.organization_email },
@@ -148,18 +232,20 @@ export const UserLogin = async (req: Request, res: Response) => {
         accessToken,
       });
     }
+
+    return res.status(400).json({
+      message: "Invalid email or password",
+    });
   } catch (error) {
     console.error("Error Logging in user:", error);
     res.status(500).json({ message: "Error Logging in user" });
   }
 };
 
-
-export const ForgotPassword = catchAsync(
+export const OrganizationUserForgotPassword = catchAsync(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     // 1) Get user based on POSTed email
     const { email } = req.body;
-    console.log(email);
 
     try {
       // Check if the user exists in the organization model
@@ -178,32 +264,40 @@ export const ForgotPassword = catchAsync(
       }
 
       // Generate the random reset token based on whether org or user is defined
-      const resetToken = (org ? org.createPasswordResetToken() : user!.createPasswordResetToken());
+      const resetToken = org
+        ? org.createPasswordResetToken()
+        : user!.createPasswordResetToken();
 
       // Save the organization or user based on which one is found
-      await (org ? org.save({ validateBeforeSave: false }) : user!.save({ validateBeforeSave: false }));
+      await (org
+        ? org.save({ validateBeforeSave: false })
+        : user!.save({ validateBeforeSave: false }));
 
       // Send reset email to the user's email
-      const resetURL = `${req.protocol}://${req.get("host")}/auth/resetPassword/${resetToken}`;
+      const resetURL = `${req.protocol}://${req.get(
+        "host"
+      )}/auth/organization/resetPassword/${resetToken}`;
       // sendURLEmail([org?.organization_email, user?.email].filter(Boolean), resetURL);
-      const validEmails = [org?.organization_email, user?.email].filter((email) => typeof email === 'string') as string[];
+      const validEmails = [org?.organization_email, user?.email].filter(
+        (email) => typeof email === "string"
+      ) as string[];
 
       sendURLEmail(validEmails, resetURL);
 
       res.status(200).json({ message: "success" }); 
     } catch (error) {
-      return next(new AppError("There is an error processing the request.", 500));
+      return next(
+        new AppError("There is an error processing the request.", 500)
+      );
     }
-  } 
+  }
 );
 
-
-export const ResetPassword = catchAsync(
+export const organizationUserResetPassword = catchAsync(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     // 1) Get user based on the token
 
     const token = req.params.token;
-    console.log(token)
 
     const hashedToken = crypto
       .createHash("sha256")
@@ -219,7 +313,6 @@ export const ResetPassword = catchAsync(
       passwordResetToken: hashedToken,
       // passwordResetExpires: { $gt: Date.now() }, 
     });
-    console.log(user)
 
     // 2) If token has not expired, and there is a user, set the new password
     if (!org && !user) {
@@ -252,3 +345,42 @@ export const ResetPassword = catchAsync(
   }
 );
 
+export const organizationUserUpdatePassword = catchAsync(
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password } = req.body;
+    try {
+      const org = await OrganizationModel.findOne({
+        passwordResetToken: req.params.token,
+        passwordResetExpires: { $gt: Date.now() },
+      });
+      const user = await IndividualUser.findOne({
+        passwordResetToken: req.params.token,
+        passwordResetExpires: { $gt: Date.now() },
+      });
+      if (!org && !user) {
+        return next(new AppError("Token is invalid or has expired", 400));
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+);
+
+const checkIfUserExist = async (
+  email: string
+): Promise<organizationalDoc | IndividualUserDocument | null> => {
+  const individualUser = await IndividualUser.findOne({
+    email,
+  });
+
+  if (individualUser) return individualUser;
+
+  const organizationUser = await OrganizationModel.findOne({
+    organization_email: email,
+  });
+
+  if (organizationUser) return organizationUser;
+
+  return null;
+};
