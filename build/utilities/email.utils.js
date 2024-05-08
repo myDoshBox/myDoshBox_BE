@@ -54,6 +54,17 @@ const sendURLEmail = (email, resetURL) => __awaiter(void 0, void 0, void 0, func
     });
 });
 exports.sendURLEmail = sendURLEmail;
+// export const sendResetPasswordEmail = async (email: string, token: string) => {
+//   const transport = generateMailTransporter();
+//   // const { email, message: customMessage } = options; // Renamed the variable to avoid conflict
+//   const emailMessage = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${token}.\nIf you didn't forget your password, please ignore this email!`;
+//   transport.sendMail({
+//     to: email,
+//     from: process.env.VERIFICATION_EMAIL,
+//     subject: "Reset Password Token",
+//     html: emailMessage, // Assign the HTML string directly to the html property
+//   });
+// };
 const sendVerificationEmail = (email, token) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const transport = generateMailTransporter();

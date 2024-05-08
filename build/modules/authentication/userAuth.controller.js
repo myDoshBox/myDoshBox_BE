@@ -264,7 +264,7 @@ exports.organizationUserResetPassword = (0, catchAsync_1.default)((req, res, nex
     });
     const user = yield individualUserAuth_model_1.default.findOne({
         passwordResetToken: hashedToken,
-        passwordResetExpires: { $gt: Date.now() },
+        // passwordResetExpires: { $gt: Date.now() }, 
     });
     // 2) If token has not expired, and there is a user, set the new password
     if (!org && !user) {

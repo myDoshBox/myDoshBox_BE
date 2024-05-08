@@ -94,25 +94,10 @@ router.post("/signup", organizationController.organizationUserSignup);
  *           $ref: "#/components/responses/400"
  */
 
-<<<<<<< HEAD
-router.post(
-  "/verify-email",
-  organizationController.verifyOrganizationUserEmail
-);
-
-router.post(
-  "/forgotpassword",
-  userController.ForgotPassword
-);
-router.patch(
-  "/resetPassword/:token", 
-  userController.ResetPassword
-=======
 router.post("/forgotpassword", userController.OrganizationUserForgotPassword);
 router.patch(
   "/resetPassword/:token",
   userController.organizationUserResetPassword
->>>>>>> faf51175f63242aa93a201342bc24f3138398fd5
 );
 
-export default router; 
+export default router;
