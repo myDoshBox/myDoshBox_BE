@@ -38,10 +38,10 @@ const router = express_1.default.Router();
  */
 /**
  * @swagger
- *   /auth/organization/organizationUserSignup:
+ *   /auth/organization/signup:
  *     post:
  *       summary: Sign up an organization user
- *       description: Sign up a new user for the organization.
+ *       description: Sign up a new user for the organization. sub, email_verified, picture, and role are optional and are not needed to signup
  *       tags: [OrganizationUserAuth]
  *       requestBody:
  *         required: true
