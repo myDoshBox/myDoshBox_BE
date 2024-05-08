@@ -47,7 +47,7 @@ router.post("/signup", organizationController.organizationUserSignup);
 
 /**
  * @swagger
- *   /auth/organization/OrganizationUserForgotPassword:
+ *   /auth/ForgotPassword:
  *     post:
  *       summary: Request a password reset link
  *       description: Request a password reset link for the organization user.
@@ -69,7 +69,7 @@ router.post("/signup", organizationController.organizationUserSignup);
 
 /**
  * @swagger
- *   /auth/organization/organizationUserResetPassword/{token}:
+ *   /auth/ResetPassword/{token}:
  *     patch:
  *       summary: Reset user's password
  *       description: Reset user's password using the provided reset token.
@@ -94,10 +94,25 @@ router.post("/signup", organizationController.organizationUserSignup);
  *           $ref: "#/components/responses/400"
  */
 
+<<<<<<< HEAD
+router.post(
+  "/verify-email",
+  organizationController.verifyOrganizationUserEmail
+);
+
+router.post(
+  "/forgotpassword",
+  userController.ForgotPassword
+);
+router.patch(
+  "/resetPassword/:token", 
+  userController.ResetPassword
+=======
 router.post("/forgotpassword", userController.OrganizationUserForgotPassword);
 router.patch(
   "/resetPassword/:token",
   userController.organizationUserResetPassword
+>>>>>>> faf51175f63242aa93a201342bc24f3138398fd5
 );
 
-export default router;
+export default router; 

@@ -8,7 +8,7 @@ import { Request, Response } from "express";
 import connectDB from "./config/dbconn.config";
 
 import organizationUserAuthRouter from "./modules/authentication/organizationUserAuth/organizationUser/organizationAuth.route";
-// import UserAuthRouter from "./modules/authentication/organizationUserAuth/organizationUser/organizationAuth.route";
+import UserAuthRouter from "./modules/authentication/organizationUserAuth/organizationUser/organizationAuth.route";
 import individualUserAuthRouter from "./modules/authentication/individualUserAuth/individualUser/individualAuth.route";
 import googleOrganizationUserAuthRouter from "./modules/authentication/organizationUserAuth/googleOrganizationUser/googleOrganizationUserAuth.route";
 import googleIndividualUserAuthRouter from "./modules/authentication/individualUserAuth/googleIndividualUser/googleIndividualUserAuth.route";
@@ -51,7 +51,11 @@ app.get("/", (req: Request, res: Response) => {
 
 app.use("/auth/organization", organizationUserAuthRouter);
 app.use("/auth/individual", individualUserAuthRouter);
+<<<<<<< HEAD
+app.use("/auth", UserAuthRouter)
+=======
 app.use("/auth", authRouter);
+>>>>>>> faf51175f63242aa93a201342bc24f3138398fd5
 
 app.use("/auth/organization", googleOrganizationUserAuthRouter);
 app.use("/auth/individual", googleIndividualUserAuthRouter);

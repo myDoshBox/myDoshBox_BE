@@ -284,7 +284,7 @@ export const OrganizationUserForgotPassword = catchAsync(
 
       sendURLEmail(validEmails, resetURL);
 
-      res.status(200).json({ message: "success" });
+      res.status(200).json({ message: "success" }); 
     } catch (error) {
       return next(
         new AppError("There is an error processing the request.", 500)
@@ -311,7 +311,7 @@ export const organizationUserResetPassword = catchAsync(
 
     const user = await IndividualUser.findOne({
       passwordResetToken: hashedToken,
-      passwordResetExpires: { $gt: Date.now() },
+      // passwordResetExpires: { $gt: Date.now() }, 
     });
 
     // 2) If token has not expired, and there is a user, set the new password
