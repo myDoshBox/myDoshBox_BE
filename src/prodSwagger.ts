@@ -61,12 +61,30 @@ export const options = {
     },
     servers: [
       {
-        url: "https://mydoshbox-be-test.onrender.com",
-        description: "This is the Doshbox API test server",
+        url: "https://mydoshbox-be.onrender.com",
+        description: "This is the Doshbox API server",
       },
     ],
     components: {
       schemas: {
+        UserLogin: {
+          type: "object",
+          required: ["email", "user_password"],
+          properties: {
+            email: {
+              type: "string",
+              format: "email",
+              default: "example@gmail.com",
+              description: "User's email address",
+            },
+            user_password: {
+              type: "string",
+              format: "password",
+              default: "examplePassword",
+              description: "User's password",
+            },
+          },
+        },
         GoogleOrganizationAccess: {
           type: "object",
           required: [
@@ -101,11 +119,6 @@ export const options = {
             "password",
             "password_confirmation",
           ],
-          properties: organizationUserSchemaProps,
-        },
-        OrganizationUserLogin: {
-          type: "object",
-          required: ["organization_email", "password"],
           properties: organizationUserSchemaProps,
         },
         OrganizationUserForgotPassword: {
@@ -190,24 +203,6 @@ export const options = {
               format: "password",
               description: "confirm password",
               default: "examplePassword",
-            },
-          },
-        },
-        IndividualUserLogin: {
-          type: "object",
-          required: ["email", "password"],
-          properties: {
-            email: {
-              type: "string",
-              format: "email",
-              default: "example@gmail.com",
-              description: "User's email address",
-            },
-            password: {
-              type: "string",
-              format: "password",
-              default: "examplePassword",
-              description: "User's password",
             },
           },
         },
