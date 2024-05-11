@@ -11,14 +11,9 @@ export const individualUserRegistration = async (
   res: Response
 ) => {
   try {
-    const { name, email, phone_number, password, confirm_password } = req.body;
+    const { email, phone_number, password, confirm_password } = req.body;
 
-    if (!name) {
-      return res.status(400).json({
-        status: "fail",
-        message: "Name is required",
-      });
-    } else if (!email) {
+    if (!email) {
       return res.status(400).json({
         status: "fail",
         message: "Email is required",
@@ -71,7 +66,6 @@ export const individualUserRegistration = async (
 
     // Create a new user
     const newUser = new IndividualUser({
-      name,
       email,
       phone_number,
       password,
