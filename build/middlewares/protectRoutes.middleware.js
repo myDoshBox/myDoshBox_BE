@@ -32,6 +32,7 @@ const protectRoutes = (req, res, next) => __awaiter(void 0, void 0, void 0, func
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
     }
     catch (error) {
+        console.log(error);
         return res.status(500).json({
             message: "something happened at the protectRoutes function",
         });

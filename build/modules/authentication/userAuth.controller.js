@@ -129,7 +129,9 @@ exports.verifyUserEmail = verifyUserEmail;
 const UserLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, user_password } = req.body;
     if (!email || !user_password) {
-        res.status(400).json({ message: "Please provide email and password" });
+        res.status(400).json({
+            message: "Invalid Email or Password. Please provide a valid email or password",
+        });
         return;
     }
     try {
@@ -152,7 +154,7 @@ const UserLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             }
             const passwordMatch = yield individualUserToLogin.comparePassword(user_password);
             if (!passwordMatch) {
-                return res.status(422).json({ error: "Password is not correct" });
+                return res.status(422).json({ error: "Incorrect Password" });
             }
             const userWithoutPassword = __rest(individualUserToLogin.toObject(), []);
             const { status, message, user: userWithoutPasswordForSession, accessToken, refreshToken, } = yield (0, createSessionAndSendToken_util_1.createSessionAndSendTokens)({
@@ -188,7 +190,7 @@ const UserLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             }
             const passwordMatch = yield organizationUserToLogin.correctPassword(user_password, organizationUserToLogin.password);
             if (!passwordMatch) {
-                return res.status(422).json({ error: "Invalid email or password" });
+                return res.status(422).json({ error: "Incorrect Password" });
             }
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const _a = organizationUserToLogin.toObject(), { password } = _a, userWithoutPassword = __rest(_a, ["password"]);
