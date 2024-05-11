@@ -178,7 +178,7 @@ export const options = {
         },
         IndividualUserSignup: {
           type: "object",
-          required: ["email", "password", "phoneNumber", "confirmPassword"],
+          required: ["email", "password", "phone_number", "confirm_password"],
           properties: {
             email: {
               type: "string",
@@ -186,7 +186,7 @@ export const options = {
               deault: "example@example.com",
               description: "User's email addess",
             },
-            phoneNumber: {
+            phone_number: {
               type: "string",
               format: "phoneNumber",
               description: "User's phone number",
@@ -198,7 +198,7 @@ export const options = {
               description: "User's password",
               default: "examplePassword",
             },
-            confirmPassword: {
+            confirm_password: {
               type: "string",
               format: "password",
               description: "confirm password",
@@ -220,7 +220,7 @@ export const options = {
         },
         IndividualUserResetPassword: {
           type: "object",
-          required: ["password", "confirmPassword"],
+          required: ["password", "confirm_password"],
           properties: {
             password: {
               type: "string",
@@ -228,7 +228,7 @@ export const options = {
               default: "examplePassword",
               description: "User's password",
             },
-            confirmPassword: {
+            confirm_password: {
               type: "string",
               format: "password",
               default: "examplePassword",

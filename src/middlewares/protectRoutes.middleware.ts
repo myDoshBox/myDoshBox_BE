@@ -26,6 +26,7 @@ const protectRoutes = async (
       });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
+    console.log(error);
     return res.status(500).json({
       message: "something happened at the protectRoutes function",
     });

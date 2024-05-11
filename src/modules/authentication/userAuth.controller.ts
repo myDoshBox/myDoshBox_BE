@@ -114,7 +114,10 @@ export const UserLogin = async (req: Request, res: Response) => {
   };
 
   if (!email || !user_password) {
-    res.status(400).json({ message: "Please provide email and password" });
+    res.status(400).json({
+      message:
+        "Invalid Email or Password. Please provide a valid email or password",
+    });
     return;
   }
 
@@ -148,7 +151,7 @@ export const UserLogin = async (req: Request, res: Response) => {
         user_password
       );
       if (!passwordMatch) {
-        return res.status(422).json({ error: "Password is not correct" });
+        return res.status(422).json({ error: "Incorrect Password" });
       }
 
       const { ...userWithoutPassword } = individualUserToLogin.toObject();
@@ -207,7 +210,7 @@ export const UserLogin = async (req: Request, res: Response) => {
       );
 
       if (!passwordMatch) {
-        return res.status(422).json({ error: "Invalid email or password" });
+        return res.status(422).json({ error: "Incorrect Password" });
       }
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...userWithoutPassword } =

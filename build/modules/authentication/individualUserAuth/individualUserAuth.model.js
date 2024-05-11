@@ -18,7 +18,6 @@ const bcrypt_1 = require("bcrypt");
 // import bcrypt from "bcryptjs";
 const crypto_1 = __importDefault(require("crypto"));
 const individualUserSchema = new mongoose_1.Schema({
-    name: { type: String, required: [true, "Please tell us your name"] },
     email: {
         type: String,
         unique: true,

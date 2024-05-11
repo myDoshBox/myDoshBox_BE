@@ -167,7 +167,7 @@ exports.options = {
                 },
                 IndividualUserSignup: {
                     type: "object",
-                    required: ["email", "password", "phoneNumber", "confirmPassword"],
+                    required: ["email", "password", "phone_number", "confirm_password"],
                     properties: {
                         email: {
                             type: "string",
@@ -175,7 +175,7 @@ exports.options = {
                             deault: "example@example.com",
                             description: "User's email addess",
                         },
-                        phoneNumber: {
+                        phone_number: {
                             type: "string",
                             format: "phoneNumber",
                             description: "User's phone number",
@@ -187,7 +187,7 @@ exports.options = {
                             description: "User's password",
                             default: "examplePassword",
                         },
-                        confirmPassword: {
+                        confirm_password: {
                             type: "string",
                             format: "password",
                             description: "confirm password",
@@ -209,7 +209,7 @@ exports.options = {
                 },
                 IndividualUserResetPassword: {
                     type: "object",
-                    required: ["password", "confirmPassword"],
+                    required: ["password", "confirm_password"],
                     properties: {
                         password: {
                             type: "string",
@@ -217,7 +217,7 @@ exports.options = {
                             default: "examplePassword",
                             description: "User's password",
                         },
-                        confirmPassword: {
+                        confirm_password: {
                             type: "string",
                             format: "password",
                             default: "examplePassword",
