@@ -38,6 +38,27 @@ const router: Router = express.Router();
  */
 router.post("/login", UserLogin);
 
+/**
+ * @swagger
+ *   /auth/verify-email:
+ *     post:
+ *       summary: Verify user email
+ *       description: confirm user email and verify user so user can continue to login to application.
+ *       tags: [UserAuth]
+ *       requestBody:
+ *         required: true
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/ConfirmEmail"
+ *       responses:
+ *         '200':
+ *           description: User email successfully verified
+ *           content:
+ *             application/json:
+ *               schema:
+ *                 $ref: "#/components/schemas/ConfirmEmail"
+ */
 router.post("/verify-email", verifyUserEmail);
 
 /**

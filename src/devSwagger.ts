@@ -85,6 +85,16 @@ export const options = {
             },
           },
         },
+        ConfirmEmail: {
+          type: "object",
+          required: ["token"],
+          properties: {
+            email: {
+              default:
+                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRhaXdvZGFuaWVsMTk5OEBnbWFpbC5jb20iLCJpYXQiOjE3MTU5ODE3MzgsImV4cCI6MTcxNTk4NTMzOH0.dGBYu8Jeop6P7YiHYk3MgGmUlWGQn4dSZ4bu4RWdY7E",
+            },
+          },
+        },
         GoogleOrganizationAccess: {
           type: "object",
           required: [
