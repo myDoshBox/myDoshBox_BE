@@ -93,7 +93,9 @@ const individualUserRegistration = (req, res) => __awaiter(void 0, void 0, void 
     }
     catch (error) {
         console.error("Error registering the user:", error);
-        return res.status(500).json({ message: "Error registering the user" });
+        return res
+            .status(500)
+            .json({ message: "Error registering the user", error });
     }
 });
 exports.individualUserRegistration = individualUserRegistration;

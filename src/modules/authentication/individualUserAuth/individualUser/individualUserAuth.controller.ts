@@ -95,7 +95,9 @@ export const individualUserRegistration = async (
     });
   } catch (error: unknown) {
     console.error("Error registering the user:", error);
-    return res.status(500).json({ message: "Error registering the user" });
+    return res
+      .status(500)
+      .json({ message: "Error registering the user", error });
   }
 };
 
