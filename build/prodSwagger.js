@@ -113,7 +113,32 @@ exports.options = {
                         "password",
                         "password_confirmation",
                     ],
-                    properties: organizationUserSchemaProps,
+                    properties: {
+                        organization_name: {
+                            type: "string",
+                            description: "this is the google account username provided by the google oauth",
+                        },
+                        organization_email: {
+                            type: "string",
+                            description: "this is the google account email provided by the google oauth",
+                        },
+                        contact_number: {
+                            type: "string",
+                            description: "this is the organization's contact phone number to be provided by the user after google account verification and access",
+                        },
+                        contact_email: {
+                            type: "string",
+                            description: "this is the organization's contact email address to be provided by the user after google account verification and access",
+                        },
+                        password: {
+                            type: "string",
+                            description: "organization account password",
+                        },
+                        password_confirmation: {
+                            type: "string",
+                            description: "organization account password",
+                        },
+                    },
                 },
                 OrganizationUserForgotPassword: {
                     type: "object",

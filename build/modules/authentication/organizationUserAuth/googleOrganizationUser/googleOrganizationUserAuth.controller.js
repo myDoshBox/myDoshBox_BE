@@ -19,7 +19,7 @@ const organizationAuth_model_1 = __importDefault(require("../organizationAuth.mo
 const createSessionAndSendToken_util_1 = require("../../../../utilities/createSessionAndSendToken.util");
 const individualUserAuth_model_1 = __importDefault(require("../../individualUserAuth/individualUserAuth.model"));
 const getGoogleUrl = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const oAuth2Client = new google_auth_library_1.OAuth2Client(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, process.env.GOOGLE_OAUTH_REDIRECT_URL_ORGANIZATION);
+    const oAuth2Client = new google_auth_library_1.OAuth2Client(process.env.GOOGLE_OAUTH_CLIENT_ID, process.env.GOOGLE_OAUTH_CLIENT_SECRET, process.env.GOOGLE_OAUTH_REDIRECT_URL_ORGANIZATION);
     const authorizeUrl = oAuth2Client.generateAuthUrl({
         access_type: "offline",
         prompt: "consent",
@@ -41,7 +41,7 @@ const getGoogleUserDetail = (req, res, next) => __awaiter(void 0, void 0, void 0
         if (req.query.error === "access_denied") {
             return res.redirect("https://mydoshbox-git-testingbranch-mydoshbox-gmailcom.vercel.app/signup");
         }
-        const oAuth2Client = new google_auth_library_1.OAuth2Client(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, process.env.GOOGLE_OAUTH_REDIRECT_URL_ORGANIZATION);
+        const oAuth2Client = new google_auth_library_1.OAuth2Client(process.env.GOOGLE_OAUTH_CLIENT_ID, process.env.GOOGLE_OAUTH_CLIENT_SECRET, process.env.GOOGLE_OAUTH_REDIRECT_URL_ORGANIZATION);
         const response = yield oAuth2Client.getToken(code);
         yield oAuth2Client.setCredentials(response.tokens);
         const googleUser = oAuth2Client.credentials;

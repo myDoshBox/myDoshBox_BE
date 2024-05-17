@@ -6,8 +6,8 @@ import OrganizationModel from "../../organizationUserAuth/organizationAuth.model
 
 export const getGoogleUrl = async (req: Request, res: Response) => {
   const oAuth2Client = new OAuth2Client(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.GOOGLE_OAUTH_CLIENT_ID,
+    process.env.GOOGLE_OAUTH_CLIENT_SECRET,
     process.env.GOOGLE_OAUTH_REDIRECT_URL_INDIVIDUAL
   );
 
@@ -50,8 +50,8 @@ export const getGoogleUserDetail = async (
     }
 
     const oAuth2Client = new OAuth2Client(
-      process.env.GOOGLE_CLIENT_ID,
-      process.env.GOOGLE_CLIENT_SECRET,
+      process.env.GOOGLE_OAUTH_CLIENT_ID,
+      process.env.GOOGLE_OAUTH_CLIENT_SECRET,
       process.env.GOOGLE_OAUTH_REDIRECT_URL_INDIVIDUAL
     );
 
