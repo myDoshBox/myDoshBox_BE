@@ -245,7 +245,7 @@ export const UserLogin = async (req: Request, res: Response) => {
   }
 };
 
-export const OrganizationUserForgotPassword = catchAsync(
+export const userForgotPassword = catchAsync(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     // 1) Get user based on POSTed email
     const { email } = req.body;
@@ -296,7 +296,7 @@ export const OrganizationUserForgotPassword = catchAsync(
   }
 );
 
-export const organizationUserResetPassword = catchAsync(
+export const userResetPassword = catchAsync(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     // 1) Get user based on the token
 

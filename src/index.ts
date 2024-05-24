@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import express from "express";
 import cors from "cors";
-import swaggerJSDOC from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 
 import { Request, Response } from "express";
