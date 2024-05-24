@@ -20,14 +20,8 @@ const email_utils_1 = require("../../../../utilities/email.utils");
 const organizationAuth_model_1 = __importDefault(require("../../organizationUserAuth/organizationAuth.model"));
 const individualUserRegistration = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { name, email, phone_number, password, confirm_password } = req.body;
-        if (!name) {
-            return res.status(400).json({
-                status: "fail",
-                message: "Name is required",
-            });
-        }
-        else if (!email) {
+        const { email, phone_number, password, confirm_password } = req.body;
+        if (!email) {
             return res.status(400).json({
                 status: "fail",
                 message: "Email is required",
@@ -78,7 +72,6 @@ const individualUserRegistration = (req, res) => __awaiter(void 0, void 0, void 
         }
         // Create a new user
         const newUser = new individualUserAuth_model_1.default({
-            name,
             email,
             phone_number,
             password,
@@ -100,7 +93,9 @@ const individualUserRegistration = (req, res) => __awaiter(void 0, void 0, void 
     }
     catch (error) {
         console.error("Error registering the user:", error);
-        return res.status(500).json({ message: "Error registering the user" });
+        return res
+            .status(500)
+            .json({ message: "Error registering the user", error });
     }
 });
 exports.individualUserRegistration = individualUserRegistration;
