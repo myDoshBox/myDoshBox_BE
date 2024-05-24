@@ -38,32 +38,6 @@ const individualrouter = (0, express_1.Router)();
 individualrouter.route("/signup").post(individualUserAuth_controller_1.individualUserRegistration);
 /**
  * @swagger
- * /auth/individual/login:
- *   post:
- *     summary: Sign in a user
- *     tags: [IndividualUserAuth]
- *     requestBody:
- *       required: true
- *       content:
- *           application/json:
- *             schema:
- *               $ref: "#/components/schemas/IndividualUserLogin"
- *     responses:
- *       "200":
- *         description: User token
- *       "400":
- *         description: Bad request
- *       "404":
- *         description: Not found
- *       "403":
- *         description: Unauthorized request
- *       "500":
- *         description: Internal server error
- */
-// routes
-individualrouter.route("/login").post(individualUserAuth_controller_1.individualUserLogin);
-/**
- * @swagger
  * /auth/individual/reset-password:
  *   post:
  *     summary: Reset a user's password
@@ -87,29 +61,4 @@ individualrouter.route("/login").post(individualUserAuth_controller_1.individual
  *         description: Internal server error
  */
 individualrouter.route("/reset-password").post(individualUserAuth_controller_1.resetIndividualPassword);
-/**
- * @swagger
- * /auth/individual/verify-email:
- *   get:
- *     summary: Verify a user's email
- *     tags: [IndividualUserAuth]
- *     parameters:
- *       - in: query
- *         name: token
- *         description: Token to verify user email
- *         required: true
- *
- *     responses:
- *       "200":
- *         description: User token
- *       "400":
- *         description: Bad request
- *       "404":
- *         description: Not found
- *       "403":
- *         description: Unauthorized request
- *       "500":
- *         description: Internal server error
- */
-individualrouter.route("/verify-email").post(individualUserAuth_controller_1.verifyIndividualUserEmail);
 exports.default = individualrouter;

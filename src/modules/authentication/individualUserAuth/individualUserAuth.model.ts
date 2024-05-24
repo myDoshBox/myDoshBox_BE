@@ -1,6 +1,7 @@
 import { Document, model, Model, Schema } from "mongoose";
 import { emailValidator } from "../../../utilities/validator.utils";
 import { hash, compare } from "bcrypt";
+// import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
 export interface IndividualUserDocument extends Document {
@@ -11,16 +12,14 @@ export interface IndividualUserDocument extends Document {
   role: string;
   phone_number: string;
   password: string;
-  email_verified: boolean;
+  email_verified: boolean; 
   passwordChangedAt?: Date;
   passwordResetExpires?: Date;
-  passwordResetToken?: {
-    token: string;
-    createdAt?: Date;
-  };
+  passwordResetToken?: string;
   comparePassword(candidatePassword: string): Promise<boolean>;
   createPasswordResetToken(): string;
   comparePasswordResetToken(token: string): boolean;
+
 }
 
 export interface IndividualUserModel extends Model<IndividualUserDocument> {}
@@ -60,18 +59,9 @@ const individualUserSchema = new Schema<IndividualUserDocument>(
       select: false,
     },
     passwordChangedAt: Date,
-    passwordResetExpires:Date,
-    passwordResetToken: {
-      token: {
-        type: String,
-      },
-      createdAt: {
-        type: Date,
-        expires: "1h",
-        default: Date.now(),
-        select: false,
-      },
-    },
+    passwordResetToken: String,
+    passwordResetExpires: Date,
+    
   },
   { timestamps: true }
 );
@@ -83,7 +73,7 @@ individualUserSchema.pre<IndividualUserDocument>("save", async function (next) {
       this.password = await hash(this.password, saltRounds);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      return next(err);
+      next(err);
     }
   }
   next();
@@ -95,19 +85,29 @@ individualUserSchema.methods.comparePassword = async function (
   return await compare(candidatePassword, this.password);
 };
 
+individualUserSchema.methods.createPasswordResetToken = function (
+  this: IndividualUserDocument
+) {
+  const resetToken = crypto.randomBytes(32).toString("hex");
+  this.passwordResetToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+  console.log({ resetToken }, this.passwordResetToken);
+
+  const resetExpires = new Date();
+  resetExpires.setMinutes(resetExpires.getMinutes() + 10); // Add 10 minutes to the current time
+  this.passwordResetExpires = resetExpires;
+
+  return resetToken;
+};
+
+
 individualUserSchema.methods.comparePasswordResetToken = function (
   token: string
 ) {
   const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
   return this.passwordResetToken?.token === hashedToken;
-};
-
-individualUserSchema.methods.createPasswordResetToken = function () {
-  const resetToken = crypto.randomBytes(32).toString("hex");
-  this.passwordResetToken = {
-    token: crypto.createHash("sha256").update(resetToken).digest("hex"),
-  };
-  return resetToken;
 };
 
 const IndividualUser = model<IndividualUserDocument, IndividualUserModel>(

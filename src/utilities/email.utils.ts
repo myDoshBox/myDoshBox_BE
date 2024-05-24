@@ -5,8 +5,10 @@ dotenv.config();
 
 const generateMailTransporter = () => {
   const transport = nodemailer.createTransport({
-    host: "sandbox.smtp.mailtrap.io",
-    port: 2525,
+    service: "Gmail",
+    host: "smtp.gmail.com",
+    port: 456,
+    secure: true,
     auth: {
       user: process.env.EMAIL_USERNAME,
       pass: process.env.EMAIL_PASSWORD,
@@ -29,7 +31,9 @@ export const sendOtpEmail = async (otp: string, email: string) => {
   });
 };
 
-export const sendURLEmail = async (emails: string[], resetURL: string) => {
+export const sendURLEmail = async (email: string[], resetURL: string) => {
+  const validEmails = email.filter(Boolean) as string[];
+
   const transport = generateMailTransporter();
 
   const emailMessage = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetURL}.\nIf you didn't forget your password, please ignore this email!`;
@@ -52,6 +56,20 @@ export const sendURLEmail = async (emails: string[], resetURL: string) => {
   }
 };
 
+// export const sendResetPasswordEmail = async (email: string, token: string) => {
+
+//   const transport = generateMailTransporter();
+
+//   // const { email, message: customMessage } = options; // Renamed the variable to avoid conflict
+//   const emailMessage = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${token}.\nIf you didn't forget your password, please ignore this email!`;
+
+//   transport.sendMail({
+//     to: email,
+//     from: process.env.VERIFICATION_EMAIL,
+//     subject: "Reset Password Token",
+//     html: emailMessage, // Assign the HTML string directly to the html property
+//   });
+// };
 
 export const sendVerificationEmail = async (email: string, token: string) => {
   try {
@@ -91,9 +109,6 @@ export const sendVerificationEmail = async (email: string, token: string) => {
           <p>If you have any questions or need assistance, feel free to reach out to our support team at <a href="mailto:${supportEmail}" style="text-decoration: none; color: #007bff;">${supportEmail}</a>.</p>
           <p>Thank you for choosing Doshbox. We look forward to having you as an active member of our community!</p>
           <p>Best regards,<br>
-            Fawaz<br>
-            Dev<br>
-            Doshbox</p>
         </td>
       </tr>
     </table>

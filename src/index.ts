@@ -11,14 +11,15 @@ import individualUserAuthRouter from "./modules/authentication/individualUserAut
 import googleOrganizationUserAuthRouter from "./modules/authentication/organizationUserAuth/googleOrganizationUser/googleOrganizationUserAuth.route";
 import googleIndividualUserAuthRouter from "./modules/authentication/individualUserAuth/googleIndividualUser/googleIndividualUserAuth.route";
 import { errorHandler } from "./utilities/errorHandler.util";
-import { options } from "./swagger";
- 
-const swaggerJsDoc = require("swagger-jsdoc")
-// const swaggerUi = require('swagger-ui-express')
-// const options = require('./modules/authentication/individualUserAuth/individualAuthSwagger.docs')
+import { options as prodOptions } from "./prodSwagger";
+import { options as devOptions } from "./devSwagger";
 import deserializeUser from "./middlewares/deserializeUser.middleware";
 import protectRoutes from "./middlewares/protectRoutes.middleware";
 import individualRoutes from "./modules/users/individualUsers/individualUsers.route";
+import authRouter from "./modules/authentication/userAuth.route";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 
@@ -48,6 +49,7 @@ app.get("/", (req: Request, res: Response) => {
 
 app.use("/auth/organization", organizationUserAuthRouter);
 app.use("/auth/individual", individualUserAuthRouter);
+app.use("/auth", authRouter);
 
 app.use("/auth/organization", googleOrganizationUserAuthRouter);
 app.use("/auth/individual", googleIndividualUserAuthRouter);
@@ -56,13 +58,34 @@ app.use("/user", protectRoutes, individualRoutes);
 
 app.use(errorHandler);
 
+//
 
-const spec = swaggerJsDoc(options)
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(spec))
+// const swaggerDocumentOne = require("./swagger-one.json");
+// const swaggerDocumentTwo = require("./swagger-two.json");
 
-//const swaggerUiSetup = swaggerUi.setup(specs);
+// var options = {};
 
-//app.use("/api-docs", swaggerUi.serve, swaggerUiSetup);
+// app.use(
+//   "/api-docs-one",
+//   swaggerUi.serveFiles(swaggerDocumentOne, options),
+//   swaggerUi.setup(swaggerDocumentOne)
+// );
+
+// app.use(
+//   "/api-docs-two",
+//   swaggerUi.serveFiles(swaggerDocumentTwo, options),
+//   swaggerUi.setup(swaggerDocumentTwo)
+// );
+
+//
+
+// let options = {};
+
+const devSpec = swaggerJSDOC(devOptions);
+const prodSpec = swaggerJSDOC(prodOptions);
+
+app.use("/dev-api-docs", swaggerUi.serve, swaggerUi.setup(devSpec));
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(prodSpec));
 
 const PORT = process.env.PORT;
 

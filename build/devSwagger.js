@@ -1,4 +1,6 @@
 "use strict";
+// import swaggerJSDOC from "swagger-jsdoc";
+// import { individualUserRegistration } from "./modules/authentication/individualUserAuth/individualUser/individualAuth.route";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.options = void 0;
 const organizationUserSchemaProps = {
@@ -54,11 +56,29 @@ exports.options = {
         servers: [
             {
                 url: "http://localhost:5000",
-                description: "This is the Doshbox API server",
+                description: "This is the Doshbox API dev server",
             },
         ],
         components: {
             schemas: {
+                UserLogin: {
+                    type: "object",
+                    required: ["email", "user_password"],
+                    properties: {
+                        email: {
+                            type: "string",
+                            format: "email",
+                            default: "example@gmail.com",
+                            description: "User's email address",
+                        },
+                        user_password: {
+                            type: "string",
+                            format: "password",
+                            default: "examplePassword",
+                            description: "User's password",
+                        },
+                    },
+                },
                 GoogleOrganizationAccess: {
                     type: "object",
                     required: [
@@ -93,11 +113,6 @@ exports.options = {
                         "password",
                         "password_confirmation",
                     ],
-                    properties: organizationUserSchemaProps,
-                },
-                OrganizationUserLogin: {
-                    type: "object",
-                    required: ["organization_email", "password"],
                     properties: organizationUserSchemaProps,
                 },
                 OrganizationUserForgotPassword: {
@@ -180,24 +195,6 @@ exports.options = {
                         },
                     },
                 },
-                IndividualUserLogin: {
-                    type: "object",
-                    required: ["email", "password"],
-                    properties: {
-                        email: {
-                            type: "string",
-                            format: "email",
-                            default: "example@gmail.com",
-                            description: "User's email address",
-                        },
-                        password: {
-                            type: "string",
-                            format: "password",
-                            default: "examplePassword",
-                            description: "User's password",
-                        },
-                    },
-                },
                 IndividualUserForgotPassword: {
                     type: "object",
                     required: ["email"],
@@ -245,7 +242,11 @@ exports.options = {
                     contents: "application/json",
                 },
                 401: {
-                    description: "Google user not verified",
+                    description: "User not verified",
+                    contents: "application/json",
+                },
+                404: {
+                    description: "Resource not found",
                     contents: "application/json",
                 },
                 409: {
@@ -253,7 +254,7 @@ exports.options = {
                     contents: "application/json",
                 },
                 200: {
-                    description: "Google AuthorizedUrl successful gotten",
+                    description: "Response successfully gotten",
                     contents: "application/json",
                 },
                 201: {
@@ -278,9 +279,10 @@ exports.options = {
         ],
     },
     apis: [
+        "./src/modules/authentication/individualUserAuth/googleIndividualUser/googleIndividualUserAuth.route.ts",
         "./src/modules/authentication/organizationUserAuth/googleOrganizationUser/googleOrganizationUserAuth.route.ts",
         "./src/modules/authentication/organizationUserAuth/organizationUser/organizationAuth.route.ts",
         "./src/modules/authentication/individualUserAuth/individualUser/individualAuth.route.ts",
-        "./src/modules/authentication/individualUserAuth/googleIndividualUser/googleIndividualUserAuth.route.ts",
+        "./src/modules/authentication/userAuth.route.ts",
     ],
 };

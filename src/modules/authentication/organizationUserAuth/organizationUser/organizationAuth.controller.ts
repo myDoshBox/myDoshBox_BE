@@ -1,15 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import OrganizationModel from "../organizationAuth.model";
-import jwt, { JwtPayload } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import catchAsync from "../../../../utilities/catchAsync";
 import AppError from "../../../../utilities/appError";
-import {
-  sendURLEmail,
-  sendVerificationEmail,
-} from "../../../../utilities/email.utils";
-import { createSessionAndSendTokens } from "../../../../utilities/createSessionAndSendToken.util";
-import { BlacklistedToken } from "../../../blacklistedTokens/blacklistedToken.model";
+import { sendVerificationEmail } from "../../../../utilities/email.utils";
 import IndividualUser from "../../individualUserAuth/individualUserAuth.model";
 
 interface TokenPayload {
@@ -38,13 +33,6 @@ const createSendToken = (user: any, statusCode: number, res: Response) => {
   });
 };
 
-const sendErrorResponse = (res: Response, message: string) => {
-  res.status(404).json({
-    status: "fail",
-    message: message,
-  });
-};
-
 export const organizationUserSignup = async (
   req: Request,
   res: Response,
@@ -60,28 +48,40 @@ export const organizationUserSignup = async (
       password_confirmation,
     } = req.body;
 
-    switch (true) {
-      case !organization_name:
-        sendErrorResponse(res, "Organization name is required");
-        break;
-      case !organization_email:
-        sendErrorResponse(res, "Organization email is required");
-        break;
-      case !contact_email:
-        sendErrorResponse(res, "Contact email is required");
-        break;
-      case !contact_number:
-        sendErrorResponse(res, "Contact number is required");
-        break;
-      case !password:
-        sendErrorResponse(res, "Password is required");
-        break;
-      default:
-        sendErrorResponse(res, "Unexpected error occured");
+    if (!organization_name) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Organization name is required",
+      });
+    } else if (!organization_email) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Organization email is required",
+      });
+    } else if (!contact_email) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Contact email is required",
+      });
+    } else if (!contact_number) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Contact number is required",
+      });
+    } else if (!password) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Password is required",
+      });
+    } else if (!password_confirmation) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Password confirmation  is required",
+      });
     }
 
     if (password !== password_confirmation) {
-      res.status(401).json({
+      return res.status(401).json({
         status: "fail",
         message: "Password do not match",
       });
@@ -127,87 +127,89 @@ export const organizationUserSignup = async (
       message:
         "Account successfully created. Verification email sent. Verify account to continue",
     });
-  } catch (err) {
-    return next(err);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
+    next(err);
   }
 };
 
-export const organizationUserLogin = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const { organization_email, password } = req.body;
+// export const organizationUserLogin = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   try {
+//     const { organization_email, password } = req.body;
 
-    if (!organization_email || !password) {
-      res.status(401).json({
-        status: "fail",
-        message: "Password and organization email are required",
-      });
-    }
+//     if (!organization_email || !password) {
+//       res.status(401).json({
+//         status: "fail",
+//         message: "Password and organization email are required",
+//       });
+//     }
 
-    // 2) Check if user exists && password is correct
-    const loggedInUser = await OrganizationModel.findOne({
-      organization_email,
-    }).select("+password");
+//     // 2) Check if user exists && password is correct
+//     const loggedInUser = await OrganizationModel.findOne({
+//       organization_email,
+//     }).select("+password");
 
-    if (
-      !loggedInUser ||
-      !(await loggedInUser.correctPassword(password, loggedInUser.password))
-    ) {
-      return res.status(401).json({
-        status: "fail",
-        message: "Incorrect details",
-      });
-    }
+//     if (
+//       !loggedInUser ||
+//       !(await loggedInUser.correctPassword(password, loggedInUser.password))
+//     ) {
+//       return res.status(401).json({
+//         status: "fail",
+//         message: "Incorrect details",
+//       });
+//     }
 
-    if (!loggedInUser.email_verified) {
-      const verificationToken = jwt.sign(
-        {
-          email: loggedInUser.organization_email,
-        },
-        process.env.JWT_SECRET as string,
-        {
-          expiresIn: 60 * 60,
-        }
-      );
+//     if (!loggedInUser.email_verified) {
+//       const verificationToken = jwt.sign(
+//         {
+//           email: loggedInUser.organization_email,
+//         },
+//         process.env.JWT_SECRET as string,
+//         {
+//           expiresIn: 60 * 60,
+//         }
+//       );
 
-      await sendVerificationEmail(
-        loggedInUser.organization_email,
-        verificationToken
-      );
+//       await sendVerificationEmail(
+//         loggedInUser.organization_email,
+//         verificationToken
+//       );
 
-      // Send a response
-      return res.status(200).json({
-        status: "true",
-        message:
-          "Account is unverified! Verification email sent. Verify account to continue",
-      });
-    }
+//       // Send a response
+//       return res.status(200).json({
+//         status: "true",
+//         message:
+//           "Account is unverified! Verification email sent. Verify account to continue",
+//       });
+//     }
 
-    // 3) If everything ok, send token to client
-    const createSessionAndSendTokensOptions = {
-      user: loggedInUser.toObject(),
-      userAgent: req.get("user-agent") || "",
-      role: loggedInUser.role,
-      message: "Organization user sucessfully logged in",
-    };
+//     // 3) If everything ok, send token to client
+//     const createSessionAndSendTokensOptions = {
+//       user: loggedInUser.toObject(),
+//       userAgent: req.get("user-agent") || "",
+//       role: loggedInUser.role,
+//       message: "Organization user sucessfully logged in",
+//     };
 
-    const { status, message, user, accessToken, refreshToken } =
-      await createSessionAndSendTokens(createSessionAndSendTokensOptions);
+//     const { status, message, user, accessToken, refreshToken } =
+//       await createSessionAndSendTokens(createSessionAndSendTokensOptions);
 
-    return res.status(200).json({
-      status,
-      message,
-      user,
-      refreshToken,
-      accessToken,
-    });
-  } catch (err) {
-    return next(err);
-  }
-};
+//     return res.status(200).json({
+//       status,
+//       message,
+//       user,
+//       refreshToken,
+//       accessToken,
+//     });
+//     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//   } catch (err: any) {
+//     next(err);
+//   }
+// };
 
 // export const OrganizationUserForgotPassword = catchAsync(
 //   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -229,7 +231,7 @@ export const organizationUserLogin = async (
 //     )}/auth/organization/resetPassword/${resetToken}`;
 
 //     try {
-//       sendURLEmail(org.organization_email, resetURL);
+//       sendURLEmail([org.organization_email], resetURL);
 //       res.status(200).json({ message: "success" });
 //     } catch (err) {
 //       return next(new AppError("There is an error sending the email.", 500));
@@ -259,80 +261,8 @@ export const organizationUserLogin = async (
 //     org.passwordResetExpires = undefined;
 //     await org.save();
 
-//     // 3) Update changedPasswordAt property for the org
-//     // 4) Log the org in, send JWT
+    // 3) Update changedPasswordAt property for the org
+    // 4) Log the org in, send JWT
 //     createSendToken(org, 200, res);
 //   }
 // );
-
-export const verifyOrganizationUserEmail = async (
-  req: Request,
-  res: Response
-) => {
-  try {
-    const { token } = req.body;
-
-    const blackListedToken = await BlacklistedToken.findOne({
-      token,
-    });
-
-    if (blackListedToken) {
-      return res.status(400).json({
-        status: false,
-        message:
-          "Link has already been used. Kindly regenerate confirm email link!",
-      });
-    }
-
-    const { email } = jwt.verify(
-      token,
-      process.env.JWT_SECRET as string
-    ) as JwtPayload;
-
-    // Check if the user exists and is verified
-    const user = await OrganizationModel.findOne({
-      organization_email: email,
-    });
-
-    if (!user) {
-      return res
-        .status(400)
-        .json({ message: "User with this email does not exist" });
-    }
-
-    if (user.email_verified) {
-      return res.status(400).json({ message: "User is already verified." });
-    }
-
-    await BlacklistedToken.create({
-      token,
-    });
-
-    // Update user's verification status
-    user.email_verified = true;
-    await user.save();
-
-    // Respond with success message
-    return res.status(200).json({
-      message: "Email verified successfully. Kindly go ahead to login",
-      status: "true",
-    });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    console.error("Error verifying email:", error);
-    if (error.name === "TokenExpiredError") {
-      return res.status(400).json({
-        status: false,
-        message:
-          "Your token has expired. Please try to generate link and confirm email again", //expired token
-      });
-    }
-    if (error.name === "JsonWebTokenError") {
-      return res.status(400).json({
-        status: false,
-        message: "Invalid Token!!", // invalid token
-      });
-    }
-    res.status(500).json({ message: "Error verifying email" });
-  }
-};

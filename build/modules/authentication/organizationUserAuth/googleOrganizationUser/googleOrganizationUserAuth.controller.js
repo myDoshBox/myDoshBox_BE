@@ -18,7 +18,7 @@ const google_auth_library_1 = require("google-auth-library");
 const organizationAuth_model_1 = __importDefault(require("../organizationAuth.model"));
 const createSessionAndSendToken_util_1 = require("../../../../utilities/createSessionAndSendToken.util");
 const getGoogleUrl = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const oAuth2Client = new google_auth_library_1.OAuth2Client(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, process.env.GOOGLE_OAUTH_REDIRECT_URL);
+    const oAuth2Client = new google_auth_library_1.OAuth2Client(process.env.GOOGLE_CLIENT_ID_ORGANIZATION, process.env.GOOGLE_CLIENT_SECRET_ORGANIZATION, process.env.GOOGLE_OAUTH_REDIRECT_URL_ORGANIZATION);
     const authorizeUrl = oAuth2Client.generateAuthUrl({
         access_type: "offline",
         prompt: "consent",
@@ -37,7 +37,7 @@ exports.getUserDetails = getUserDetails;
 const getGoogleUserDetail = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { code } = req.query;
-        const oAuth2Client = new google_auth_library_1.OAuth2Client(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, process.env.GOOGLE_OAUTH_REDIRECT_URL);
+        const oAuth2Client = new google_auth_library_1.OAuth2Client(process.env.GOOGLE_CLIENT_ID_ORGANIZATION, process.env.GOOGLE_CLIENT_SECRET_ORGANIZATION, process.env.GOOGLE_OAUTH_REDIRECT_URL_ORGANIZATION);
         const response = yield oAuth2Client.getToken(code);
         yield oAuth2Client.setCredentials(response.tokens);
         const googleUser = oAuth2Client.credentials;
@@ -77,6 +77,7 @@ const getGoogleUserDetail = (req, res, next) => __awaiter(void 0, void 0, void 0
             accessToken,
             refreshToken,
         });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     }
     catch (err) {
         // console.log("errorrrrrrrrrrr", err);

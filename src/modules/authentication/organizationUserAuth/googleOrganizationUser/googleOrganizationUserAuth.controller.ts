@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import { NextFunction, Request, Response } from "express";
 import { Credentials, OAuth2Client } from "google-auth-library";
 // import GoogleOrganizationUser from "./googleOrganizationUserAuth.model";
 import OrganizationModel from "../organizationAuth.model";
@@ -6,9 +6,9 @@ import { createSessionAndSendTokens } from "../../../../utilities/createSessionA
 
 export const getGoogleUrl = async (req: Request, res: Response) => {
   const oAuth2Client = new OAuth2Client(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_OAUTH_REDIRECT_URL
+    process.env.GOOGLE_CLIENT_ID_ORGANIZATION,
+    process.env.GOOGLE_CLIENT_SECRET_ORGANIZATION,
+    process.env.GOOGLE_OAUTH_REDIRECT_URL_ORGANIZATION
   );
 
   const authorizeUrl = oAuth2Client.generateAuthUrl({
@@ -40,9 +40,9 @@ export const getGoogleUserDetail = async (
     const { code } = req.query;
 
     const oAuth2Client = new OAuth2Client(
-      process.env.GOOGLE_CLIENT_ID,
-      process.env.GOOGLE_CLIENT_SECRET,
-      process.env.GOOGLE_OAUTH_REDIRECT_URL
+      process.env.GOOGLE_CLIENT_ID_ORGANIZATION,
+      process.env.GOOGLE_CLIENT_SECRET_ORGANIZATION,
+      process.env.GOOGLE_OAUTH_REDIRECT_URL_ORGANIZATION
     );
 
     const response = await oAuth2Client.getToken(code as string);
@@ -91,7 +91,8 @@ export const getGoogleUserDetail = async (
       accessToken,
       refreshToken,
     });
-  } catch (err: unknown) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
     // console.log("errorrrrrrrrrrr", err);
     next(err);
   }
