@@ -239,30 +239,30 @@ export const organizationUserSignup = async (
 //   }
 // );
 
-export const organizationUserResetPassword = catchAsync(
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    // 1) Get user based on the token
-    const hashedToken = crypto
-      .createHash("sha256")
-      .update(req.params.token)
-      .digest("hex");
+// export const organizationUserResetPassword = catchAsync(
+//   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+//     // 1) Get user based on the token
+//     const hashedToken = crypto
+//       .createHash("sha256")
+//       .update(req.params.token)
+//       .digest("hex");
 
-    const org = await OrganizationModel.findOne({
-      passwordResetToken: hashedToken,
-      passwordResetExpires: { $gt: Date.now() },
-    });
+//     const org = await OrganizationModel.findOne({
+//       passwordResetToken: hashedToken,
+//       passwordResetExpires: { $gt: Date.now() },
+//     });
 
-    // 2) If token has not expired, and there is org, set the new password
-    if (!org) {
-      return next(new AppError("Token is invalid or has expired", 400));
-    }
-    org.password = req.body.password;
-    org.passwordResetToken = undefined;
-    org.passwordResetExpires = undefined;
-    await org.save();
+//     // 2) If token has not expired, and there is org, set the new password
+//     if (!org) {
+//       return next(new AppError("Token is invalid or has expired", 400));
+//     }
+//     org.password = req.body.password;
+//     org.passwordResetToken = undefined;
+//     org.passwordResetExpires = undefined;
+//     await org.save();
 
     // 3) Update changedPasswordAt property for the org
     // 4) Log the org in, send JWT
-    createSendToken(org, 200, res);
-  }
-);
+//     createSendToken(org, 200, res);
+//   }
+// );

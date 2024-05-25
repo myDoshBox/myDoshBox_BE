@@ -63,7 +63,7 @@ router.post("/verify-email", verifyUserEmail);
 
 /**
  * @swagger
- *   /auth/ForgotPassword:
+ *   /auth/forgotpassword:
  *     post:
  *       summary: Request a password reset link
  *       description: Request a password reset link for the organization user.
@@ -85,7 +85,7 @@ router.post("/verify-email", verifyUserEmail);
 
 /**
  * @swagger
- *   /auth/ResetPassword/{token}:
+ *   /auth/resetPassword/{token}:
  *     patch:
  *       summary: Reset user's password
  *       description: Reset user's password using the provided reset token.
