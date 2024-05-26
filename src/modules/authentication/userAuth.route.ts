@@ -38,6 +38,27 @@ const router: Router = express.Router();
  */
 router.post("/login", UserLogin);
 
+/**
+ * @swagger
+ *   /auth/verify-email:
+ *     post:
+ *       summary: Verify user email
+ *       description: confirm user email and verify user so user can continue to login to application.
+ *       tags: [UserAuth]
+ *       requestBody:
+ *         required: true
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/ConfirmEmail"
+ *       responses:
+ *         '200':
+ *           description: User email successfully verified
+ *           content:
+ *             application/json:
+ *               schema:
+ *                 $ref: "#/components/schemas/ConfirmEmail"
+ */
 router.post("/verify-email", verifyUserEmail);
 
 /**
@@ -46,7 +67,7 @@ router.post("/verify-email", verifyUserEmail);
  *     post:
  *       summary: Request a password reset link
  *       description: Request a password reset link for the organization user.
- *       tags: [OrganizationUserAuth]
+ *       tags: [UserAuth]
  *       requestBody:
  *         required: true
  *         content:
@@ -68,7 +89,7 @@ router.post("/verify-email", verifyUserEmail);
  *     patch:
  *       summary: Reset user's password
  *       description: Reset user's password using the provided reset token.
- *       tags: [OrganizationUserAuth]
+ *       tags: [UserAuth]
  *       parameters:
  *         - in: path
  *           name: token

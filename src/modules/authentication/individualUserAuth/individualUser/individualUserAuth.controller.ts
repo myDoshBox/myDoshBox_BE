@@ -1,3 +1,4 @@
+/* eslint-disable no-dupe-else-if */
 import jwt from "jsonwebtoken";
 import { Request, Response } from "express";
 
@@ -11,8 +12,9 @@ export const individualUserRegistration = async (
   res: Response
 ) => {
   try {
-    const { name, email, phone_number, password, confirm_password } = req.body;
+    const { email, phone_number, password, confirm_password } = req.body;
 
+<<<<<<< HEAD
     if (!name) {
       return res.status(400).json({
         status: "fail",
@@ -23,6 +25,17 @@ export const individualUserRegistration = async (
         status: "fail",
         message: "Email is required",
       });
+=======
+    if (!email || !phone_number || !password || !confirm_password) {
+      return res
+        .status(400) 
+        .json({ message: "Please provide all required fields" });
+      //return res.status(400).json({
+      //  status: "fail",
+      //  message: "Email is required",
+      //});
+    // eslint-disable-next-line no-dupe-else-if
+>>>>>>> ad8678b1fbf0bcd674cb3c85425b002ddd1a2018
     } else if (!phone_number) {
       return res.status(400).json({
         status: "fail",
@@ -71,7 +84,6 @@ export const individualUserRegistration = async (
 
     // Create a new user
     const newUser = new IndividualUser({
-      name,
       email,
       phone_number,
       password,
@@ -101,7 +113,9 @@ export const individualUserRegistration = async (
     });
   } catch (error: unknown) {
     console.error("Error registering the user:", error);
-    return res.status(500).json({ message: "Error registering the user" });
+    return res
+      .status(500)
+      .json({ message: "Error registering the user", error });
   }
 };
 

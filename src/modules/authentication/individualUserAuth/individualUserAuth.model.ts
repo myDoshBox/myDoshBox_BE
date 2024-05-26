@@ -5,28 +5,25 @@ import { hash, compare } from "bcrypt";
 import crypto from "crypto";
 
 export interface IndividualUserDocument extends Document {
-  name: string;
   email: string;
   sub: string;
   picture: string;
   role: string;
   phone_number: string;
   password: string;
-  email_verified: boolean; 
+  email_verified: boolean;
   passwordChangedAt?: Date;
   passwordResetExpires?: Date;
   passwordResetToken?: string;
   comparePassword(candidatePassword: string): Promise<boolean>;
   createPasswordResetToken(): string;
   comparePasswordResetToken(token: string): boolean;
-
 }
 
 export interface IndividualUserModel extends Model<IndividualUserDocument> {}
 
 const individualUserSchema = new Schema<IndividualUserDocument>(
   {
-    name: { type: String, required: [true, "Please tell us your name"] },
     email: {
       type: String,
       unique: true,
@@ -61,7 +58,6 @@ const individualUserSchema = new Schema<IndividualUserDocument>(
     passwordChangedAt: Date,
     passwordResetToken: String,
     passwordResetExpires: Date,
-    
   },
   { timestamps: true }
 );
@@ -101,7 +97,6 @@ individualUserSchema.methods.createPasswordResetToken = function (
 
   return resetToken;
 };
-
 
 individualUserSchema.methods.comparePasswordResetToken = function (
   token: string

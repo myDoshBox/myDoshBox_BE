@@ -85,6 +85,16 @@ export const options = {
             },
           },
         },
+        ConfirmEmail: {
+          type: "object",
+          required: ["token"],
+          properties: {
+            token: {
+              default:
+                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRhaXdvZGFuaWVsMTk5OEBnbWFpbC5jb20iLCJpYXQiOjE3MTU5ODE3MzgsImV4cCI6MTcxNTk4NTMzOH0.dGBYu8Jeop6P7YiHYk3MgGmUlWGQn4dSZ4bu4RWdY7E",
+            },
+          },
+        },
         GoogleOrganizationAccess: {
           type: "object",
           required: [
@@ -119,7 +129,36 @@ export const options = {
             "password",
             "password_confirmation",
           ],
-          properties: organizationUserSchemaProps,
+          properties: {
+            organization_name: {
+              type: "string",
+              description:
+                "this is the google account username provided by the google oauth",
+            },
+            organization_email: {
+              type: "string",
+              description:
+                "this is the google account email provided by the google oauth",
+            },
+            contact_number: {
+              type: "string",
+              description:
+                "this is the organization's contact phone number to be provided by the user after google account verification and access",
+            },
+            contact_email: {
+              type: "string",
+              description:
+                "this is the organization's contact email address to be provided by the user after google account verification and access",
+            },
+            password: {
+              type: "string",
+              description: "organization account password",
+            },
+            password_confirmation: {
+              type: "string",
+              description: "organization account password",
+            },
+          },
         },
         OrganizationUserForgotPassword: {
           type: "object",
@@ -178,7 +217,7 @@ export const options = {
         },
         IndividualUserSignup: {
           type: "object",
-          required: ["email", "password", "phoneNumber", "confirmPassword"],
+          required: ["email", "password", "phone_number", "confirm_password"],
           properties: {
             email: {
               type: "string",
@@ -186,9 +225,9 @@ export const options = {
               deault: "example@example.com",
               description: "User's email addess",
             },
-            phoneNumber: {
+            phone_number: {
               type: "string",
-              format: "phoneNumber",
+              format: "phone_number",
               description: "User's phone number",
               default: "+11234567890",
             },
@@ -198,7 +237,7 @@ export const options = {
               description: "User's password",
               default: "examplePassword",
             },
-            confirmPassword: {
+            confirm_password: {
               type: "string",
               format: "password",
               description: "confirm password",
@@ -220,7 +259,7 @@ export const options = {
         },
         IndividualUserResetPassword: {
           type: "object",
-          required: ["password", "confirmPassword"],
+          required: ["password", "confirm_password"],
           properties: {
             password: {
               type: "string",
@@ -228,7 +267,7 @@ export const options = {
               default: "examplePassword",
               description: "User's password",
             },
-            confirmPassword: {
+            confirm_password: {
               type: "string",
               format: "password",
               default: "examplePassword",

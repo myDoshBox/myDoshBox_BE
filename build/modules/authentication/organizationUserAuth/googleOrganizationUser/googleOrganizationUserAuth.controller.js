@@ -17,8 +17,9 @@ const google_auth_library_1 = require("google-auth-library");
 // import GoogleOrganizationUser from "./googleOrganizationUserAuth.model";
 const organizationAuth_model_1 = __importDefault(require("../organizationAuth.model"));
 const createSessionAndSendToken_util_1 = require("../../../../utilities/createSessionAndSendToken.util");
+const individualUserAuth_model_1 = __importDefault(require("../../individualUserAuth/individualUserAuth.model"));
 const getGoogleUrl = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const oAuth2Client = new google_auth_library_1.OAuth2Client(process.env.GOOGLE_CLIENT_ID_ORGANIZATION, process.env.GOOGLE_CLIENT_SECRET_ORGANIZATION, process.env.GOOGLE_OAUTH_REDIRECT_URL_ORGANIZATION);
+    const oAuth2Client = new google_auth_library_1.OAuth2Client(process.env.GOOGLE_OAUTH_CLIENT_ID, process.env.GOOGLE_OAUTH_CLIENT_SECRET, process.env.GOOGLE_OAUTH_REDIRECT_URL_ORGANIZATION);
     const authorizeUrl = oAuth2Client.generateAuthUrl({
         access_type: "offline",
         prompt: "consent",
@@ -37,7 +38,10 @@ exports.getUserDetails = getUserDetails;
 const getGoogleUserDetail = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { code } = req.query;
-        const oAuth2Client = new google_auth_library_1.OAuth2Client(process.env.GOOGLE_CLIENT_ID_ORGANIZATION, process.env.GOOGLE_CLIENT_SECRET_ORGANIZATION, process.env.GOOGLE_OAUTH_REDIRECT_URL_ORGANIZATION);
+        if (req.query.error === "access_denied") {
+            return res.redirect("https://mydoshbox-git-testingbranch-mydoshbox-gmailcom.vercel.app/signup");
+        }
+        const oAuth2Client = new google_auth_library_1.OAuth2Client(process.env.GOOGLE_OAUTH_CLIENT_ID, process.env.GOOGLE_OAUTH_CLIENT_SECRET, process.env.GOOGLE_OAUTH_REDIRECT_URL_ORGANIZATION);
         const response = yield oAuth2Client.getToken(code);
         yield oAuth2Client.setCredentials(response.tokens);
         const googleUser = oAuth2Client.credentials;
@@ -48,9 +52,27 @@ const getGoogleUserDetail = (req, res, next) => __awaiter(void 0, void 0, void 0
                 message: "Google user not verified",
             });
         }
-        const googleUserExist = yield organizationAuth_model_1.default.findOne({
-            sub: userDetails.sub,
+        // Check if the user already exists
+        const individualEmailAlreadyExist = yield individualUserAuth_model_1.default.findOne({
+            email: userDetails.email,
         });
+        const organizationEmailAlreadyExist = yield organizationAuth_model_1.default.findOne({
+            organization_email: userDetails.email,
+        });
+        if (organizationEmailAlreadyExist &&
+            organizationEmailAlreadyExist.role === "org") {
+            return res.status(400).json({
+                status: "false",
+                message: "Kindly login with your email and password as account was not registered with google",
+            });
+        }
+        if (individualEmailAlreadyExist) {
+            return res.status(400).json({
+                status: "false",
+                message: "User already exist as an individual user. Kindly login as an individual user to continue",
+            });
+        }
+        const googleUserExist = organizationEmailAlreadyExist === null || organizationEmailAlreadyExist === void 0 ? void 0 : organizationEmailAlreadyExist.sub;
         if (!googleUserExist) {
             return res.status(200).json({
                 status: "success",
@@ -64,7 +86,7 @@ const getGoogleUserDetail = (req, res, next) => __awaiter(void 0, void 0, void 0
             });
         }
         const createSessionAndSendTokensOptions = {
-            user: googleUserExist.toObject(),
+            user: organizationEmailAlreadyExist.toObject(),
             userAgent: req.get("user-agent") || "",
             role: "g-org",
             message: "Google user sucessfully logged in",
