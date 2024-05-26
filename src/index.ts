@@ -18,6 +18,7 @@ import protectRoutes from "./middlewares/protectRoutes.middleware";
 import individualRoutes from "./modules/users/individualUsers/individualUsers.route";
 import authRouter from "./modules/authentication/userAuth.route";
 import dotenv from "dotenv";
+import swaggerJSDoc from "swagger-jsdoc";
 
 dotenv.config();
 
@@ -55,7 +56,7 @@ app.use("/auth/organization", googleOrganizationUserAuthRouter);
 app.use("/auth/individual", googleIndividualUserAuthRouter);
 
 app.use("/user", protectRoutes, individualRoutes);
-
+ 
 app.use(errorHandler);
 
 //
@@ -81,11 +82,11 @@ app.use(errorHandler);
 
 // let options = {};
 
-const devSpec = swaggerJSDOC(devOptions);
-const prodSpec = swaggerJSDOC(prodOptions);
+const devSpec = swaggerJSDoc(devOptions);
+// const prodSpec = swaggerJSDOC(prodOptions);
 
 app.use("/dev-api-docs", swaggerUi.serve, swaggerUi.setup(devSpec));
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(prodSpec));
+// app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(prodSpec));
 
 const PORT = process.env.PORT;
 

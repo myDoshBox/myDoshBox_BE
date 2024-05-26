@@ -13,12 +13,6 @@ export const individualUserRegistration = async (
   try {
     const { name, email, phone_number, password, confirm_password } = req.body;
 
-<<<<<<< HEAD
-    if (!name || !email || !phone_number || !password || !confirm_password) {
-      return res
-        .status(400) 
-        .json({ message: "Please provide all required fields" });
-=======
     if (!name) {
       return res.status(400).json({
         status: "fail",
@@ -51,7 +45,6 @@ export const individualUserRegistration = async (
         status: "fail",
         message: "Password do not match",
       });
->>>>>>> 58bf78d95eb871fc59a7fa677bc81b794e4eeb06
     }
 
     // Check if the user already exists

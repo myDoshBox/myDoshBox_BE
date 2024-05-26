@@ -31,30 +31,46 @@ export const sendOtpEmail = async (otp: string, email: string) => {
   });
 };
 
+
 export const sendURLEmail = async (email: string[], resetURL: string) => {
   const validEmails = email.filter(Boolean) as string[];
-
   const transport = generateMailTransporter();
 
+  // const { email, message: customMessage } = options; // Renamed the variable to avoid conflict
   const emailMessage = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetURL}.\nIf you didn't forget your password, please ignore this email!`;
 
-  try {
-    // Loop through each email address and send the email individually
-    for (const email of emails) {
-      await transport.sendMail({
-        to: email,
-        from: process.env.VERIFICATION_EMAIL,
-        subject: "Reset Password Token",
-        html: emailMessage,
-      });
-    }
-
-    console.log("Password reset email sent successfully.");
-  } catch (error) {
-    console.error("Error sending password reset email:", error);
-    throw new Error("Failed to send password reset email.");
-  }
+  transport.sendMail({
+    to: email,
+    from: process.env.VERIFICATION_EMAIL,
+    subject: "Reset Password Token",
+    html: emailMessage, // Assign the HTML string directly to the html property
+  });
 };
+
+// export const sendURLEmail = async (email: string[], resetURL: string) => {
+//   const validEmails = email.filter(Boolean) as string[];
+
+//   const transport = generateMailTransporter();
+
+//   const emailMessage = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetURL}.\nIf you didn't forget your password, please ignore this email!`;
+
+//   try {
+//     // Loop through each email address and send the email individually
+//     for (const email of emails) {
+//       await transport.sendMail({
+//         to: email,
+//         from: process.env.VERIFICATION_EMAIL,
+//         subject: "Reset Password Token",
+//         html: emailMessage,
+//       });
+//     }
+
+//     console.log("Password reset email sent successfully.");
+//   } catch (error) {
+//     console.error("Error sending password reset email:", error);
+//     throw new Error("Failed to send password reset email.");
+//   }
+// };
 
 // export const sendResetPasswordEmail = async (email: string, token: string) => {
 
