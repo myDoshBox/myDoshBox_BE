@@ -1,9 +1,5 @@
 import { Request, NextFunction, Response } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
-import {
-  sendURLEmail,
-  sendVerificationEmail,
-} from "../../utilities/email.utils";
 import { createSessionAndSendTokens } from "../../utilities/createSessionAndSendToken.util";
 import AppError from "../../utilities/appError";
 import catchAsync from "../../utilities/catchAsync";
@@ -15,6 +11,7 @@ import OrganizationModel, {
   organizationalDoc,
 } from "./organizationUserAuth/organizationAuth.model";
 import * as crypto from "crypto";
+import { sendVerificationEmail, sendURLEmail } from "../../utilities/email.utils";
 
 interface TokenPayload {
   id: string;
@@ -27,6 +24,7 @@ const signToken = (id: string): string => {
   });
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const createSendToken = (user: any, statusCode: number, res: Response) => {
   const token = signToken(user._id);
 
@@ -244,10 +242,8 @@ export const UserLogin = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error Logging in user" });
   }
 };
-
-export const OrganizationUserForgotPassword = catchAsync(
+export const userForgotPassword = catchAsync(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    // 1) Get user based on POSTed email
     const { email } = req.body;
 
     try {
@@ -259,11 +255,11 @@ export const OrganizationUserForgotPassword = catchAsync(
       // Check if the user exists in the individual model
       const user = await IndividualUser.findOne({
         email,
-      });
+      }); 
 
       // If neither organization nor individual user is found, throw an error
       if (!org && !user) {
-        throw new AppError("There is no user with this email address.", 404);
+        return next(new AppError("There is no user with this email address.", 404));
       }
 
       // Generate the random reset token based on whether org or user is defined
@@ -272,31 +268,32 @@ export const OrganizationUserForgotPassword = catchAsync(
         : user!.createPasswordResetToken();
 
       // Save the organization or user based on which one is found
-      await (org
-        ? org.save({ validateBeforeSave: false })
-        : user!.save({ validateBeforeSave: false }));
+      if (org) {
+        await org.save({ validateBeforeSave: false });
+      } else {
+        await user!.save({ validateBeforeSave: false });
+      }
 
-      // Send reset email to the user's email
-      const resetURL = `${req.protocol}://${req.get(
-        "host"
-      )}/auth/organization/resetPassword/${resetToken}`;
-      // sendURLEmail([org?.organization_email, user?.email].filter(Boolean), resetURL);
+      // Prepare the reset URL
+      const resetURL = `${req.protocol}://${req.get("host")}/auth/resetPassword/${resetToken}`;
+
+      // Prepare the email list
       const validEmails = [org?.organization_email, user?.email].filter(
         (email) => typeof email === "string"
       ) as string[];
 
-      sendURLEmail(validEmails, resetURL);
+      // Send the reset email
+      await sendURLEmail(validEmails, resetURL);
 
       res.status(200).json({ message: "success" });
     } catch (error) {
-      return next(
-        new AppError("There is an error processing the request.", 500)
-      );
+      console.error("Error in userForgotPassword:", error);
+      return next(new AppError("There is an error processing the request.", 500));
     }
   }
 );
 
-export const organizationUserResetPassword = catchAsync(
+export const userResetPassword = catchAsync(
   async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     // 1) Get user based on the token
 

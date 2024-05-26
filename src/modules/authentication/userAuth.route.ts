@@ -63,11 +63,11 @@ router.post("/verify-email", verifyUserEmail);
 
 /**
  * @swagger
- *   /auth/ForgotPassword:
+ *   /auth/forgotpassword:
  *     post:
  *       summary: Request a password reset link
  *       description: Request a password reset link for the organization user.
- *       tags: [OrganizationUserAuth]
+ *       tags: [UserAuth]
  *       requestBody:
  *         required: true
  *         content:
@@ -85,11 +85,11 @@ router.post("/verify-email", verifyUserEmail);
 
 /**
  * @swagger
- *   /auth/ResetPassword/{token}:
+ *   /auth/resetPassword/{token}:
  *     patch:
  *       summary: Reset user's password
  *       description: Reset user's password using the provided reset token.
- *       tags: [OrganizationUserAuth]
+ *       tags: [UserAuth]
  *       parameters:
  *         - in: path
  *           name: token
@@ -110,10 +110,10 @@ router.post("/verify-email", verifyUserEmail);
  *           $ref: "#/components/responses/400"
  */
 
-router.post("/forgotpassword", userController.OrganizationUserForgotPassword);
+router.post("/forgotpassword", userController.userForgotPassword);
 router.patch(
   "/resetPassword/:token",
-  userController.organizationUserResetPassword
+  userController.userResetPassword
 );
 
 export default router;

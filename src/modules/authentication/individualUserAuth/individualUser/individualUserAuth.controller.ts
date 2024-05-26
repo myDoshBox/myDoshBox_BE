@@ -1,3 +1,4 @@
+/* eslint-disable no-dupe-else-if */
 import jwt from "jsonwebtoken";
 import { Request, Response } from "express";
 
@@ -13,11 +14,28 @@ export const individualUserRegistration = async (
   try {
     const { email, phone_number, password, confirm_password } = req.body;
 
-    if (!email) {
+<<<<<<< HEAD
+    if (!name) {
+      return res.status(400).json({
+        status: "fail",
+        message: "Name is required",
+      });
+    } else if (!email) {
       return res.status(400).json({
         status: "fail",
         message: "Email is required",
       });
+=======
+    if (!email || !phone_number || !password || !confirm_password) {
+      return res
+        .status(400) 
+        .json({ message: "Please provide all required fields" });
+      //return res.status(400).json({
+      //  status: "fail",
+      //  message: "Email is required",
+      //});
+    // eslint-disable-next-line no-dupe-else-if
+>>>>>>> ad8678b1fbf0bcd674cb3c85425b002ddd1a2018
     } else if (!phone_number) {
       return res.status(400).json({
         status: "fail",
