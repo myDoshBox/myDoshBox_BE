@@ -32,7 +32,7 @@ export const sendOtpEmail = async (otp: string, email: string) => {
 };
 
 export const sendURLEmail = async (email: string[], resetURL: string) => {
-  const validEmails = email.filter(Boolean) as string[];
+  // const validEmails = email.filter(Boolean) as string[];
 
   const transport = generateMailTransporter();
 
@@ -47,30 +47,12 @@ export const sendURLEmail = async (email: string[], resetURL: string) => {
   });
 };
 
-// export const sendResetPasswordEmail = async (email: string, token: string) => {
-
-//   const transport = generateMailTransporter();
-
-//   // const { email, message: customMessage } = options; // Renamed the variable to avoid conflict
-//   const emailMessage = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${token}.\nIf you didn't forget your password, please ignore this email!`;
-
-//   transport.sendMail({
-//     to: email,
-//     from: process.env.VERIFICATION_EMAIL,
-//     subject: "Reset Password Token",
-//     html: emailMessage, // Assign the HTML string directly to the html property
-//   });
-// };
-
 export const sendVerificationEmail = async (email: string, token: string) => {
   try {
     const transport = generateMailTransporter();
-
-    const verificationURL = `http://localhost:3000/auth/verify-email/${token}`;
+    const verificationURL = `http://localhost:3000/auth/verify-email?token=${token}`;
 
     const supportEmail = "mydoshbox@gmail.com";
-
-    // const { email, message: customMessage } = options; // Renamed the variable to avoid conflict
     const emailMessage = `
   <!DOCTYPE html>
   <html lang="en">
@@ -107,7 +89,7 @@ export const sendVerificationEmail = async (email: string, token: string) => {
   </body>
   </html>
   `;
-    console.log("here");
+    // console.log("here");
     const info = await transport.sendMail({
       to: email,
       from: process.env.VERIFICATION_EMAIL,
@@ -115,9 +97,9 @@ export const sendVerificationEmail = async (email: string, token: string) => {
       html: emailMessage, // Assign the HTML string directly to the html property
     });
 
-    console.log("info mesage id: " + info.messageId);
-    console.log("info accepted: " + info.accepted);
-    console.log("info rejected: " + info.rejected);
+    console.log("info mesage id: " + info?.messageId);
+    console.log("info accepted: " + info?.accepted);
+    console.log("info rejected: " + info?.rejected);
   } catch (err) {
     console.log(err);
   }

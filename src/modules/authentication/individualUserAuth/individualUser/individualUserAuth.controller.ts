@@ -1,10 +1,14 @@
 import jwt from "jsonwebtoken";
-import { Request, Response } from "express";
+// import { NextFunction, Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 
-import IndividualUser from "../individualUserAuth.model";
+import IndividualUser from "../individualUserAuth.model1";
 import individualAuthPasswordToken from "./individualAuthPasswordToken";
 import { sendVerificationEmail } from "../../../../utilities/email.utils";
 import OrganizationModel from "../../organizationUserAuth/organizationAuth.model";
+// import { createSessionAndSendTokens } from "../../../../utilities/createSessionAndSendToken.util";
+import bcrypt from "bcrypt";
+import { signJwt } from "../../../../utilities/signAndVerifyToken.util";
 
 export const individualUserRegistration = async (
   req: Request,
@@ -31,7 +35,7 @@ export const individualUserRegistration = async (
     } else if (!confirm_password) {
       return res.status(400).json({
         status: "fail",
-        message: "Confirm password  is required",
+        message: "Confirm password is required",
       });
     }
 
@@ -47,20 +51,13 @@ export const individualUserRegistration = async (
       email,
     });
     const organizationEmailAlreadyExist = await OrganizationModel.findOne({
-      organization_email: email,
+      email,
     });
 
     if (individualEmailAlreadyExist || organizationEmailAlreadyExist) {
       return res.status(400).json({
         status: "false",
         message: "User already exists",
-      });
-    }
-
-    // Check if password and confirmPassword match
-    if (password !== confirm_password) {
-      return res.status(400).json({
-        message: "Passwords do not match",
       });
     }
 
@@ -81,7 +78,7 @@ export const individualUserRegistration = async (
       },
       process.env.JWT_SECRET as string,
       {
-        expiresIn: 60 * 60,
+        expiresIn: 2 * 60,
       }
     );
 
@@ -98,6 +95,48 @@ export const individualUserRegistration = async (
     return res
       .status(500)
       .json({ message: "Error registering the user", error });
+  }
+};
+
+export const individualUserRegistrationGoogle = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { email, phone_number } = req.body;
+
+  try {
+    const individualUserToLogin = await IndividualUser.findOne({
+      email,
+    }).select("+password");
+
+    if (individualUserToLogin) {
+      const token = signJwt.toString();
+      // const token = signJwt();
+
+      res.cookie("access_token", token, { httpOnly: true }).status(200).json();
+    } else {
+      const generatedPassword = Math.random().toString(36).slice(-8);
+
+      const hashedPassword = bcrypt.hashSync(generatedPassword, 10);
+
+      // Create a new user
+      const newUser = new IndividualUser({
+        email,
+        phone_number,
+        password: hashedPassword,
+        role: "ind",
+        email_verified: true,
+      });
+
+      await newUser.save();
+
+      const token = signJwt.toString();
+      res.cookie("access_token", token, { httpOnly: true }).status(200).json();
+    }
+  } catch (error) {
+    console.log(error);
+    next(error);
   }
 };
 
@@ -127,4 +166,3 @@ export const resetIndividualPassword = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error resetting password" });
   }
 };
-// export const logout = async (req: Request, res: Response) => {};

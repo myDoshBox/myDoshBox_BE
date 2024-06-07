@@ -95,6 +95,11 @@ const getGoogleUserDetail = (req, res, next) => __awaiter(void 0, void 0, void 0
                 role: newUser.role,
                 message: "Individual google user successfully created",
             };
+            //     options: {
+            // user: { _id: Types.ObjectId; password?: string };
+            // userAgent: string;
+            // role: string;
+            // message: string;
             const { status, message, user, accessToken, refreshToken } = yield (0, createSessionAndSendToken_util_1.createSessionAndSendTokens)(createSessionAndSendTokensOptions);
             return res.status(201).json({
                 status,

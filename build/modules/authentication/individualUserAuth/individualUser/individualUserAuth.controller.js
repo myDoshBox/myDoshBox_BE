@@ -42,7 +42,7 @@ const individualUserRegistration = (req, res) => __awaiter(void 0, void 0, void 
         else if (!confirm_password) {
             return res.status(400).json({
                 status: "fail",
-                message: "Confirm password  is required",
+                message: "Confirm password is required",
             });
         }
         if (password !== confirm_password) {
@@ -65,11 +65,11 @@ const individualUserRegistration = (req, res) => __awaiter(void 0, void 0, void 
             });
         }
         // Check if password and confirmPassword match
-        if (password !== confirm_password) {
-            return res.status(400).json({
-                message: "Passwords do not match",
-            });
-        }
+        // if (password !== confirm_password) {
+        //   return res.status(400).json({
+        //     message: "Passwords do not match",
+        //   });
+        // }
         // Create a new user
         const newUser = new individualUserAuth_model_1.default({
             email,
@@ -78,11 +78,11 @@ const individualUserRegistration = (req, res) => __awaiter(void 0, void 0, void 
             role: "ind",
         });
         // Save the user to the database
-        yield newUser.save();
+        const user = yield newUser.save();
         const verificationToken = jsonwebtoken_1.default.sign({
-            email: newUser.email,
+            email: user.email,
         }, process.env.JWT_SECRET, {
-            expiresIn: 60 * 60,
+            expiresIn: 2 * 60,
         });
         yield (0, email_utils_1.sendVerificationEmail)(email, verificationToken);
         // Send a response

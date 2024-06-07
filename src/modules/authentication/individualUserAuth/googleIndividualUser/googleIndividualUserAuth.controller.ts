@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
-import { Credentials, OAuth2Client } from "google-auth-library";
+import { OAuth2Client } from "google-auth-library";
 import { createSessionAndSendTokens } from "../../../../utilities/createSessionAndSendToken.util";
-import IndividualUser from "../individualUserAuth.model";
+import IndividualUser from "../individualUserAuth.model1";
 import OrganizationModel from "../../organizationUserAuth/organizationAuth.model";
 
 export const getGoogleUrl = async (req: Request, res: Response) => {
@@ -14,10 +14,13 @@ export const getGoogleUrl = async (req: Request, res: Response) => {
   const authorizeUrl = oAuth2Client.generateAuthUrl({
     access_type: "offline",
     prompt: "consent",
-    include_granted_scopes: true,
-    scope:
-      "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email",
+    scope: [
+      "https://www.googleapis.com/auth/userinfo.profile",
+      "https://www.googleapis.com/auth/userinfo.email",
+    ],
+    redirect_uri: process.env.GOOGLE_OAUTH_REDIRECT_URL_INDIVIDUAL,
   });
+
   return res.json({ authorizeUrl });
 };
 
@@ -25,8 +28,12 @@ export const getUserDetails = async (access_token: string) => {
   const response = await fetch(
     `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${access_token}`
   );
-  const data = await response.json();
 
+  if (!response.ok) {
+    throw new Error();
+  }
+
+  const data = response.json();
   return data;
 };
 
@@ -42,11 +49,10 @@ export const getGoogleUserDetail = async (
   next: NextFunction
 ) => {
   try {
-    const { code } = req.query;
-    if (req.query.error === "access_denied") {
-      return res.redirect(
-        "https://mydoshbox-git-testingbranch-mydoshbox-gmailcom.vercel.app/signup"
-      );
+    const { code } = req.body;
+
+    if (!code) {
+      return res.status(400).json({ message: "Missing authorization code" });
     }
 
     const oAuth2Client = new OAuth2Client(
@@ -55,12 +61,13 @@ export const getGoogleUserDetail = async (
       process.env.GOOGLE_OAUTH_REDIRECT_URL_INDIVIDUAL
     );
 
-    const response = await oAuth2Client.getToken(code as string);
-    await oAuth2Client.setCredentials(response.tokens as Credentials);
-    const googleUser = oAuth2Client.credentials;
-    const userDetails = await getUserDetails(googleUser.access_token as string);
+    const { tokens } = await oAuth2Client.getToken({
+      code,
+      redirect_uri: process.env.GOOGLE_OAUTH_REDIRECT_URL_INDIVIDUAL,
+    });
 
-    const { name, email, email_verified, picture, sub } = userDetails;
+    oAuth2Client.setCredentials(tokens);
+    const userDetails = await getUserDetails(tokens.access_token as string);
 
     if (!userDetails.email_verified) {
       return res.status(401).json({
@@ -68,6 +75,8 @@ export const getGoogleUserDetail = async (
         message: "Google user not verified",
       });
     }
+
+    const { name, email, email_verified, picture, sub } = userDetails;
 
     // Check if the user already exists
     const individualEmailAlreadyExist = await IndividualUser.findOne({
@@ -96,8 +105,6 @@ export const getGoogleUserDetail = async (
       });
     }
 
-    // if (individualEmailAlreadyExist.sub)
-
     const googleUserExist = individualEmailAlreadyExist?.sub;
 
     if (!googleUserExist) {
@@ -114,7 +121,7 @@ export const getGoogleUserDetail = async (
         user: newUser.toObject(),
         userAgent: req.get("user-agent") || "",
         role: newUser.role,
-        message: "Individual google user successfully created",
+        message: "Individual Google user successfully created",
       };
 
       const { status, message, user, accessToken, refreshToken } =
@@ -133,7 +140,7 @@ export const getGoogleUserDetail = async (
       user: individualEmailAlreadyExist.toObject(),
       userAgent: req.get("user-agent") || "",
       role: "g-ind",
-      message: "Individual google user successfully logged in",
+      message: "Individual Google user successfully logged in",
     };
 
     const { status, message, user, accessToken, refreshToken } =
@@ -146,9 +153,9 @@ export const getGoogleUserDetail = async (
       accessToken,
       refreshToken,
     });
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
-    // console.log(err.stack);
     next(err);
   }
 };

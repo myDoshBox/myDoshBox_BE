@@ -10,7 +10,7 @@ import catchAsync from "../../utilities/catchAsync";
 import { BlacklistedToken } from "../blacklistedTokens/blacklistedToken.model";
 import IndividualUser, {
   IndividualUserDocument,
-} from "./individualUserAuth/individualUserAuth.model";
+} from "./individualUserAuth/individualUserAuth.model1";
 import OrganizationModel, {
   organizationalDoc,
 } from "./organizationUserAuth/organizationAuth.model";
@@ -27,6 +27,7 @@ const signToken = (id: string): string => {
   });
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const createSendToken = (user: any, statusCode: number, res: Response) => {
   const token = signToken(user._id);
 
@@ -41,7 +42,16 @@ const createSendToken = (user: any, statusCode: number, res: Response) => {
   });
 };
 
-export const verifyUserEmail = async (req: Request, res: Response) => {
+interface VerifyEmailRequest {
+  body: { token?: unknown };
+  // query: {
+  //   token?: unknown;
+  // };
+}
+export const verifyUserEmail = async (
+  req: VerifyEmailRequest,
+  res: Response
+) => {
   try {
     const { token } = req.body;
 
@@ -58,7 +68,7 @@ export const verifyUserEmail = async (req: Request, res: Response) => {
     }
 
     const { email } = jwt.verify(
-      token,
+      token as string,
       process.env.JWT_SECRET as string
     ) as JwtPayload;
 
@@ -204,9 +214,8 @@ export const UserLogin = async (req: Request, res: Response) => {
         });
       }
 
-      const passwordMatch = await organizationUserToLogin.correctPassword(
-        user_password,
-        organizationUserToLogin.password
+      const passwordMatch = await organizationUserToLogin.comparePassword(
+        user_password
       );
 
       if (!passwordMatch) {
@@ -240,8 +249,8 @@ export const UserLogin = async (req: Request, res: Response) => {
       message: "Invalid email or password",
     });
   } catch (error) {
-    console.error("Error Logging in user:", error);
-    res.status(500).json({ message: "Error Logging in user" });
+    // console.log("Error Logging in user:", error);
+    res.status(500).json({ message: "Error Logging in user", error });
   }
 };
 
@@ -387,3 +396,7 @@ const checkIfUserExist = async (
 
   return null;
 };
+
+// const logout = async () => {
+
+// }

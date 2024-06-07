@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  // authWithGoogle,
   getGoogleUrl,
   getGoogleUserDetail,
 } from "./googleIndividualUserAuth.controller";
@@ -29,7 +30,9 @@ const router = express.Router();
  *           $ref: "#/components/responses/401"
  */
 
-router.post("/oauth", getGoogleUrl);
-router.get("/oauth/callback", getGoogleUserDetail);
+// router.post("/oauth", getGoogleUrl);
+router.get("/oauth", getGoogleUrl);
+router.post("/oauth/callback", getGoogleUserDetail);
+// router.post("/oauth/callback", authWithGoogle);
 
 export default router;

@@ -1,14 +1,16 @@
-import { Types } from "mongoose";
+// import { Types } from "mongoose";
 
 import { createSession } from "./createSession.util";
 import { generateAccessAndRefreshToken } from "./generateAccessAndRefreshToken.util";
 
 export const createSessionAndSendTokens = async (options: {
-  user: { _id: Types.ObjectId; password?: string };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  user: any;
   userAgent: string;
   role: string;
   message: string;
 }) => {
+  // const { user, userAgent, role, message } = options;
   const { user, userAgent, role, message } = options;
   const session = await createSession(user._id.toString(), userAgent, role);
 
@@ -17,14 +19,6 @@ export const createSessionAndSendTokens = async (options: {
     session._id,
     role
   );
-
-  console.log({
-    status: "success",
-    message,
-    user,
-    accessToken,
-    refreshToken,
-  });
 
   return {
     status: "success",

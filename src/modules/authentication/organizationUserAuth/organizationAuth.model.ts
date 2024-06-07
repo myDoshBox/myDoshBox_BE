@@ -1,7 +1,8 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 import { emailValidator } from "../../../utilities/validator.utils";
-import bcrypt, { compare, hash } from "bcryptjs";
+import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import { compare } from "bcrypt";
 
 // Extend the OrganizationDoc interface to include virtual properties
 export interface organizationalDoc extends Document {
@@ -17,14 +18,10 @@ export interface organizationalDoc extends Document {
   sub: string;
   picture: string;
   role: string;
-  correctPassword(
-    candidatePassword: string,
-    userPassword: string
-  ): Promise<boolean>;
+  comparePassword(candidatePassword: string): Promise<boolean>;
   changedPasswordAfter(JWTTimestamp: number): boolean;
   createPasswordResetToken(): string;
 }
-
 
 const organizationalSchema: Schema<organizationalDoc> = new mongoose.Schema(
   {
@@ -89,12 +86,10 @@ organizationalSchema.pre<organizationalDoc>("save", async function (next) {
   next();
 });
 
-organizationalSchema.methods.correctPassword = async function (
-  this: organizationalDoc,
-  candidatePassword: string,
-  userPassword: string
+organizationalSchema.methods.comparePassword = async function (
+  candidatePassword: string
 ) {
-  return await bcrypt.compare(candidatePassword, userPassword);
+  return await compare(candidatePassword, this.password);
 };
 
 organizationalSchema.methods.createPasswordResetToken = function (
@@ -105,7 +100,7 @@ organizationalSchema.methods.createPasswordResetToken = function (
     .createHash("sha256")
     .update(resetToken)
     .digest("hex");
-  console.log({ resetToken }, this.passwordResetToken);
+  // console.log({ resetToken }, this.passwordResetToken);
 
   const resetExpires = new Date();
   resetExpires.setMinutes(resetExpires.getMinutes() + 10); // Add 10 minutes to the current time
@@ -113,7 +108,6 @@ organizationalSchema.methods.createPasswordResetToken = function (
 
   return resetToken;
 };
-
 
 const OrganizationModel: Model<organizationalDoc> =
   mongoose.model<organizationalDoc>("OrganizationUser", organizationalSchema);

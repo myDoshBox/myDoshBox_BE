@@ -3,7 +3,7 @@ import { Credentials, OAuth2Client } from "google-auth-library";
 // import GoogleOrganizationUser from "./googleOrganizationUserAuth.model";
 import OrganizationModel from "../organizationAuth.model";
 import { createSessionAndSendTokens } from "../../../../utilities/createSessionAndSendToken.util";
-import IndividualUser from "../../individualUserAuth/individualUserAuth.model";
+import IndividualUser from "../../individualUserAuth/individualUserAuth.model1";
 
 export const getGoogleUrl = async (req: Request, res: Response) => {
   const oAuth2Client = new OAuth2Client(
@@ -125,7 +125,6 @@ export const getGoogleUserDetail = async (
     });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
-    // console.log("errorrrrrrrrrrr", err);
     next(err);
   }
 };
@@ -160,8 +159,6 @@ export const createGoogleUser = async (req: Request, res: Response) => {
     const emailAlreadyExist = await OrganizationModel.findOne({
       organization_email,
     });
-    //const emailAlreadyExist = await OtherUserModels.findOne({ email: userDetails.email });
-    //const emailAlreadyExist = await OtherUserModels.findOne({ email: userDetails.email });
 
     if (emailAlreadyExist) {
       return res.status(409).json({
@@ -201,7 +198,7 @@ export const createGoogleUser = async (req: Request, res: Response) => {
     });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
-    console.log(err.stack);
+    // console.log(err.stack);
     return res.json(err);
   }
 };

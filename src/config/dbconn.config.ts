@@ -8,6 +8,7 @@ const connectDB = async () => {
 
   try {
     await mongoose.connect(DATABASE_URI);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     throw new Error(error);
   }

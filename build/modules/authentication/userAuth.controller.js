@@ -47,7 +47,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.organizationUserUpdatePassword = exports.organizationUserResetPassword = exports.OrganizationUserForgotPassword = exports.UserLogin = exports.verifyUserEmail = void 0;
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const jsonwebtoken_1 = __importStar(require("jsonwebtoken"));
 const email_utils_1 = require("../../utilities/email.utils");
 const createSessionAndSendToken_util_1 = require("../../utilities/createSessionAndSendToken.util");
 const appError_1 = __importDefault(require("../../utilities/appError"));
@@ -62,6 +62,7 @@ const signToken = (id) => {
         expiresIn: process.env.JWT_EXPIRES_IN,
     });
 };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const createSendToken = (user, statusCode, res) => {
     const token = signToken(user._id);
     user.password = undefined;
@@ -76,13 +77,15 @@ const createSendToken = (user, statusCode, res) => {
 const verifyUserEmail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { token } = req.body;
+        // const { token } = req.params;
+        // const { token } = req.query;
         const checkIfBlacklistedToken = yield blacklistedToken_model_1.BlacklistedToken.findOne({
             token,
         });
         if (checkIfBlacklistedToken) {
             return res.status(400).json({
                 status: false,
-                message: "Link has already been used. Kindly attempt login to regenerate confirm email link!",
+                message: "Link has already been used. Kindly attempt signup to regenerate confirm email link!",
             });
         }
         const { email } = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
@@ -109,17 +112,64 @@ const verifyUserEmail = (req, res) => __awaiter(void 0, void 0, void 0, function
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
     }
     catch (error) {
-        console.error("Error verifying email:", error);
-        if (error.name === "TokenExpiredError") {
+        //   console.log("Error verifying email:", error);
+        //   // const { token } = req.params;
+        //   // const { token } = req.query;
+        //   const { token } = req.body;
+        //   const { email } = jwt.verify(
+        //     token as string,
+        //     process.env.JWT_SECRET as string
+        //   ) as JwtPayload;
+        //   const user = await checkIfUserExist(email);
+        //   // if (error.name === "TokenExpiredError") {
+        //   if (error.name === TokenExpiredError) {
+        //     console.log("rrrr", error);
+        //     await user?.deleteOne();
+        //     return res.status(400).json({
+        //       status: false,
+        //       message:
+        //         "Your token has expired. Kindly attempt signup to regenerate confirm email link!", //expired token
+        //     });
+        //   } else if (error === "JsonWebTokenError") {
+        //     await user?.deleteOne();
+        //     return res.status(400).json({
+        //       status: false,
+        //       message: "Invalid Token!!", // invalid token
+        //     });
+        //   }
+        //   res.status(500).json({ message: "Error verifying email" });
+        // }
+        console.log("Error verifying email:", error);
+        if (error instanceof jsonwebtoken_1.TokenExpiredError) {
+            // Find the user based on the token payload (email)
+            try {
+                const { token } = req.body;
+                const { email } = jsonwebtoken_1.default.decode(token);
+                const user = yield individualUserAuth_model_1.default.findOne({ email });
+                yield (user === null || user === void 0 ? void 0 : user.deleteOne());
+            }
+            catch (innerError) {
+                console.log("Error deleting user:", innerError);
+            }
             return res.status(400).json({
                 status: false,
-                message: "Your token has expired. Kindly attempt login to regenerate confirm email link!", //expired token
+                message: "Your token has expired. Kindly attempt signup to regenerate confirm email link!",
             });
         }
-        if (error.name === "JsonWebTokenError") {
+        else if (error instanceof jsonwebtoken_1.JsonWebTokenError) {
+            // Find the user based on the token payload (email)
+            try {
+                const { token } = req.body;
+                const { email } = jsonwebtoken_1.default.decode(token);
+                const user = yield individualUserAuth_model_1.default.findOne({ email });
+                yield (user === null || user === void 0 ? void 0 : user.deleteOne());
+            }
+            catch (innerError) {
+                console.log("Error deleting user:", innerError);
+            }
             return res.status(400).json({
                 status: false,
-                message: "Invalid Token!!", // invalid token
+                message: "Invalid Token!!",
             });
         }
         res.status(500).json({ message: "Error verifying email" });

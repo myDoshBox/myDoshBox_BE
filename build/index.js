@@ -23,16 +23,17 @@ const userAuth_route_1 = __importDefault(require("./modules/authentication/userA
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
-app.use((0, cors_1.default)());
+// app.use(cors());
+app.use((0, cors_1.default)({
+    origin: "*",
+    credentials: false,
+}));
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({
     extended: true,
 }));
 app.use(deserializeUser_middleware_1.default);
-app.use((0, cors_1.default)({
-    origin: "*",
-    credentials: false,
-}));
+// app.use(cors());
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: false }));
 app.get("/", (req, res) => {

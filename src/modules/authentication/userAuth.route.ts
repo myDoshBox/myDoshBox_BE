@@ -1,6 +1,7 @@
 import express, { Router } from "express";
-import { UserLogin, verifyUserEmail } from "./userAuth.controller";
-import * as userController from "./userAuth.controller";
+// import { UserLogin, verifyUserEmail } from "./userAuth.controller";
+import * as userController from "./userAuth.controller1";
+// import { UserLogin } from "./userAuth.controller";
 
 const router: Router = express.Router();
 
@@ -36,7 +37,7 @@ const router: Router = express.Router();
  *         '401':
  *           $ref: "#/components/responses/401"
  */
-router.post("/login", UserLogin);
+router.post("/login", userController.UserLogin);
 
 /**
  * @swagger
@@ -59,7 +60,8 @@ router.post("/login", UserLogin);
  *               schema:
  *                 $ref: "#/components/schemas/ConfirmEmail"
  */
-router.post("/verify-email", verifyUserEmail);
+router.post("/verify-email", userController.verifyUserEmail);
+// router.post("/logout", userController.logoutUser);
 
 /**
  * @swagger

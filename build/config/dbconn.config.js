@@ -19,6 +19,7 @@ const connectDB = () => __awaiter(void 0, void 0, void 0, function* () {
     const DATABASE_URI = process.env.DATABASE_URI;
     try {
         yield mongoose_1.default.connect(DATABASE_URI);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     }
     catch (error) {
         throw new Error(error);

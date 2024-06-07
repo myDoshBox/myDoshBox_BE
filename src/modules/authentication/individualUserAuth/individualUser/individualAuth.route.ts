@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   individualUserRegistration,
+  individualUserRegistrationGoogle,
   resetIndividualPassword,
 } from "./individualUserAuth.controller";
 
@@ -41,6 +42,35 @@ const individualrouter = Router();
  */
 
 individualrouter.route("/signup").post(individualUserRegistration);
+
+/**
+ * @swagger
+ *   /auth/individual/googleauth:
+ *     post:
+ *       summary: Google signup/login
+ *       description: Sign up a new user using google.
+ *       tags: [IndividualUserGoogleAuth]
+ *       requestBody:
+ *         required: true
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/IndividualUserSignup"
+ *       responses:
+ *         '200':
+ *           description: User successfully signed up
+ *           content:
+ *             application/json:
+ *               schema:
+ *                 $ref: "#/components/schemas/IndividualUserGoogleAuth"
+ *         '400':
+ *           $ref: "#/components/responses/400"
+ *         '401':
+ *           $ref: "#/components/responses/401"
+ *
+ */
+
+individualrouter.route("/googleauth").post(individualUserRegistrationGoogle);
 
 /**
  * @swagger

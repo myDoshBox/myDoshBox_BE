@@ -24,7 +24,14 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors());
+// app.use(cors());
+app.use(
+  cors({
+    origin: "*",
+    credentials: false,
+  })
+);
+
 app.use(express.json());
 app.use(
   express.urlencoded({
@@ -34,12 +41,7 @@ app.use(
 
 app.use(deserializeUser);
 
-app.use(
-  cors({
-    origin: "*",
-    credentials: false,
-  })
-);
+// app.use(cors());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -58,29 +60,6 @@ app.use("/auth/individual", googleIndividualUserAuthRouter);
 app.use("/user", protectRoutes, individualRoutes);
 
 app.use(errorHandler);
-
-//
-
-// const swaggerDocumentOne = require("./swagger-one.json");
-// const swaggerDocumentTwo = require("./swagger-two.json");
-
-// var options = {};
-
-// app.use(
-//   "/api-docs-one",
-//   swaggerUi.serveFiles(swaggerDocumentOne, options),
-//   swaggerUi.setup(swaggerDocumentOne)
-// );
-
-// app.use(
-//   "/api-docs-two",
-//   swaggerUi.serveFiles(swaggerDocumentTwo, options),
-//   swaggerUi.setup(swaggerDocumentTwo)
-// );
-
-//
-
-// let options = {};
 
 const devSpec = swaggerJSDOC(devOptions);
 const prodSpec = swaggerJSDOC(prodOptions);
