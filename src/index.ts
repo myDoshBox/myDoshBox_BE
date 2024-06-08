@@ -7,10 +7,8 @@ import swaggerUi from "swagger-ui-express";
 import { Request, Response } from "express";
 import connectDB from "./config/dbconn.config";
 
-import organizationUserAuthRouter from "./modules/authentication/organizationUserAuth/organizationUser/organizationAuth.route";
-import individualUserAuthRouter from "./modules/authentication/individualUserAuth/individualUser/individualAuth.route";
-import googleOrganizationUserAuthRouter from "./modules/authentication/organizationUserAuth/googleOrganizationUser/googleOrganizationUserAuth.route";
-import googleIndividualUserAuthRouter from "./modules/authentication/individualUserAuth/googleIndividualUser/googleIndividualUserAuth.route";
+import organizationUserAuthRouter from "./modules/authentication/organizationUserAuth/organizationAuth.route";
+import individualUserAuthRouter from "./modules/authentication/individualUserAuth/individualAuth.route";
 import { errorHandler } from "./utilities/errorHandler.util";
 import { options as prodOptions } from "./prodSwagger";
 import { options as devOptions } from "./devSwagger";
@@ -53,10 +51,6 @@ app.get("/", (req: Request, res: Response) => {
 app.use("/auth/organization", organizationUserAuthRouter);
 app.use("/auth/individual", individualUserAuthRouter);
 app.use("/auth", authRouter);
-
-app.use("/auth/organization", googleOrganizationUserAuthRouter);
-app.use("/auth/individual", googleIndividualUserAuthRouter);
-
 app.use("/user", protectRoutes, individualRoutes);
 
 app.use(errorHandler);

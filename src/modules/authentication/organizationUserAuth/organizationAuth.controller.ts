@@ -1,11 +1,11 @@
 import { Request, Response, NextFunction } from "express";
-import OrganizationModel from "../organizationAuth.model";
+import OrganizationModel from "./organizationAuth.model";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import catchAsync from "../../../../utilities/catchAsync";
-import AppError from "../../../../utilities/appError";
-import { sendVerificationEmail } from "../../../../utilities/email.utils";
-import IndividualUser from "../../individualUserAuth/individualUserAuth.model1";
+import catchAsync from "../../../utilities/catchAsync";
+import AppError from "../../../utilities/appError";
+import { sendVerificationEmail } from "../../../utilities/email.utils";
+import IndividualUser from "../individualUserAuth/individualUserAuth.model1";
 
 interface TokenPayload {
   id: string;

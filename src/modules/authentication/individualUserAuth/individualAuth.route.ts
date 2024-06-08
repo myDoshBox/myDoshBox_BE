@@ -3,7 +3,12 @@ import {
   individualUserRegistration,
   individualUserRegistrationGoogle,
   resetIndividualPassword,
-} from "./individualUserAuth.controller";
+} from "../individualUserAuth/individualUserAuth.controller";
+
+import {
+  getGoogleUrl,
+  getGoogleUserDetail,
+} from "../individualUserAuth/individualUserAuth.controller";
 
 const individualrouter = Router();
 
@@ -98,5 +103,25 @@ individualrouter.route("/googleauth").post(individualUserRegistrationGoogle);
  */
 
 individualrouter.route("/reset-password").post(resetIndividualPassword);
+
+/**
+ * @swagger
+ *   /auth/individual/oauth:
+ *     post:
+ *       summary: Get google authorized url; navigate to google consent page; and give google user access
+ *       tags: [GoogleIndividualUserAuth]
+ *       responses:
+ *         '200':
+ *           description: Google AuthorizedUrl successful gotten
+ *           content:
+ *             application/json:
+ *               schema:
+ *                 $ref: "#/components/schemas/GoogleOrganizationAccess"
+ *         '401':
+ *           $ref: "#/components/responses/401"
+ */
+
+individualrouter.get("/oauth", getGoogleUrl);
+individualrouter.post("/oauth/callback", getGoogleUserDetail);
 
 export default individualrouter;
