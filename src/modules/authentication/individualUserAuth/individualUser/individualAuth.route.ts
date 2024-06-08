@@ -42,31 +42,31 @@ const individualrouter = Router();
 
 individualrouter.route("/signup").post(individualUserRegistration);
 
-/**
- * @swagger
- * /auth/individual/reset-password:
- *   post:
- *     summary: Reset a user's password
- *     tags: [IndividualUserAuth]
- *     requestBody:
- *       required: true
- *       content:
- *           application/json:
- *             schema:
- *               $ref: "#/components/schemas/IndividualUserResetPassword"
- *     responses:
- *       "200":
- *         description: User token
- *       "400":
- *         description: Bad request
- *       "404":
- *         description: Not found
- *       "403":
- *         description: Unauthorized request
- *       "500":
- *         description: Internal server error
- */
+// /**
+//  * @swagger
+//  * /auth/individual/reset-password:
+//  *   post:
+//  *     summary: Reset a user's password
+//  *     tags: [IndividualUserAuth]
+//  *     requestBody:
+//  *       required: true
+//  *       content:
+//  *           application/json:
+//  *             schema:
+//  *               $ref: "#/components/schemas/IndividualUserResetPassword"
+//  *     responses:
+//  *       "200":
+//  *         description: User token
+//  *       "400":
+//  *         description: Bad request
+//  *       "404":
+//  *         description: Not found
+//  *       "403":
+//  *         description: Unauthorized request
+//  *       "500":
+//  *         description: Internal server error
+//  */
 
-individualrouter.route("/reset-password").post(resetIndividualPassword);
+// // individualrouter.route("/reset-password").post(resetIndividualPassword);
 
 export default individualrouter;
