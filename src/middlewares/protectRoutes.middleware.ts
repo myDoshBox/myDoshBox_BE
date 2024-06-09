@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import IndividualUser from "../modules/authentication/individualUserAuth/individualUserAuth.model";
+import IndividualUser from "../modules/authentication/individualUserAuth/individualUserAuth.model1";
 import OrganizationModel from "../modules/authentication/organizationUserAuth/organizationAuth.model";
 
 const protectRoutes = async (
@@ -26,7 +26,6 @@ const protectRoutes = async (
       });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
-    console.log(error);
     return res.status(500).json({
       message: "something happened at the protectRoutes function",
     });
