@@ -1,6 +1,5 @@
 import express, { Router } from "express";
 import * as organizationController from "./organizationAuth.controller";
-import * as userController from "../../userLoginAndResetPassword";
 
 const router: Router = express.Router();
 

@@ -1,6 +1,7 @@
 import express, { Router } from "express";
-import { UserLogin, verifyUserEmail } from "./userAuth.controller";
-import * as userController from "./userAuth.controller";
+// import { UserLogin, verifyUserEmail } from "./userAuth.controller";
+import * as userController from "./userAuth.controller1";
+// import { UserLogin } from "./userAuth.controller";
 
 const router: Router = express.Router();
 
@@ -36,7 +37,7 @@ const router: Router = express.Router();
  *         '401':
  *           $ref: "#/components/responses/401"
  */
-router.post("/login", UserLogin);
+router.post("/login", userController.UserLogin);
 
 /**
  * @swagger
@@ -59,15 +60,16 @@ router.post("/login", UserLogin);
  *               schema:
  *                 $ref: "#/components/schemas/ConfirmEmail"
  */
-router.post("/verify-email", verifyUserEmail);
+router.post("/verify-email", userController.verifyUserEmail);
+// router.post("/logout", userController.logoutUser);
 
 /**
  * @swagger
- *   /auth/forgotpassword:
+ *   /auth/ForgotPassword:
  *     post:
  *       summary: Request a password reset link
  *       description: Request a password reset link for the organization user.
- *       tags: [UserAuth]
+ *       tags: [OrganizationUserAuth]
  *       requestBody:
  *         required: true
  *         content:
@@ -85,11 +87,11 @@ router.post("/verify-email", verifyUserEmail);
 
 /**
  * @swagger
- *   /auth/resetPassword/{token}:
+ *   /auth/ResetPassword/{token}:
  *     patch:
  *       summary: Reset user's password
  *       description: Reset user's password using the provided reset token.
- *       tags: [UserAuth]
+ *       tags: [OrganizationUserAuth]
  *       parameters:
  *         - in: path
  *           name: token
@@ -110,10 +112,10 @@ router.post("/verify-email", verifyUserEmail);
  *           $ref: "#/components/responses/400"
  */
 
-router.post("/forgotpassword", userController.userForgotPassword);
+router.post("/forgotpassword", userController.OrganizationUserForgotPassword);
 router.patch(
   "/resetPassword/:token",
-  userController.userResetPassword
+  userController.organizationUserResetPassword
 );
 
 export default router;

@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
-import IndividualUser from "../../authentication/individualUserAuth/individualUserAuth.model";
+import IndividualUser from "../../authentication/individualUserAuth/individualUserAuth.model1";
 import OrganizationModel from "../../authentication/organizationUserAuth/organizationAuth.model";
 
 /** GET: http://localhost:5000/users/user/:user_id */
 export const getIndividualUser = async (req: Request, res: Response) => {
-  console.log(res.locals.user);
+  // console.log(res.locals.user);
 
   return res.status(200).json({
     status: true,
@@ -14,7 +14,7 @@ export const getIndividualUser = async (req: Request, res: Response) => {
 };
 
 /** GET: http://localhost:5000/users */
-export const getAllIndividualUsers = async (req: Request, res: Response) => {};
+// export const getAllIndividualUsers = async (req: Request, res: Response) => {};
 //  * @param: {
 //  * "id": "<userid>"
 //  * }
@@ -66,14 +66,7 @@ export const updateIndividualUser = async (req: Request, res: Response) => {
       updatedUser,
     });
   }
-
-  //   const loggedInUser =
-  //     userData.role === "ind" || userData.role === "g-ind"
-  //       ? await IndividualUser.findOne({ email: userData.email })
-  //       : await OrganizationModel.findOne({
-  //           organization_email: userData.organization_email,
-  //         });
 };
 
 /** DELETE: http://localhost:5000/users/deleteuser */
-export const deleteIndividualUser = async (req: Request, res: Response) => {};
+// export const deleteIndividualUser = async (req: Request, res: Response) => {};
