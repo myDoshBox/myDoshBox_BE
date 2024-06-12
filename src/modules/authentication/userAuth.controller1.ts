@@ -100,6 +100,7 @@ export const verifyUserEmail = async (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error("Error verifying email:", error);
+
     if (error.name === "TokenExpiredError") {
       return res.status(400).json({
         status: false,
@@ -107,6 +108,7 @@ export const verifyUserEmail = async (
           "Your token has expired. Kindly attempt login to regenerate confirm email link!", //expired token
       });
     }
+
     if (error.name === "JsonWebTokenError") {
       return res.status(400).json({
         status: false,
@@ -136,6 +138,13 @@ export const UserLogin = async (req: Request, res: Response) => {
       email,
     }).select("+password");
 
+    if (!individualUserToLogin) {
+      res.status(400).json({
+        message:
+          "You do not have an account, please proceed to the signup page to create an account.",
+      });
+    }
+
     if (individualUserToLogin) {
       if (individualUserToLogin.role === "g-ind") {
         res.status(400).json({
@@ -151,7 +160,7 @@ export const UserLogin = async (req: Request, res: Response) => {
         );
         await sendVerificationEmail(email, verificationToken);
         return res.status(200).json({
-          status: "true",
+          status: "false",
           message:
             "Account is unverified! Verfication email sent. verify account to continue",
         });
