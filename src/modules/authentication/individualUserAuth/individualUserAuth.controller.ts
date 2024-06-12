@@ -60,7 +60,7 @@ export const individualUserRegistration = async (
     if (individualEmailAlreadyExist || organizationEmailAlreadyExist) {
       return res.status(400).json({
         status: "false",
-        message: "User already exists",
+        message: "User already exists, please proceed to login",
       });
     }
 
