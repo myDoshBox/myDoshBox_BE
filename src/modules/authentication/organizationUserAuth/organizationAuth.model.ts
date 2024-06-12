@@ -2,7 +2,7 @@ import mongoose, { Document, Model, Schema } from "mongoose";
 import { emailValidator } from "../../../utilities/validator.utils";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-import { compare } from "bcrypt";
+// import { compare } from "bcrypt";
 
 // Extend the OrganizationDoc interface to include virtual properties
 export interface organizationalDoc extends Document {
@@ -18,7 +18,11 @@ export interface organizationalDoc extends Document {
   sub: string;
   picture: string;
   role: string;
-  comparePassword(candidatePassword: string): Promise<boolean>;
+  // comparePassword(candidatePassword: string): Promise<boolean>;
+  correctPassword(
+    candidatePassword: string,
+    userPassword: string
+  ): Promise<boolean>;
   changedPasswordAfter(JWTTimestamp: number): boolean;
   createPasswordResetToken(): string;
 }
@@ -86,10 +90,18 @@ organizationalSchema.pre<organizationalDoc>("save", async function (next) {
   next();
 });
 
-organizationalSchema.methods.comparePassword = async function (
-  candidatePassword: string
+// organizationalSchema.methods.comparePassword = async function (
+//   candidatePassword: string
+// ) {
+//   return await compare(candidatePassword, this.password);
+// };
+
+organizationalSchema.methods.correctPassword = async function (
+  this: organizationalDoc,
+  candidatePassword: string,
+  userPassword: string
 ) {
-  return await compare(candidatePassword, this.password);
+  return await bcrypt.compare(candidatePassword, userPassword);
 };
 
 organizationalSchema.methods.createPasswordResetToken = function (

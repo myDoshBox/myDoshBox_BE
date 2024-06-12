@@ -1,7 +1,6 @@
 import { Document, model, Model, Schema } from "mongoose";
 import { emailValidator } from "../../../utilities/validator.utils";
-import { hash, compare } from "bcrypt";
-// import bcrypt from "bcryptjs";
+import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
 export interface IndividualUserDocument extends Document {
@@ -15,7 +14,11 @@ export interface IndividualUserDocument extends Document {
   passwordChangedAt?: Date;
   passwordResetExpires?: Date;
   passwordResetToken?: string;
-  comparePassword(candidatePassword: string): Promise<boolean>;
+  // comparePassword(candidatePassword: string): Promise<boolean>;
+  correctPassword(
+    candidatePassword: string,
+    userPassword: string
+  ): Promise<boolean>;
   createPasswordResetToken(): string;
   comparePasswordResetToken(token: string): boolean;
 }
@@ -64,22 +67,22 @@ const individualUserSchema = new Schema<IndividualUserDocument>(
 );
 
 individualUserSchema.pre<IndividualUserDocument>("save", async function (next) {
-  if (this.isModified("password")) {
-    try {
-      const saltRounds = 10;
-      this.password = await hash(this.password, saltRounds);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      next(err);
-    }
+  if (!this.password) {
+    return next();
   }
+
+  if (!this.isModified("password")) return next();
+
+  this.password = await bcrypt.hash(this.password, 12);
   next();
 });
 
-individualUserSchema.methods.comparePassword = async function (
-  candidatePassword: string
+individualUserSchema.methods.correctPassword = async function (
+  this: IndividualUserDocument,
+  candidatePassword: string,
+  userPassword: string
 ) {
-  return await compare(candidatePassword, this.password);
+  return await bcrypt.compare(candidatePassword, userPassword);
 };
 
 individualUserSchema.methods.createPasswordResetToken = function (

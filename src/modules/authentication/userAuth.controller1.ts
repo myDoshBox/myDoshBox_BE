@@ -27,7 +27,6 @@ const signToken = (id: string): string => {
   });
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const createSendToken = (user: any, statusCode: number, res: Response) => {
   const token = signToken(user._id);
 
@@ -42,16 +41,7 @@ const createSendToken = (user: any, statusCode: number, res: Response) => {
   });
 };
 
-interface VerifyEmailRequest {
-  body: { token?: unknown };
-  // query: {
-  //   token?: unknown;
-  // };
-}
-export const verifyUserEmail = async (
-  req: VerifyEmailRequest,
-  res: Response
-) => {
+export const verifyUserEmail = async (req: Request, res: Response) => {
   try {
     const { token } = req.body;
 
@@ -68,7 +58,7 @@ export const verifyUserEmail = async (
     }
 
     const { email } = jwt.verify(
-      token as string,
+      token,
       process.env.JWT_SECRET as string
     ) as JwtPayload;
 
@@ -136,6 +126,8 @@ export const UserLogin = async (req: Request, res: Response) => {
       email,
     }).select("+password");
 
+    console.log(individualUserToLogin);
+
     if (individualUserToLogin) {
       if (individualUserToLogin.role === "g-ind") {
         res.status(400).json({
@@ -157,14 +149,17 @@ export const UserLogin = async (req: Request, res: Response) => {
         });
       }
 
-      const passwordMatch = await individualUserToLogin.comparePassword(
-        user_password
+      const passwordMatch = await individualUserToLogin.correctPassword(
+        user_password,
+        individualUserToLogin.password
       );
+
       if (!passwordMatch) {
         return res.status(422).json({ error: "Incorrect Password" });
       }
-
-      const { ...userWithoutPassword } = individualUserToLogin.toObject();
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password, ...userWithoutPassword } =
+        individualUserToLogin.toObject();
       const {
         status,
         message,
@@ -175,9 +170,8 @@ export const UserLogin = async (req: Request, res: Response) => {
         user: userWithoutPassword,
         userAgent: req.get("user-agent") || "",
         role: individualUserToLogin.role,
-        message: "Individual user successfully logged in",
+        message: "Organization user successfully logged in",
       });
-
       return res.status(200).json({
         status,
         message,
@@ -214,8 +208,9 @@ export const UserLogin = async (req: Request, res: Response) => {
         });
       }
 
-      const passwordMatch = await organizationUserToLogin.comparePassword(
-        user_password
+      const passwordMatch = await organizationUserToLogin.correctPassword(
+        user_password,
+        organizationUserToLogin.password
       );
 
       if (!passwordMatch) {
@@ -396,7 +391,3 @@ const checkIfUserExist = async (
 
   return null;
 };
-
-// const logout = async () => {
-
-// }
