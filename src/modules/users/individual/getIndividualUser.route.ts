@@ -4,12 +4,12 @@ import { getAllUsers, getUserById, updateUserById } from './getIndividualUser.co
 const individualUsersRoutes = Router();
 
 // Route to get all users
-individualUsersRoutes.route("/users").get(getAllUsers);
+individualUsersRoutes.route("/").get(getAllUsers);
 
 // Route to get a single user by ID
-individualUsersRoutes.route("/users/:id").get(getUserById);
+individualUsersRoutes.route("/:id").get(getUserById);
 
 // Route to update a user by ID
-individualUsersRoutes.route("/users/:id").patch(updateUserById);
+individualUsersRoutes.route("/:id").patch(updateUserById);
 
 export default individualUsersRoutes;
