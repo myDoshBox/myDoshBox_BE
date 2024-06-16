@@ -12,7 +12,7 @@ const individualUsersRoutes = Router();
 
 /**
  * @swagger
- * /user/induser:
+ * /users/induser:
  *   get:
  *     summary: Get all users
  *     tags: [user]
@@ -32,7 +32,7 @@ individualUsersRoutes.route("/induser").get(getAllUsers);
 
 /**
  * @swagger
- * /user/induser/{id}:
+ * /users/induser/{id}:
  *   get:
  *     summary: Get a user
  *     tags: [user]
@@ -59,7 +59,7 @@ individualUsersRoutes.route("/induser/:id").get(getUserById);
 
 /**
  * @swagger
- * /user/induser/{id}:
+ * /users/induser/{id}:
  *   patch:
  *     summary: Update a user
  *     tags: [user]
