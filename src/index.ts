@@ -52,7 +52,7 @@ app.get("/", (req: Request, res: Response) => {
 app.use("/auth/organization", organizationUserAuthRouter);
 app.use("/auth/individual", individualUserAuthRouter);
 app.use("/auth", authRouter);
-app.use("/user", individualUsersRoutes);
+app.use("/users", individualUsersRoutes);
 
 app.use(errorHandler);
 
