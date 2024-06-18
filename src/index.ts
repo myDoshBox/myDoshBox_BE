@@ -15,7 +15,7 @@ import { options as devOptions } from "./devSwagger";
 import deserializeUser from "./middlewares/deserializeUser.middleware";
 //import protectRoutes from "./middlewares/protectRoutes.middleware";
 //import individualRoutes from "./modules/users/individualUsers/individualUsers.route";
-import individualUsersRoutes from "./modules/users/individual/getIndividualUser.route";
+import individualUsersRoutes from "./modules/users/individualUsers/individualUsers.route";
 import authRouter from "./modules/authentication/userAuth.route";
 import dotenv from "dotenv";
 
