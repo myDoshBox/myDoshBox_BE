@@ -16,6 +16,7 @@ import deserializeUser from "./middlewares/deserializeUser.middleware";
 //import protectRoutes from "./middlewares/protectRoutes.middleware";
 //import individualRoutes from "./modules/users/individualUsers/individualUsers.route";
 import individualUsersRoutes from "./modules/users/individualUsers/individualUsers.route";
+import organizationUsersRoutes from "./modules/users/organization/getOrganizationUser.route";
 import authRouter from "./modules/authentication/userAuth.route";
 import dotenv from "dotenv";
 
@@ -52,7 +53,8 @@ app.get("/", (req: Request, res: Response) => {
 app.use("/auth/organization", organizationUserAuthRouter);
 app.use("/auth/individual", individualUserAuthRouter);
 app.use("/auth", authRouter);
-app.use("/user", individualUsersRoutes);
+app.use("/user", organizationUsersRoutes);
+app.use("/users", individualUsersRoutes);
 
 app.use(errorHandler);
 
