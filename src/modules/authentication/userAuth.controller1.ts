@@ -127,10 +127,8 @@ export const UserLogin = async (req: Request, res: Response) => {
 
   if (!email || !user_password) {
     res.status(400).json({
-      message:
-        "Invalid Email or Password. Please provide a valid email or password",
+      message: "All fields are required",
     });
-    return;
   }
 
   try {
