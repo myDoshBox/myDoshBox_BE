@@ -251,10 +251,6 @@ export const UserLogin = async (req: Request, res: Response) => {
         accessToken,
       });
     }
-
-    return res.status(400).json({
-      message: "Invalid email or password",
-    });
   } catch (error) {
     // console.log("Error Logging in user:", error);
     res.status(500).json({ message: "Error Logging in user", error });
