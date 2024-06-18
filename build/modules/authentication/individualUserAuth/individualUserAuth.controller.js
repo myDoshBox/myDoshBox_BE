@@ -87,7 +87,7 @@ const individualUserRegistration = (req, res) => __awaiter(void 0, void 0, void 
         // Send a response
         return res.status(201).json({
             status: "true",
-            message: "Account successfully created. Verification email sent. Verify account to continue",
+            message: "Account is unverified! Verification email sent. Verify account to continue. Please note that token expires in an hour",
         });
     }
     catch (error) {

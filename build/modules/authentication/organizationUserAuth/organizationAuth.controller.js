@@ -114,7 +114,7 @@ const organizationUserSignup = (req, res) => __awaiter(void 0, void 0, void 0, f
         yield (0, email_utils_1.sendVerificationEmail)(organization_email, verificationToken);
         return res.status(201).json({
             status: "true",
-            message: "Account successfully created. Verification email sent. Verify account to continue",
+            message: "Account is unverified! Verification email sent. Verify account to continue. Please note that token expires in an hour",
         });
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
     }

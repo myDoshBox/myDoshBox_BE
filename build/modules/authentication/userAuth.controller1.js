@@ -200,7 +200,7 @@ const UserLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                     yield (0, email_utils_1.sendVerificationEmail)(organizationUserToLogin.organization_email, verificationToken);
                     return res.status(200).json({
                         status: "true",
-                        message: "Account is unverified! Verification email sent. Verify account to continue",
+                        message: "Account is unverified! Verification email sent. Verify account to continue. Please note that token expires in an hour",
                     });
                 }
                 const passwordMatch = yield organizationUserToLogin.comparePassword(user_password);
