@@ -168,7 +168,12 @@ export const UserLogin = async (req: Request, res: Response) => {
         user_password
       );
       if (!passwordMatch) {
-        return res.status(422).json({ error: "Incorrect Password" });
+        return res
+          .status(422)
+          .json({
+            error:
+              "Incorrect Password, please enter the correct password or proceed to reset password",
+          });
       }
 
       const { ...userWithoutPassword } = individualUserToLogin.toObject();
