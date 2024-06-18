@@ -138,14 +138,18 @@ const UserLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const individualUserToLogin = yield individualUserAuth_model1_1.default.findOne({
             email,
         }).select("+password");
-        if (!individualUserToLogin) {
-            res.status(400).json({
-                message: "You do not have an account, please proceed to the signup page to create an account.",
-            });
-        }
+        const organizationUserToLogin = yield organizationAuth_model_1.default.findOne({
+            organization_email: email,
+        }).select("+password");
+        // if (!individualUserToLogin) {
+        //   return res.status(400).json({
+        //     message:
+        //       "You do not have an account, please proceed to the signup page to create an account.",
+        //   });
+        // }
         if (individualUserToLogin) {
             if (individualUserToLogin.role === "g-ind") {
-                res.status(400).json({
+                return res.status(400).json({
                     message: "Your account was created with Google. Kindly login Google.",
                 });
             }
@@ -159,9 +163,7 @@ const UserLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             }
             const passwordMatch = yield individualUserToLogin.comparePassword(user_password);
             if (!passwordMatch) {
-                return res
-                    .status(422)
-                    .json({
+                return res.status(422).json({
                     error: "Incorrect Password, please enter the correct password or proceed to reset password",
                 });
             }
@@ -172,6 +174,7 @@ const UserLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 role: individualUserToLogin.role,
                 message: "Individual user successfully logged in",
             });
+            delete userWithoutPasswordForSession.password;
             return res.status(200).json({
                 status,
                 message,
@@ -180,42 +183,47 @@ const UserLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 accessToken,
             });
         }
-        const organizationUserToLogin = yield organizationAuth_model_1.default.findOne({
-            organization_email: email,
-        }).select("+password");
-        if (organizationUserToLogin) {
-            if (organizationUserToLogin.role === "g-org") {
+        else {
+            if (!organizationUserToLogin) {
                 return res.status(400).json({
-                    message: "Your account was created with Google. Kindly login Google.",
+                    message: "You do not have an account, please proceed to the signup page to create an account.",
                 });
             }
-            if (!organizationUserToLogin.email_verified) {
-                const verificationToken = jsonwebtoken_1.default.sign({ email: organizationUserToLogin.organization_email }, process.env.JWT_SECRET, { expiresIn: 60 * 60 });
-                yield (0, email_utils_1.sendVerificationEmail)(organizationUserToLogin.organization_email, verificationToken);
+            if (organizationUserToLogin) {
+                if (organizationUserToLogin.role === "g-org") {
+                    return res.status(400).json({
+                        message: "Your account was created with Google. Kindly login Google.",
+                    });
+                }
+                if (!organizationUserToLogin.email_verified) {
+                    const verificationToken = jsonwebtoken_1.default.sign({ email: organizationUserToLogin.organization_email }, process.env.JWT_SECRET, { expiresIn: 60 * 60 });
+                    yield (0, email_utils_1.sendVerificationEmail)(organizationUserToLogin.organization_email, verificationToken);
+                    return res.status(200).json({
+                        status: "true",
+                        message: "Account is unverified! Verification email sent. Verify account to continue",
+                    });
+                }
+                const passwordMatch = yield organizationUserToLogin.comparePassword(user_password);
+                if (!passwordMatch) {
+                    return res.status(422).json({ error: "Incorrect Password" });
+                }
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const _a = organizationUserToLogin.toObject(), { password } = _a, userWithoutPassword = __rest(_a, ["password"]);
+                const { status, message, user: userWithoutPasswordForSession, accessToken, refreshToken, } = yield (0, createSessionAndSendToken_util_1.createSessionAndSendTokens)({
+                    user: userWithoutPassword,
+                    userAgent: req.get("user-agent") || "",
+                    role: organizationUserToLogin.role,
+                    message: "Organization user successfully logged in",
+                });
+                delete userWithoutPasswordForSession.password;
                 return res.status(200).json({
-                    status: "true",
-                    message: "Account is unverified! Verification email sent. Verify account to continue",
+                    status,
+                    message,
+                    user: userWithoutPasswordForSession,
+                    refreshToken,
+                    accessToken,
                 });
             }
-            const passwordMatch = yield organizationUserToLogin.comparePassword(user_password);
-            if (!passwordMatch) {
-                return res.status(422).json({ error: "Incorrect Password" });
-            }
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const _a = organizationUserToLogin.toObject(), { password } = _a, userWithoutPassword = __rest(_a, ["password"]);
-            const { status, message, user: userWithoutPasswordForSession, accessToken, refreshToken, } = yield (0, createSessionAndSendToken_util_1.createSessionAndSendTokens)({
-                user: userWithoutPassword,
-                userAgent: req.get("user-agent") || "",
-                role: organizationUserToLogin.role,
-                message: "Organization user successfully logged in",
-            });
-            return res.status(200).json({
-                status,
-                message,
-                user: userWithoutPasswordForSession,
-                refreshToken,
-                accessToken,
-            });
         }
     }
     catch (error) {
@@ -224,6 +232,81 @@ const UserLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 exports.UserLogin = UserLogin;
+// export const UserLogin = async (req: Request, res: Response) => {
+//   const { email, user_password } = req.body as {
+//     email: string;
+//     user_password: string;
+//   };
+//   if (!email || !user_password) {
+//     return res.status(400).json({
+//       message: "All fields are required",
+//     });
+//   }
+//   try {
+//     // Find user with password for authentication purposes
+//     const individualUserToLogin = await IndividualUser.findOne({
+//       email,
+//     }).select("+password");
+//     if (!individualUserToLogin) {
+//       return res.status(400).json({
+//         message:
+//           "You do not have an account, please proceed to the signup page to create an account.",
+//       });
+//     }
+//     // Additional checks based on user role and email verification
+//     if (individualUserToLogin.role === "g-ind") {
+//       return res.status(400).json({
+//         message:
+//           "Your account was created with Google. Kindly login using Google.",
+//       });
+//     }
+//     if (!individualUserToLogin.email_verified) {
+//       const verificationToken = jwt.sign(
+//         { email },
+//         process.env.JWT_SECRET as string,
+//         { expiresIn: 60 * 60 } // 1 hour
+//       );
+//       await sendVerificationEmail(email, verificationToken);
+//       return res.status(200).json({
+//         status: "false",
+//         message:
+//           "Account is unverified! Verification email sent. Verify account to continue",
+//       });
+//     }
+//     // Password match check
+//     const passwordMatch = await individualUserToLogin.comparePassword(
+//       user_password
+//     );
+//     if (!passwordMatch) {
+//       return res.status(422).json({ error: "Incorrect Password" });
+//     }
+//     // Remove the password from the user object before sending it to the frontend
+//     const { ...userWithoutPassword } = individualUserToLogin.toObject();
+//     const {
+//       status,
+//       message,
+//       user: userWithoutPasswordForSession,
+//       accessToken,
+//       refreshToken,
+//     } = await createSessionAndSendTokens({
+//       user: userWithoutPassword,
+//       userAgent: req.get("user-agent") || "",
+//       role: individualUserToLogin.role,
+//       message: "Individual user successfully logged in",
+//     });
+//     // Explicitly remove the password field from the session user
+//     delete userWithoutPasswordForSession.password;
+//     return res.status(200).json({
+//       status,
+//       message,
+//       user: userWithoutPasswordForSession,
+//       refreshToken,
+//       accessToken,
+//     });
+//   } catch (error) {
+//     return res.status(500).json({ message: "Error Logging in user", error });
+//   }
+// };
 exports.OrganizationUserForgotPassword = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     // 1) Get user based on POSTed email
     const { email } = req.body;
