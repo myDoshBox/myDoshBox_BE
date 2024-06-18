@@ -125,7 +125,7 @@ export const organizationUserSignup = async (req: Request, res: Response) => {
     return res.status(201).json({
       status: "true",
       message:
-        "Account successfully created. Verification email sent. Verify account to continue",
+        "Account is unverified! Verification email sent. Verify account to continue. Please note that token expires in an hour",
     });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {

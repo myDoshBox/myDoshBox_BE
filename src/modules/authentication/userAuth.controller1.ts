@@ -229,7 +229,7 @@ export const UserLogin = async (req: Request, res: Response) => {
           return res.status(200).json({
             status: "true",
             message:
-              "Account is unverified! Verification email sent. Verify account to continue",
+              "Account is unverified! Verification email sent. Verify account to continue. Please note that token expires in an hour",
           });
         }
 
