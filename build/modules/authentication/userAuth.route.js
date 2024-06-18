@@ -27,8 +27,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const userAuth_controller_1 = require("./userAuth.controller");
-const userController = __importStar(require("./userAuth.controller"));
+// import { UserLogin, verifyUserEmail } from "./userAuth.controller";
+const userController = __importStar(require("./userAuth.controller1"));
+// import { UserLogin } from "./userAuth.controller";
 const router = express_1.default.Router();
 /**
  * @swagger
@@ -61,7 +62,7 @@ const router = express_1.default.Router();
  *         '401':
  *           $ref: "#/components/responses/401"
  */
-router.post("/login", userAuth_controller_1.UserLogin);
+router.post("/login", userController.UserLogin);
 /**
  * @swagger
  *   /auth/verify-email:
@@ -83,7 +84,8 @@ router.post("/login", userAuth_controller_1.UserLogin);
  *               schema:
  *                 $ref: "#/components/schemas/ConfirmEmail"
  */
-router.post("/verify-email", userAuth_controller_1.verifyUserEmail);
+router.post("/verify-email", userController.verifyUserEmail);
+// router.post("/logout", userController.logoutUser);
 /**
  * @swagger
  *   /auth/ForgotPassword:

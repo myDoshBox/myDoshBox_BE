@@ -12,12 +12,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteIndividualUser = exports.updateIndividualUser = exports.getAllIndividualUsers = exports.getIndividualUser = void 0;
-const individualUserAuth_model_1 = __importDefault(require("../../authentication/individualUserAuth/individualUserAuth.model"));
+exports.updateIndividualUser = exports.getIndividualUser = void 0;
+const individualUserAuth_model1_1 = __importDefault(require("../../authentication/individualUserAuth/individualUserAuth.model1"));
 const organizationAuth_model_1 = __importDefault(require("../../authentication/organizationUserAuth/organizationAuth.model"));
 /** GET: http://localhost:5000/users/user/:user_id */
 const getIndividualUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(res.locals.user);
+    // console.log(res.locals.user);
     return res.status(200).json({
         status: true,
         message: "Logged in user profile",
@@ -26,8 +26,7 @@ const getIndividualUser = (req, res) => __awaiter(void 0, void 0, void 0, functi
 });
 exports.getIndividualUser = getIndividualUser;
 /** GET: http://localhost:5000/users */
-const getAllIndividualUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () { });
-exports.getAllIndividualUsers = getAllIndividualUsers;
+// export const getAllIndividualUsers = async (req: Request, res: Response) => {};
 //  * @param: {
 //  * "id": "<userid>"
 //  * }
@@ -55,7 +54,7 @@ const updateIndividualUser = (req, res) => __awaiter(void 0, void 0, void 0, fun
     const { userData } = res.locals.user;
     const { phone_number, name, contact_email, contact_number } = req.body;
     if (userData.role === "ind") {
-        const updatedUser = yield individualUserAuth_model_1.default.findOneAndUpdate({ email: userData.email }, { name, phone_number });
+        const updatedUser = yield individualUserAuth_model1_1.default.findOneAndUpdate({ email: userData.email }, { name, phone_number });
         return res.status(200).json({
             message: "Individual user sucessfully updated",
             updatedUser,
@@ -68,14 +67,7 @@ const updateIndividualUser = (req, res) => __awaiter(void 0, void 0, void 0, fun
             updatedUser,
         });
     }
-    //   const loggedInUser =
-    //     userData.role === "ind" || userData.role === "g-ind"
-    //       ? await IndividualUser.findOne({ email: userData.email })
-    //       : await OrganizationModel.findOne({
-    //           organization_email: userData.organization_email,
-    //         });
 });
 exports.updateIndividualUser = updateIndividualUser;
 /** DELETE: http://localhost:5000/users/deleteuser */
-const deleteIndividualUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () { });
-exports.deleteIndividualUser = deleteIndividualUser;
+// export const deleteIndividualUser = async (req: Request, res: Response) => {};

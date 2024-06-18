@@ -33,6 +33,7 @@ const individualUserSchema = new mongoose_1.Schema({
     phone_number: {
         type: String,
         trim: true,
+        required: false,
     },
     email_verified: {
         type: Boolean,
@@ -79,7 +80,7 @@ individualUserSchema.methods.createPasswordResetToken = function () {
         .createHash("sha256")
         .update(resetToken)
         .digest("hex");
-    console.log({ resetToken }, this.passwordResetToken);
+    // console.log({ resetToken }, this.passwordResetToken);
     const resetExpires = new Date();
     resetExpires.setMinutes(resetExpires.getMinutes() + 10); // Add 10 minutes to the current time
     this.passwordResetExpires = resetExpires;

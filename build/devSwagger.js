@@ -318,5 +318,6 @@ exports.options = {
         "./src/modules/authentication/organizationUserAuth/organizationUser/organizationAuth.route.ts",
         "./src/modules/authentication/individualUserAuth/individualUser/individualAuth.route.ts",
         "./src/modules/authentication/userAuth.route.ts",
+        "./src/modules/users/individual/getIndividualUser.route.ts",
     ],
 };

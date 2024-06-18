@@ -16,6 +16,7 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const validator_utils_1 = require("../../../utilities/validator.utils");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const crypto_1 = __importDefault(require("crypto"));
+const bcrypt_1 = require("bcrypt");
 const organizationalSchema = new mongoose_1.default.Schema({
     organization_name: {
         type: String,
@@ -75,9 +76,9 @@ organizationalSchema.pre("save", function (next) {
         next();
     });
 });
-organizationalSchema.methods.correctPassword = function (candidatePassword, userPassword) {
+organizationalSchema.methods.comparePassword = function (candidatePassword) {
     return __awaiter(this, void 0, void 0, function* () {
-        return yield bcryptjs_1.default.compare(candidatePassword, userPassword);
+        return yield (0, bcrypt_1.compare)(candidatePassword, this.password);
     });
 };
 organizationalSchema.methods.createPasswordResetToken = function () {
@@ -86,7 +87,7 @@ organizationalSchema.methods.createPasswordResetToken = function () {
         .createHash("sha256")
         .update(resetToken)
         .digest("hex");
-    console.log({ resetToken }, this.passwordResetToken);
+    // console.log({ resetToken }, this.passwordResetToken);
     const resetExpires = new Date();
     resetExpires.setMinutes(resetExpires.getMinutes() + 10); // Add 10 minutes to the current time
     this.passwordResetExpires = resetExpires;

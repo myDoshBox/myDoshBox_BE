@@ -47,13 +47,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.organizationUserUpdatePassword = exports.organizationUserResetPassword = exports.OrganizationUserForgotPassword = exports.UserLogin = exports.verifyUserEmail = void 0;
-const jsonwebtoken_1 = __importStar(require("jsonwebtoken"));
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const email_utils_1 = require("../../utilities/email.utils");
 const createSessionAndSendToken_util_1 = require("../../utilities/createSessionAndSendToken.util");
 const appError_1 = __importDefault(require("../../utilities/appError"));
 const catchAsync_1 = __importDefault(require("../../utilities/catchAsync"));
 const blacklistedToken_model_1 = require("../blacklistedTokens/blacklistedToken.model");
-const individualUserAuth_model_1 = __importDefault(require("./individualUserAuth/individualUserAuth.model"));
+const individualUserAuth_model1_1 = __importDefault(require("./individualUserAuth/individualUserAuth.model1"));
 const organizationAuth_model_1 = __importDefault(require("./organizationUserAuth/organizationAuth.model"));
 const crypto = __importStar(require("crypto"));
 const signToken = (id) => {
@@ -77,15 +77,13 @@ const createSendToken = (user, statusCode, res) => {
 const verifyUserEmail = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { token } = req.body;
-        // const { token } = req.params;
-        // const { token } = req.query;
         const checkIfBlacklistedToken = yield blacklistedToken_model_1.BlacklistedToken.findOne({
             token,
         });
         if (checkIfBlacklistedToken) {
             return res.status(400).json({
                 status: false,
-                message: "Link has already been used. Kindly attempt signup to regenerate confirm email link!",
+                message: "Link has already been used. Kindly attempt login to regenerate confirm email link!",
             });
         }
         const { email } = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
@@ -112,64 +110,17 @@ const verifyUserEmail = (req, res) => __awaiter(void 0, void 0, void 0, function
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
     }
     catch (error) {
-        //   console.log("Error verifying email:", error);
-        //   // const { token } = req.params;
-        //   // const { token } = req.query;
-        //   const { token } = req.body;
-        //   const { email } = jwt.verify(
-        //     token as string,
-        //     process.env.JWT_SECRET as string
-        //   ) as JwtPayload;
-        //   const user = await checkIfUserExist(email);
-        //   // if (error.name === "TokenExpiredError") {
-        //   if (error.name === TokenExpiredError) {
-        //     console.log("rrrr", error);
-        //     await user?.deleteOne();
-        //     return res.status(400).json({
-        //       status: false,
-        //       message:
-        //         "Your token has expired. Kindly attempt signup to regenerate confirm email link!", //expired token
-        //     });
-        //   } else if (error === "JsonWebTokenError") {
-        //     await user?.deleteOne();
-        //     return res.status(400).json({
-        //       status: false,
-        //       message: "Invalid Token!!", // invalid token
-        //     });
-        //   }
-        //   res.status(500).json({ message: "Error verifying email" });
-        // }
-        console.log("Error verifying email:", error);
-        if (error instanceof jsonwebtoken_1.TokenExpiredError) {
-            // Find the user based on the token payload (email)
-            try {
-                const { token } = req.body;
-                const { email } = jsonwebtoken_1.default.decode(token);
-                const user = yield individualUserAuth_model_1.default.findOne({ email });
-                yield (user === null || user === void 0 ? void 0 : user.deleteOne());
-            }
-            catch (innerError) {
-                console.log("Error deleting user:", innerError);
-            }
+        console.error("Error verifying email:", error);
+        if (error.name === "TokenExpiredError") {
             return res.status(400).json({
                 status: false,
-                message: "Your token has expired. Kindly attempt signup to regenerate confirm email link!",
+                message: "Your token has expired. Kindly attempt login to regenerate confirm email link!", //expired token
             });
         }
-        else if (error instanceof jsonwebtoken_1.JsonWebTokenError) {
-            // Find the user based on the token payload (email)
-            try {
-                const { token } = req.body;
-                const { email } = jsonwebtoken_1.default.decode(token);
-                const user = yield individualUserAuth_model_1.default.findOne({ email });
-                yield (user === null || user === void 0 ? void 0 : user.deleteOne());
-            }
-            catch (innerError) {
-                console.log("Error deleting user:", innerError);
-            }
+        if (error.name === "JsonWebTokenError") {
             return res.status(400).json({
                 status: false,
-                message: "Invalid Token!!",
+                message: "Invalid Token!!", // invalid token
             });
         }
         res.status(500).json({ message: "Error verifying email" });
@@ -180,14 +131,18 @@ const UserLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, user_password } = req.body;
     if (!email || !user_password) {
         res.status(400).json({
-            message: "Invalid Email or Password. Please provide a valid email or password",
+            message: "All fields are required",
         });
-        return;
     }
     try {
-        const individualUserToLogin = yield individualUserAuth_model_1.default.findOne({
+        const individualUserToLogin = yield individualUserAuth_model1_1.default.findOne({
             email,
         }).select("+password");
+        if (!individualUserToLogin) {
+            res.status(400).json({
+                message: "You do not have an account, please proceed to the signup page to create an account.",
+            });
+        }
         if (individualUserToLogin) {
             if (individualUserToLogin.role === "g-ind") {
                 res.status(400).json({
@@ -198,13 +153,17 @@ const UserLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 const verificationToken = jsonwebtoken_1.default.sign({ email }, process.env.JWT_SECRET, { expiresIn: 60 * 60 });
                 yield (0, email_utils_1.sendVerificationEmail)(email, verificationToken);
                 return res.status(200).json({
-                    status: "true",
+                    status: "false",
                     message: "Account is unverified! Verfication email sent. verify account to continue",
                 });
             }
             const passwordMatch = yield individualUserToLogin.comparePassword(user_password);
             if (!passwordMatch) {
-                return res.status(422).json({ error: "Incorrect Password" });
+                return res
+                    .status(422)
+                    .json({
+                    error: "Incorrect Password, please enter the correct password or proceed to reset password",
+                });
             }
             const userWithoutPassword = __rest(individualUserToLogin.toObject(), []);
             const { status, message, user: userWithoutPasswordForSession, accessToken, refreshToken, } = yield (0, createSessionAndSendToken_util_1.createSessionAndSendTokens)({
@@ -238,7 +197,7 @@ const UserLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                     message: "Account is unverified! Verification email sent. Verify account to continue",
                 });
             }
-            const passwordMatch = yield organizationUserToLogin.correctPassword(user_password, organizationUserToLogin.password);
+            const passwordMatch = yield organizationUserToLogin.comparePassword(user_password);
             if (!passwordMatch) {
                 return res.status(422).json({ error: "Incorrect Password" });
             }
@@ -258,13 +217,10 @@ const UserLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 accessToken,
             });
         }
-        return res.status(400).json({
-            message: "Invalid email or password",
-        });
     }
     catch (error) {
-        console.error("Error Logging in user:", error);
-        res.status(500).json({ message: "Error Logging in user" });
+        // console.log("Error Logging in user:", error);
+        res.status(500).json({ message: "Error Logging in user", error });
     }
 });
 exports.UserLogin = UserLogin;
@@ -277,7 +233,7 @@ exports.OrganizationUserForgotPassword = (0, catchAsync_1.default)((req, res, ne
             organization_email: email,
         });
         // Check if the user exists in the individual model
-        const user = yield individualUserAuth_model_1.default.findOne({
+        const user = yield individualUserAuth_model1_1.default.findOne({
             email,
         });
         // If neither organization nor individual user is found, throw an error
@@ -314,7 +270,7 @@ exports.organizationUserResetPassword = (0, catchAsync_1.default)((req, res, nex
         passwordResetToken: hashedToken,
         passwordResetExpires: { $gt: Date.now() },
     });
-    const user = yield individualUserAuth_model_1.default.findOne({
+    const user = yield individualUserAuth_model1_1.default.findOne({
         passwordResetToken: hashedToken,
         // passwordResetExpires: { $gt: Date.now() },
     });
@@ -352,7 +308,7 @@ exports.organizationUserUpdatePassword = (0, catchAsync_1.default)((req, res, ne
             passwordResetToken: req.params.token,
             passwordResetExpires: { $gt: Date.now() },
         });
-        const user = yield individualUserAuth_model_1.default.findOne({
+        const user = yield individualUserAuth_model1_1.default.findOne({
             passwordResetToken: req.params.token,
             passwordResetExpires: { $gt: Date.now() },
         });
@@ -365,7 +321,7 @@ exports.organizationUserUpdatePassword = (0, catchAsync_1.default)((req, res, ne
     }
 }));
 const checkIfUserExist = (email) => __awaiter(void 0, void 0, void 0, function* () {
-    const individualUser = yield individualUserAuth_model_1.default.findOne({
+    const individualUser = yield individualUserAuth_model1_1.default.findOne({
         email,
     });
     if (individualUser)
@@ -377,3 +333,5 @@ const checkIfUserExist = (email) => __awaiter(void 0, void 0, void 0, function* 
         return organizationUser;
     return null;
 });
+// const logout = async () => {
+// }

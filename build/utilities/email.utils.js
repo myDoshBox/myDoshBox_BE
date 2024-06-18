@@ -54,24 +54,12 @@ const sendURLEmail = (email, resetURL) => __awaiter(void 0, void 0, void 0, func
     });
 });
 exports.sendURLEmail = sendURLEmail;
-// export const sendResetPasswordEmail = async (email: string, token: string) => {
-//   const transport = generateMailTransporter();
-//   // const { email, message: customMessage } = options; // Renamed the variable to avoid conflict
-//   const emailMessage = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${token}.\nIf you didn't forget your password, please ignore this email!`;
-//   transport.sendMail({
-//     to: email,
-//     from: process.env.VERIFICATION_EMAIL,
-//     subject: "Reset Password Token",
-//     html: emailMessage, // Assign the HTML string directly to the html property
-//   });
-// };
 const sendVerificationEmail = (email, token) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const transport = generateMailTransporter();
-        // const verificationURL = `http://localhost:3000/auth/verify-email/${token}`;
-        const verificationURL = `http://localhost:3000/auth/verify-email?token=${token}`;
+        const verificationURL = `https://mydoshbox.vercel.app/auth/verify-email?token=${token}`;
+        // const verificationURL = `http://localhost:3000/auth/verify-email?token=${token}`;
         const supportEmail = "mydoshbox@gmail.com";
-        // const { email, message: customMessage } = options; // Renamed the variable to avoid conflict
         const emailMessage = `
   <!DOCTYPE html>
   <html lang="en">
@@ -108,16 +96,16 @@ const sendVerificationEmail = (email, token) => __awaiter(void 0, void 0, void 0
   </body>
   </html>
   `;
-        console.log("here");
+        // console.log("here");
         const info = yield transport.sendMail({
             to: email,
             from: process.env.VERIFICATION_EMAIL,
             subject: "Verify Your Email Address",
             html: emailMessage, // Assign the HTML string directly to the html property
         });
-        console.log("info mesage id: " + info.messageId);
-        console.log("info accepted: " + info.accepted);
-        console.log("info rejected: " + info.rejected);
+        console.log("info mesage id: " + (info === null || info === void 0 ? void 0 : info.messageId));
+        console.log("info accepted: " + (info === null || info === void 0 ? void 0 : info.accepted));
+        console.log("info rejected: " + (info === null || info === void 0 ? void 0 : info.rejected));
     }
     catch (err) {
         console.log(err);

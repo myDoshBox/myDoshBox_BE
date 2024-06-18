@@ -9,16 +9,16 @@ const cors_1 = __importDefault(require("cors"));
 const swagger_jsdoc_1 = __importDefault(require("swagger-jsdoc"));
 const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
 const dbconn_config_1 = __importDefault(require("./config/dbconn.config"));
-const organizationAuth_route_1 = __importDefault(require("./modules/authentication/organizationUserAuth/organizationUser/organizationAuth.route"));
-const individualAuth_route_1 = __importDefault(require("./modules/authentication/individualUserAuth/individualUser/individualAuth.route"));
-const googleOrganizationUserAuth_route_1 = __importDefault(require("./modules/authentication/organizationUserAuth/googleOrganizationUser/googleOrganizationUserAuth.route"));
-const googleIndividualUserAuth_route_1 = __importDefault(require("./modules/authentication/individualUserAuth/googleIndividualUser/googleIndividualUserAuth.route"));
+const organizationAuth_route_1 = __importDefault(require("./modules/authentication/organizationUserAuth/organizationAuth.route"));
+const individualAuth_route_1 = __importDefault(require("./modules/authentication/individualUserAuth/individualAuth.route"));
 const errorHandler_util_1 = require("./utilities/errorHandler.util");
 const prodSwagger_1 = require("./prodSwagger");
 const devSwagger_1 = require("./devSwagger");
 const deserializeUser_middleware_1 = __importDefault(require("./middlewares/deserializeUser.middleware"));
-const protectRoutes_middleware_1 = __importDefault(require("./middlewares/protectRoutes.middleware"));
+//import protectRoutes from "./middlewares/protectRoutes.middleware";
+//import individualRoutes from "./modules/users/individualUsers/individualUsers.route";
 const individualUsers_route_1 = __importDefault(require("./modules/users/individualUsers/individualUsers.route"));
+const getOrganizationUser_route_1 = __importDefault(require("./modules/users/organization/getOrganizationUser.route"));
 const userAuth_route_1 = __importDefault(require("./modules/authentication/userAuth.route"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
@@ -42,26 +42,9 @@ app.get("/", (req, res) => {
 app.use("/auth/organization", organizationAuth_route_1.default);
 app.use("/auth/individual", individualAuth_route_1.default);
 app.use("/auth", userAuth_route_1.default);
-app.use("/auth/organization", googleOrganizationUserAuth_route_1.default);
-app.use("/auth/individual", googleIndividualUserAuth_route_1.default);
-app.use("/user", protectRoutes_middleware_1.default, individualUsers_route_1.default);
+app.use("/user", getOrganizationUser_route_1.default);
+app.use("/users", individualUsers_route_1.default);
 app.use(errorHandler_util_1.errorHandler);
-//
-// const swaggerDocumentOne = require("./swagger-one.json");
-// const swaggerDocumentTwo = require("./swagger-two.json");
-// var options = {};
-// app.use(
-//   "/api-docs-one",
-//   swaggerUi.serveFiles(swaggerDocumentOne, options),
-//   swaggerUi.setup(swaggerDocumentOne)
-// );
-// app.use(
-//   "/api-docs-two",
-//   swaggerUi.serveFiles(swaggerDocumentTwo, options),
-//   swaggerUi.setup(swaggerDocumentTwo)
-// );
-//
-// let options = {};
 const devSpec = (0, swagger_jsdoc_1.default)(devSwagger_1.options);
 const prodSpec = (0, swagger_jsdoc_1.default)(prodSwagger_1.options);
 app.use("/dev-api-docs", swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(devSpec));
