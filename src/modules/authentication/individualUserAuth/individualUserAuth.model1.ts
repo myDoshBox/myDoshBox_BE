@@ -1,10 +1,11 @@
-import { Document, model, Model, Schema } from "mongoose";
+import mongoose, { Document, model, Model, Schema } from "mongoose";
 import { emailValidator } from "../../../utilities/validator.utils";
 import { hash, compare } from "bcrypt";
 // import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
 export interface IndividualUserDocument extends Document {
+  orguser: mongoose.Schema.Types.ObjectId; // Reference to the User model
   email: string;
   sub: string;
   picture: string;
@@ -24,6 +25,11 @@ export interface IndividualUserModel extends Model<IndividualUserDocument> {}
 
 const individualUserSchema = new Schema<IndividualUserDocument>(
   {
+    orguser: {
+      type: Schema.Types.ObjectId,
+      ref: "orgUser", // Reference to User model
+    },
+
     email: {
       type: String,
       unique: true,

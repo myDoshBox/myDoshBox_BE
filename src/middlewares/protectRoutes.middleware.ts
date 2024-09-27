@@ -22,12 +22,12 @@ const protectRoutes = async (
 
     if (!userExists)
       return res.status(403).json({
-        message: "User does not exist anymore",
+        message: "User does not exist",
       });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     return res.status(500).json({
-      message: "something happened at the protectRoutes function",
+      message: error?.message,
     });
   }
 

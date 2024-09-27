@@ -18,6 +18,10 @@ const bcrypt_1 = require("bcrypt");
 // import bcrypt from "bcryptjs";
 const crypto_1 = __importDefault(require("crypto"));
 const individualUserSchema = new mongoose_1.Schema({
+    orguser: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: "orgUser", // Reference to User model
+    },
     email: {
         type: String,
         unique: true,

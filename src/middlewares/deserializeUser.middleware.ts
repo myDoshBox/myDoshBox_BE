@@ -10,7 +10,7 @@ const deserializeUser = async (
 ) => {
   const accessToken =
     get(req, "cookies.accessToken") ||
-    get(req, "headers.authorization", "").replace(/^Bearer\s/, "");
+    get(req, "headers.authorization", "")?.replace(/^Bearer\s/, "");
 
   const refreshToken =
     get(req, "cookies.refreshToken") || get(req, "headers.x-refresh");

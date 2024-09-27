@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendVerificationEmail = exports.sendURLEmail = exports.sendOtpEmail = void 0;
+exports.sendVerificationEmail = exports.sendURLEmail = exports.sendOtpEmail = exports.generateMailTransporter = void 0;
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
@@ -29,8 +29,9 @@ const generateMailTransporter = () => {
     });
     return transport;
 };
+exports.generateMailTransporter = generateMailTransporter;
 const sendOtpEmail = (otp, email) => __awaiter(void 0, void 0, void 0, function* () {
-    const transport = generateMailTransporter();
+    const transport = (0, exports.generateMailTransporter)();
     // const { email, message: customMessage } = options; // Renamed the variable to avoid conflict
     const emailMessage = `Hi, we just received a request that you forgot your password. Here is your OTP to create a new password: ${otp}`;
     transport.sendMail({
@@ -43,7 +44,7 @@ const sendOtpEmail = (otp, email) => __awaiter(void 0, void 0, void 0, function*
 exports.sendOtpEmail = sendOtpEmail;
 const sendURLEmail = (email, resetURL) => __awaiter(void 0, void 0, void 0, function* () {
     // const validEmails = email.filter(Boolean) as string[];
-    const transport = generateMailTransporter();
+    const transport = (0, exports.generateMailTransporter)();
     // const { email, message: customMessage } = options; // Renamed the variable to avoid conflict
     const emailMessage = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetURL}.\nIf you didn't forget your password, please ignore this email!`;
     transport.sendMail({
@@ -56,7 +57,7 @@ const sendURLEmail = (email, resetURL) => __awaiter(void 0, void 0, void 0, func
 exports.sendURLEmail = sendURLEmail;
 const sendVerificationEmail = (email, token) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const transport = generateMailTransporter();
+        const transport = (0, exports.generateMailTransporter)();
         const verificationURL = `https://mydoshbox.vercel.app/auth/verify-email?token=${token}`;
         // const verificationURL = `http://localhost:3000/auth/verify-email?token=${token}`;
         const supportEmail = "mydoshbox@gmail.com";

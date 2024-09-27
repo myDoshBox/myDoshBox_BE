@@ -19,6 +19,8 @@ import individualUsersRoutes from "./modules/users/individualUsers/individualUse
 import organizationUsersRoutes from "./modules/users/organization/getOrganizationUser.route";
 import authRouter from "./modules/authentication/userAuth.route";
 import dotenv from "dotenv";
+import { errorHandlingMiddleware } from "./middlewares/errorHandling.middleware";
+import escrowProductTransactionRouter from "./modules/transactions/productsTransaction/productsTransaction.route";
 
 dotenv.config();
 
@@ -56,6 +58,9 @@ app.use("/auth", authRouter);
 app.use("/user", organizationUsersRoutes);
 app.use("/users", individualUsersRoutes);
 
+// transaction
+app.use("/transactions", escrowProductTransactionRouter);
+
 app.use(errorHandler);
 
 const devSpec = swaggerJSDOC(devOptions);
@@ -82,3 +87,5 @@ connectDB()
   .catch((error: any) => {
     throw new Error(error);
   });
+
+app.use(errorHandlingMiddleware);

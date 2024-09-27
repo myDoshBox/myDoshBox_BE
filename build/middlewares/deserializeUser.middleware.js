@@ -13,8 +13,9 @@ const lodash_1 = require("lodash");
 const signAndVerifyToken_util_1 = require("./../utilities/signAndVerifyToken.util");
 const generateAccessAndRefreshToken_util_1 = require("../utilities/generateAccessAndRefreshToken.util");
 const deserializeUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     const accessToken = (0, lodash_1.get)(req, "cookies.accessToken") ||
-        (0, lodash_1.get)(req, "headers.authorization", "").replace(/^Bearer\s/, "");
+        ((_a = (0, lodash_1.get)(req, "headers.authorization", "")) === null || _a === void 0 ? void 0 : _a.replace(/^Bearer\s/, ""));
     const refreshToken = (0, lodash_1.get)(req, "cookies.refreshToken") || (0, lodash_1.get)(req, "headers.x-refresh");
     if (!accessToken) {
         return next();
