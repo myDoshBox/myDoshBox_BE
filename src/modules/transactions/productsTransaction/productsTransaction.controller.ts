@@ -80,7 +80,7 @@ export const initiateEscrowProductTransaction = async (
       return next(errorHandler(404, "User not found"));
     } else {
       // buyer pays for the escrow
-      const transaction_id: string = uuidv4(); // Generate a random UUID
+      const transaction_id: string = await uuidv4(); // Generate a random UUID
       console.log(transaction_id);
 
       const data = {
