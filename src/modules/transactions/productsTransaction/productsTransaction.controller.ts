@@ -81,6 +81,8 @@ export const initiateEscrowProductTransaction = async (
     } else {
       // buyer pays for the escrow
       const transaction_id: string = uuidv4(); // Generate a random UUID
+      console.log(transaction_id);
+
       const data = {
         reference: transaction_id,
         amount: product_price,
