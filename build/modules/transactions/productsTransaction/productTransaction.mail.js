@@ -9,9 +9,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendEscrowInitiationEmailToVendor = exports.sendEscrowInitiationEmail = void 0;
+exports.sendEscrowInitiationEmailToVendor = exports.sendEscrowInitiationEmailToInitiator = void 0;
 const email_utils_1 = require("../../../utilities/email.utils");
-const sendEscrowInitiationEmail = (email, 
+const sendEscrowInitiationEmailToInitiator = (buyer_email, 
 //   token: string,
 transaction_id) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -37,7 +37,7 @@ transaction_id) => __awaiter(void 0, void 0, void 0, function* () {
       </tr>
       <tr>
         <td align="center" style="padding: 20px 0;">
-          <p>Dear ${email},</p>
+          <p>Dear ${buyer_email},</p>
           <p>Your escrow transaction has been initiated successfully. Please wait for the vendor's confirmation. Transaction ID: ${transaction_id}</p>
 
           <p>You can click on the link to view the transaction:</p>
@@ -55,9 +55,9 @@ transaction_id) => __awaiter(void 0, void 0, void 0, function* () {
   `;
         // console.log("here");
         const info = yield transport.sendMail({
-            to: email,
+            to: buyer_email,
             from: process.env.VERIFICATION_EMAIL,
-            subject: "Escrow Transaction Initiation",
+            subject: "Escrow Transaction Initiated",
             html: emailMessage, // Assign the HTML string directly to the html property
         });
         console.log("info mesage id: " + (info === null || info === void 0 ? void 0 : info.messageId));
@@ -68,15 +68,15 @@ transaction_id) => __awaiter(void 0, void 0, void 0, function* () {
         console.log(err);
     }
 });
-exports.sendEscrowInitiationEmail = sendEscrowInitiationEmail;
+exports.sendEscrowInitiationEmailToInitiator = sendEscrowInitiationEmailToInitiator;
 //  const vendorMailContent = `A new escrow transaction has been initiated for the following product: ${product_name}. Please confirm the details and proceed with the shipping. The price for the product is ${product_price} without the 5% charge. Transaction ID: ${transaction_id}`;
 //  await sendEmail(vendor_email, "Confirm Escrow Transaction", vendorMailContent);
-const sendEscrowInitiationEmailToVendor = (email, product_name, product_price, 
+const sendEscrowInitiationEmailToVendor = (transaction_id, vendor_email, product_name, product_price
 //   token: string,
-transaction_id) => __awaiter(void 0, void 0, void 0, function* () {
+) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const transport = (0, email_utils_1.generateMailTransporter)();
-        const transactionURL = `https://mydoshbox.vercel.app/product-transaction//confirm-escrow-product-transaction?transaction=${transaction_id}`;
+        const transactionURL = `https://mydoshbox.vercel.app/product-transaction/confirm-escrow-product-transaction?transaction=${transaction_id}`;
         // const verificationURL = `http://localhost:3000/auth/verify-email?token=${token}`;
         const supportEmail = "mydoshbox@gmail.com";
         const emailMessage = `
@@ -85,7 +85,7 @@ transaction_id) => __awaiter(void 0, void 0, void 0, function* () {
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Escrow Transaction Initiated Successfully</title>
+    <title>A Buyer has Initiated an Escrow Transaction with You</title>
   </head>
   <body style="font-family: Arial, sans-serif; margin: 0; padding: 0;">
 
@@ -97,7 +97,7 @@ transaction_id) => __awaiter(void 0, void 0, void 0, function* () {
       </tr>
       <tr>
         <td align="center" style="padding: 20px 0;">
-          <p>Dear ${email},</p>
+          <p>Dear ${vendor_email},</p>
           <p>A new escrow transaction has been initiated for the following product: ${product_name} with the price: ${product_price}.</p>
 
           <p>Please click on the link to be redirected to the product summary for confirmation:</p>
@@ -115,7 +115,7 @@ transaction_id) => __awaiter(void 0, void 0, void 0, function* () {
   `;
         // console.log("here");
         const info = yield transport.sendMail({
-            to: email,
+            to: vendor_email,
             from: process.env.VERIFICATION_EMAIL,
             subject: "Escrow Transaction Initiation",
             html: emailMessage, // Assign the HTML string directly to the html property

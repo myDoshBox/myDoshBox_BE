@@ -24,18 +24,11 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
-const validProductCategories = [
-    "Electronics",
-    "Clothing",
-    "Books",
-    "Toys",
-    "Home Appliances",
-];
 const productSchema = new mongoose_1.default.Schema({
     user: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: "User", // Reference to User model
-        required: true,
+        // required: true,
     },
     transaction_id: {
         type: String,
@@ -44,11 +37,11 @@ const productSchema = new mongoose_1.default.Schema({
     buyer_email: {
         type: String,
     },
-    phone_number: {
+    vendor_phone_number: {
         type: String,
         required: true,
     },
-    vendor_phone_number: {
+    vendor_email: {
         type: String,
         required: true,
     },
@@ -60,16 +53,20 @@ const productSchema = new mongoose_1.default.Schema({
         type: String,
         required: true,
     },
-    product_category: {
-        type: String,
-        enum: validProductCategories,
-        required: true,
-    },
+    // product_category: {
+    //   type: String,
+    //   // enum: validProductCategories,
+    //   required: true,
+    // },
     product_quantity: {
         type: Number,
         required: true,
     },
     product_price: {
+        type: Number,
+        required: true,
+    },
+    transaction_total: {
         type: Number,
         required: true,
     },
@@ -83,20 +80,20 @@ const productSchema = new mongoose_1.default.Schema({
     },
     signed_escrow_doc: {
         type: String,
-        required: true,
+        // required: true,
     },
-    payment_status: {
+    verified_payment_status: {
         type: Boolean,
         default: false,
     },
     transaction_status: {
         type: Boolean,
-        default: false,
+        default: false, // this is supposed to be pending and then successful when done
     },
-    profit_made: {
-        type: Number,
-        default: 0,
-    },
+    // profit_made: {
+    //   type: Number,
+    //   default: 0,
+    // },
 }, {
     timestamps: true,
 });

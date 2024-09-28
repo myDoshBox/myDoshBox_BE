@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.errorHandler = exports.errorHandlingMiddleware = exports.ApiError = void 0;
+// import { Request, Response } from "express";
 class CustomError extends Error {
     constructor(statusCode, message) {
         super(message); // Pass message to the base Error class
@@ -16,30 +17,13 @@ class ApiError extends Error {
     }
 }
 exports.ApiError = ApiError;
-const errorHandlingMiddleware = (err, req, res
-// next: NextFunction
-) => {
+const errorHandlingMiddleware = (err, req, res, next) => {
     const statusCode = err.statusCode || 500;
     // const message = err.message || "Internal Server Error";
-    res.status(statusCode).send({ success: false, message: err.message });
+    res.status(statusCode).json({ success: false, message: err.message });
+    next();
 };
 exports.errorHandlingMiddleware = errorHandlingMiddleware;
-// export const errorHandlingMiddleware = (
-//   err: CustomError,
-//   req: Request,
-//   res: Response
-//   //   _next: NextFunction
-// ) => {
-//   const statusCode = err.statusCode || 500;
-//   const message = err.message || "Internal Server Error";
-//   res.status(statusCode).json({ success: false, statusCode, message });
-// };
-// export const errorHandlingMiddleware = (
-//   statusCode: number,
-//   message: string
-// ): CustomError => {
-//   return new CustomError(statusCode, message);
-// };
 const errorHandler = (statusCode, message) => {
     return new CustomError(statusCode, message);
 };
