@@ -22,7 +22,7 @@ export const paymentForEscrowProductTransaction = async (data: IPayment) => {
       currency: "NGN",
       // channels: ["bank_transfer", "ussd", "card"],
       channels: ["card"],
-      callback_url: `https://mydoshbox.vercel.app/userdashboardagreement?reference=${data.reference}`,
+      callback_url: `https://mydoshbox.vercel.app/userdashboard/agreement?reference=${data.reference}`,
       // callback_url: `http://localhost:3000/userdashboard/agreement?reference=${data.reference}`,
       // callback_url: `http://localhost:3000?reference=${data.reference}`,
     },
