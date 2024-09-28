@@ -12,6 +12,7 @@ interface IPayment {
 export const paymentForEscrowProductTransaction = async (data: IPayment) => {
   const API_URL = process.env.PAYSTACK_BASE_URL;
   const API_KEY = process.env.PAYSTACK_PAYMENT_KEY;
+  const DEPLOYED_FRONTEND_BASE_URL = process.env.DEPLOYED_FRONTEND_BASE_URL;
 
   const response = await axios.post(
     `${API_URL}/transaction/initialize`,
@@ -22,7 +23,7 @@ export const paymentForEscrowProductTransaction = async (data: IPayment) => {
       currency: "NGN",
       // channels: ["bank_transfer", "ussd", "card"],
       channels: ["card"],
-      callback_url: `https://mydoshbox.vercel.app/userdashboard/agreement?reference=${data.reference}`,
+      callback_url: `${DEPLOYED_FRONTEND_BASE_URL}/userdashboard/agreement?reference=${data.reference}`,
       // callback_url: `http://localhost:3000/userdashboard/agreement?reference=${data.reference}`,
       // callback_url: `http://localhost:3000?reference=${data.reference}`,
     },

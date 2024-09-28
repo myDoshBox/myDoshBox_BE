@@ -1,5 +1,7 @@
 import { generateMailTransporter } from "../../../utilities/email.utils";
 
+const DEPLOYED_FRONTEND_BASE_URL = process.env.DEPLOYED_FRONTEND_BASE_URL;
+
 export const sendEscrowInitiationEmailToInitiator = async (
   buyer_email: string,
   //   token: string,
@@ -7,7 +9,7 @@ export const sendEscrowInitiationEmailToInitiator = async (
 ) => {
   try {
     const transport = generateMailTransporter();
-    const transactionURL = `https://mydoshbox.vercel.app/product-transaction?initiate-escrow-product-transaction=${transaction_id}`;
+    const transactionURL = `${DEPLOYED_FRONTEND_BASE_URL}/product-transaction?initiate-escrow-product-transaction=${transaction_id}`;
     // const verificationURL = `http://localhost:3000/auth/verify-email?token=${token}`;
 
     const supportEmail = "mydoshbox@gmail.com";
@@ -73,7 +75,7 @@ export const sendEscrowInitiationEmailToVendor = async (
 ) => {
   try {
     const transport = generateMailTransporter();
-    const transactionURL = `https://mydoshbox.vercel.app/product-transaction/confirm-escrow-product-transaction?transaction=${transaction_id}`;
+    const transactionURL = `${DEPLOYED_FRONTEND_BASE_URL}/product-transaction/confirm-escrow-product-transaction?transaction=${transaction_id}`;
     // const verificationURL = `http://localhost:3000/auth/verify-email?token=${token}`;
 
     const supportEmail = "mydoshbox@gmail.com";
