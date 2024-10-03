@@ -11,12 +11,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendEscrowInitiationEmailToVendor = exports.sendEscrowInitiationEmailToInitiator = void 0;
 const email_utils_1 = require("../../../utilities/email.utils");
+const DEPLOYED_FRONTEND_BASE_URL = process.env.DEPLOYED_FRONTEND_BASE_URL;
 const sendEscrowInitiationEmailToInitiator = (buyer_email, 
 //   token: string,
 transaction_id) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const transport = (0, email_utils_1.generateMailTransporter)();
-        const transactionURL = `https://mydoshbox.vercel.app/product-transaction?initiate-escrow-product-transaction=${transaction_id}`;
+        const transactionURL = `${DEPLOYED_FRONTEND_BASE_URL}/product-transaction?initiate-escrow-product-transaction=${transaction_id}`;
         // const verificationURL = `http://localhost:3000/auth/verify-email?token=${token}`;
         const supportEmail = "mydoshbox@gmail.com";
         const emailMessage = `
@@ -76,7 +77,7 @@ const sendEscrowInitiationEmailToVendor = (transaction_id, vendor_email, product
 ) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const transport = (0, email_utils_1.generateMailTransporter)();
-        const transactionURL = `https://mydoshbox.vercel.app/product-transaction/confirm-escrow-product-transaction?transaction=${transaction_id}`;
+        const transactionURL = `${DEPLOYED_FRONTEND_BASE_URL}/product-transaction/confirm-escrow-product-transaction?transaction=${transaction_id}`;
         // const verificationURL = `http://localhost:3000/auth/verify-email?token=${token}`;
         const supportEmail = "mydoshbox@gmail.com";
         const emailMessage = `
