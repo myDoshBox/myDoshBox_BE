@@ -1,6 +1,8 @@
 import { Router } from "express";
 import {
-  confirmEscrowProductTransaction,
+  BuyerConfirmEscrowProductTransaction,
+  getAllEscrowProductTransactionByUser,
+  getSingleEscrowProductTransaction,
   initiateEscrowProductTransaction,
   verifyEscrowProductTransactionPayment,
 } from "./productsTransaction.controller";
@@ -23,11 +25,19 @@ escrowProductTransactionRouter
   .put(verifyEscrowProductTransactionPayment);
 
 escrowProductTransactionRouter
-  .route("/confirm-escrow-product-transaction")
-  .post(confirmEscrowProductTransaction);
+  .route("/get-single-escrow-product-transaction/:transaction_id")
+  .get(getSingleEscrowProductTransaction);
 
 escrowProductTransactionRouter
-  .route("/pay-for-escrow-product-transaction")
-  .post(confirmEscrowProductTransaction);
+  .route("/get-all-escrow-product-transaction/:buyer_email")
+  .get(getAllEscrowProductTransactionByUser);
+
+escrowProductTransactionRouter
+  .route("/confirm-escrow-product-transaction")
+  .post(BuyerConfirmEscrowProductTransaction);
+
+// escrowProductTransactionRouter
+//   .route("/pay-for-escrow-product-transaction")
+//   .post(confirmEscrowProductTransaction);
 
 export default escrowProductTransactionRouter;

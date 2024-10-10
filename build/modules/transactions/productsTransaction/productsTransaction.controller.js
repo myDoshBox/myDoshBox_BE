@@ -12,8 +12,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAllEscrowProductTransaction = exports.getSingleEscrowProductTransaction = exports.confirmEscrowProductTransaction = exports.verifyEscrowProductTransactionPayment = exports.initiateEscrowProductTransaction = void 0;
+exports.BuyerConfirmEscrowProductTransaction = exports.getAllEscrowProductTransactionByUser = exports.getSingleEscrowProductTransaction = exports.verifyEscrowProductTransactionPayment = exports.initiateEscrowProductTransaction = void 0;
 const uuid_1 = require("uuid");
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const productsTransaction_validation_1 = require("./productsTransaction.validation");
 // import { Product } from "../models/Product"; // Import the Product model
 const individualUserAuth_model1_1 = __importDefault(require("../../authentication/individualUserAuth/individualUserAuth.model1")); // Import the User model
@@ -23,6 +24,7 @@ const productsTransaction_model_1 = __importDefault(require("./productsTransacti
 // import axios from "axios";
 const productsTransaction_paystack_1 = require("./productsTransaction.paystack");
 const productTransaction_mail_1 = require("./productTransaction.mail");
+const email_utils_1 = require("../../../utilities/email.utils");
 // import {
 //   sendEscrowInitiationEmail,
 //   sendEscrowInitiationEmailToVendor,
@@ -101,7 +103,7 @@ const initiateEscrowProductTransaction = (req, res, next) => __awaiter(void 0, v
             // send response
             res.json({
                 buyerPaysForEscrow,
-                status: "successful",
+                status: "success",
                 message: "You have successfully initiated an escrow, please proceed to make payment.",
             });
         }
@@ -145,7 +147,7 @@ const verifyEscrowProductTransactionPayment = (req, res, next) => __awaiter(void
             yield (0, productTransaction_mail_1.sendEscrowInitiationEmailToVendor)(transaction_id, vendor_email, product_name, product_price);
             // send response
             res.json({
-                status: "successful",
+                status: "success",
                 message: "Payment has been successfully verified.",
             });
         }
@@ -157,16 +159,138 @@ const verifyEscrowProductTransactionPayment = (req, res, next) => __awaiter(void
     }
 });
 exports.verifyEscrowProductTransactionPayment = verifyEscrowProductTransactionPayment;
-const confirmEscrowProductTransaction = () => __awaiter(void 0, void 0, void 0, function* () {
+const getSingleEscrowProductTransaction = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        // const user = res.locals.user;
+        const { transaction_id } = req.params;
+        // console.log(user);
+        if (!transaction_id) {
+            return next((0, errorHandling_middleware_1.errorHandler)(400, "transaction ID is required"));
+        }
+        const transaction = yield productsTransaction_model_1.default.findOne({
+            transaction_id: transaction_id,
+            // user_id: user?._id,
+        });
+        console.log(transaction === null || transaction === void 0 ? void 0 : transaction.vendor_email);
+        if (!transaction) {
+            return next((0, errorHandling_middleware_1.errorHandler)(404, "transaction not found"));
+        }
+        else {
+            res.json({
+                transaction,
+                status: "success",
+                message: "transaction fetched successfully",
+            });
+        }
+    }
+    catch (error) {
+        console.log(error);
+        // return next(errorHandler(500, "server error"));
+        return next((0, errorHandling_middleware_1.errorHandler)(500, "server error"));
+    }
+});
+exports.getSingleEscrowProductTransaction = getSingleEscrowProductTransaction;
+const getAllEscrowProductTransactionByUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        // const user = res?.locals?.user;
+        const { buyer_email } = req.params;
+        // console.log("user", user);
+        if (!buyer_email) {
+            return next((0, errorHandling_middleware_1.errorHandler)(400, "Buyer email is required"));
+        }
+        // const transaction = await Product.find();
+        // const transactions = await Product.$where({ buyer_email: buyer_email });
+        // db.student.find({
+        //   $where: function () {
+        //     return this.name === "Mickel";
+        //   },
+        // });
+        const transactions = yield productsTransaction_model_1.default.find({ buyer_email: buyer_email });
+        // console.log(transactions);
+        // const { reference } = req.body;
+        // const transaction = await Product.findOne({
+        //   transaction_id: reference,
+        //   verified_payment_status: false,
+        // });
+        if (!transactions || transactions.length === 0) {
+            return next((0, errorHandling_middleware_1.errorHandler)(404, "you don't have any transactions at this time"));
+        }
+        else {
+            res.json({
+                transactions,
+                status: "success",
+                message: "all transactions fetched successfully",
+            });
+        }
+    }
+    catch (error) {
+        console.log(error);
+        // return next(errorHandler(500, "server error"));
+        return next((0, errorHandling_middleware_1.errorHandler)(500, "server error"));
+    }
+});
+exports.getAllEscrowProductTransactionByUser = getAllEscrowProductTransactionByUser;
+const BuyerConfirmEscrowProductTransaction = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     // when the mail link is clicked
+    // we need to check if they have an account, if they do,
+    // we redirect them to login if they weren't previously logged in and lead them straight to the page to confirm escrow
+    // we need to check if they have an account, if they don't,
     // they are redirected to a signup
     // they signup and are redirected to the page for confirming the escrow
     // when they accept/confirm, a message/popup to tell the seller the next steps.
     // mail is sent to the buyer that the seller has agreed and will be sending the goods
     // the mail contains a link to the page where the buyer can click on so that they are redirected to where they can confirm that they like the product and close the escrow.
+    var _a;
+    const { transaction_id } = req.body;
+    const user = (_a = res === null || res === void 0 ? void 0 : res.locals) === null || _a === void 0 ? void 0 : _a.user;
+    if (!user) {
+        // res.json({
+        //   status: "error",
+        //   message: "all transactions fetched successfully",
+        //   signup_link: `${process.env.LOCAL_FRONTEND_BASE_URL}/signup`,
+        // });
+        // res.status(401).json({
+        //   status: "error",
+        //   message: "Unauthorized. Please log in to confirm the escrow transaction.",
+        //   login_link: `/login?redirect=/confirm-escrow/${transaction_id}`,
+        // });
+        res.status(401).json({
+            status: "error",
+            message: "Unauthorized. Please log in to confirm the escrow transaction.",
+            login_link: `${process.env.LOCAL_FRONTEND_BASE_URL}/login?redirect=/confirm-escrow/${transaction_id}`,
+        });
+    }
+    const transaction = yield productsTransaction_model_1.default.findOne({
+        transaction_id: transaction_id,
+        // user_id: user?._id,
+    });
+    if (!transaction) {
+        return next((0, errorHandling_middleware_1.errorHandler)(404, "Transaction not found."));
+    }
+    const vendor_email = transaction === null || transaction === void 0 ? void 0 : transaction.vendor_email;
+    console.log(vendor_email);
+    const userAlreadyExist = yield individualUserAuth_model1_1.default.findOne({
+        vendor_email: vendor_email,
+    });
+    // const user = res.locals.user;
+    if (!userAlreadyExist) {
+        res.status(401).json({
+            status: "error",
+            message: "You do not have an account, please proceed to the signup page to create an account.",
+            signup_link: `${process.env.LOCAL_FRONTEND_BASE_URL}/signup?redirect=/confirm-escrow/${transaction_id}`,
+        });
+    }
+    if (!(user === null || user === void 0 ? void 0 : user.email_verified)) {
+        const verificationToken = jsonwebtoken_1.default.sign({ vendor_email }, process.env.JWT_SECRET, { expiresIn: 60 * 60 });
+        yield (0, email_utils_1.sendVerificationEmail)(vendor_email, verificationToken);
+        res.status(200).json({
+            status: "false",
+            message: "Account is unverified! Verfication email sent. verify account to continue",
+        });
+    }
+    // we need to fetch the details from the product document probably by hitting the getbytransactionid endpoint
+    // when vendor clicks on agree, they are redirected to a form to fill in the shipping details -> a summary is given and is contained in the mail sent to the buyer
+    // LET'S ADD DELIVERY ADDRESS
+    // when vendor agrees, the buyer and seller get a mail
 });
-exports.confirmEscrowProductTransaction = confirmEscrowProductTransaction;
-const getSingleEscrowProductTransaction = () => __awaiter(void 0, void 0, void 0, function* () { });
-exports.getSingleEscrowProductTransaction = getSingleEscrowProductTransaction;
-const getAllEscrowProductTransaction = () => __awaiter(void 0, void 0, void 0, function* () { });
-exports.getAllEscrowProductTransaction = getAllEscrowProductTransaction;
+exports.BuyerConfirmEscrowProductTransaction = BuyerConfirmEscrowProductTransaction;

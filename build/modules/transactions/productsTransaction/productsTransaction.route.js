@@ -15,9 +15,15 @@ escrowProductTransactionRouter
     .route("/verify-escrow-product-transaction-payment")
     .put(productsTransaction_controller_1.verifyEscrowProductTransactionPayment);
 escrowProductTransactionRouter
-    .route("/confirm-escrow-product-transaction")
-    .post(productsTransaction_controller_1.confirmEscrowProductTransaction);
+    .route("/get-single-escrow-product-transaction/:transaction_id")
+    .get(productsTransaction_controller_1.getSingleEscrowProductTransaction);
 escrowProductTransactionRouter
-    .route("/pay-for-escrow-product-transaction")
-    .post(productsTransaction_controller_1.confirmEscrowProductTransaction);
+    .route("/get-all-escrow-product-transaction/:buyer_email")
+    .get(productsTransaction_controller_1.getAllEscrowProductTransactionByUser);
+escrowProductTransactionRouter
+    .route("/confirm-escrow-product-transaction")
+    .post(productsTransaction_controller_1.BuyerConfirmEscrowProductTransaction);
+// escrowProductTransactionRouter
+//   .route("/pay-for-escrow-product-transaction")
+//   .post(confirmEscrowProductTransaction);
 exports.default = escrowProductTransactionRouter;

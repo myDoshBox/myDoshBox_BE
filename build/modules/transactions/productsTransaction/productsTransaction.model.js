@@ -27,7 +27,7 @@ const mongoose_1 = __importStar(require("mongoose"));
 const productSchema = new mongoose_1.default.Schema({
     user: {
         type: mongoose_1.Schema.Types.ObjectId,
-        ref: "User", // Reference to User model
+        ref: "IndividualUser", // Reference to User model
         // required: true,
     },
     transaction_id: {

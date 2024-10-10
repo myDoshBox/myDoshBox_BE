@@ -33,7 +33,7 @@ const productSchema = new mongoose.Schema(
   {
     user: {
       type: Schema.Types.ObjectId,
-      ref: "User", // Reference to User model
+      ref: "IndividualUser", // Reference to User model
       // required: true,
     },
 

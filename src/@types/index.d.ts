@@ -5,3 +5,12 @@ declare module "express-serve-static-core" {
     user?: IndividualUserDocument; // Assuming IUser is the interface for your User model
   }
 }
+
+declare module "express-serve-static-core" {
+  interface Request {
+    user?: {
+      _id: string;
+      email: string;
+    };
+  }
+}
