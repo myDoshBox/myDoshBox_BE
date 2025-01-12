@@ -12,6 +12,7 @@ interface IProduct extends Document {
   user: mongoose.Schema.Types.ObjectId; // Reference to the User model
   transaction_id: string;
   buyer_email: string;
+  vendor_name: string;
   vendor_phone_number: string;
   vendor_email: string;
   transaction_type: string;
@@ -23,8 +24,10 @@ interface IProduct extends Document {
   product_image: string;
   product_description: string;
   signed_escrow_doc: string;
+  delivery_address: string;
   verified_payment_status: boolean;
   transaction_status: boolean;
+  seller_confirm_status: boolean;
   // profit_made: number;
   // timestamps: unknown;
 }
@@ -44,6 +47,11 @@ const productSchema = new mongoose.Schema(
 
     buyer_email: {
       type: String,
+    },
+
+    vendor_name: {
+      type: String,
+      required: true,
     },
 
     vendor_phone_number: {
@@ -102,16 +110,25 @@ const productSchema = new mongoose.Schema(
       // required: true,
     },
 
+    delivery_address: {
+      type: String,
+      // required: true,
+    },
+
     verified_payment_status: {
       type: Boolean,
       default: false,
     },
 
     transaction_status: {
-      type: Boolean,
-      default: false, // this is supposed to be pending and then successful when done
+      type: String,
+      default: "processing", // this is supposed to be pending and then completed when done
     },
 
+    seller_confirm_status: {
+      type: Boolean,
+      default: false,
+    },
     // profit_made: {
     //   type: Number,
     //   default: 0,
