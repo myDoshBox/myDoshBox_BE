@@ -161,6 +161,8 @@ export const UserLogin = async (req: Request, res: Response) => {
           { expiresIn: 60 * 60 }
         );
         await sendVerificationEmail(email, verificationToken);
+        console.log(sendVerificationEmail(email, verificationToken));
+
         return res.status(200).json({
           status: "false",
           message:
