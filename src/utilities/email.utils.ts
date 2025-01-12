@@ -50,7 +50,8 @@ export const sendURLEmail = async (email: string[], resetURL: string) => {
 export const sendVerificationEmail = async (email: string, token: string) => {
   try {
     const transport = generateMailTransporter();
-    const verificationURL = `${process.env.DEPLOYED_FRONTEND_BASE_URL}/auth/verify-email?token=${token}`;
+    const verificationURL = `https://mydoshbox.vercel.app/auth/verify-email?token=${token}`;
+    // const verificationURL = `${process.env.DEPLOYED_FRONTEND_BASE_URL}/auth/verify-email?token=${token}`;
     // const verificationURL = `${process.env.LOCAL_FRONTEND_BASE_URL}/auth/verify-email?token=${token}`;
     // const verificationURL = `http://localhost:3000/auth/verify-email?token=${token}`;
 
