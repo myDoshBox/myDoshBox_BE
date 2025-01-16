@@ -382,7 +382,7 @@ export const getAllEscrowProductTransactionByUser = async (
     //   return next(errorHandler(400, "Buyer email is required"));
     // }
     if (!user_email) {
-      return next(errorHandler(400, "Buyer email is required"));
+      return next(errorHandler(400, "user email is required"));
     }
 
     // const transaction = await Product.find();
@@ -402,6 +402,16 @@ export const getAllEscrowProductTransactionByUser = async (
         select: "email",
       })
       .sort({ createdAt: -1 });
+
+    // Find products where the user (buyer or seller) email matches
+    // const transactions = await Product.find({
+    //   "user.email": user_email, // assuming you have `user` populated in your product schema with `email`
+    // })
+    //   .populate({
+    //     path: "user",
+    //     select: "email", // populating the user field to get email
+    //   })
+    //   .sort({ createdAt: -1 });
 
     // const transactions = await Product.find({ buyer_email: buyer_email }).sort({
     //   createdAt: -1,

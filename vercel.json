@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "routes": [
+    {
+      "src": "/users/(.*)",
+      "dest": "/users"
+    },
+    {
+      "src": "/transactions/(.*)",
+      "dest": "/transactions"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/auth"
+    }
+  ]
+}

@@ -156,6 +156,7 @@ const UserLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             if (!individualUserToLogin.email_verified) {
                 const verificationToken = jsonwebtoken_1.default.sign({ email }, process.env.JWT_SECRET, { expiresIn: 60 * 60 });
                 yield (0, email_utils_1.sendVerificationEmail)(email, verificationToken);
+                console.log((0, email_utils_1.sendVerificationEmail)(email, verificationToken));
                 return res.status(200).json({
                     status: "false",
                     message: "Account is unverified! Verfication email sent. verify account to continue",

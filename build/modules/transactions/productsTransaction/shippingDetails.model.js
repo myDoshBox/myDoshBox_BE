@@ -24,90 +24,50 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
-const productSchema = new mongoose_1.default.Schema({
+const shippingDetailSchema = new mongoose_1.default.Schema({
     user: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: "IndividualUser", // Reference to User model
         // required: true,
     },
-    transaction_id: {
+    product: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: "Product", // Reference to product model
+        // required: true,
+        //   WE HAVE TO MAKE THIS UNIQUE
+    },
+    shipping_company: {
+        type: String,
+        required: true,
+    },
+    delivery_person_name: {
+        type: String,
+        required: true,
+    },
+    delivery_person_number: {
+        type: String,
+        required: true,
+    },
+    delivery_person_email: {
+        type: String,
+        // required: true,
+    },
+    delivery_date: {
+        type: String,
+        required: true,
+    },
+    pick_up_address: {
         type: String,
         required: true,
     },
     buyer_email: {
         type: String,
     },
-    vendor_name: {
-        type: String,
-        required: true,
-    },
-    vendor_phone_number: {
-        type: String,
-        required: true,
-    },
     vendor_email: {
         type: String,
-        required: true,
     },
-    transaction_type: {
-        type: String,
-        required: true,
-    },
-    product_name: {
-        type: String,
-        required: true,
-    },
-    // product_category: {
-    //   type: String,
-    //   // enum: validProductCategories,
-    //   required: true,
-    // },
-    product_quantity: {
-        type: Number,
-        required: true,
-    },
-    product_price: {
-        type: Number,
-        required: true,
-    },
-    transaction_total: {
-        type: Number,
-        required: true,
-    },
-    product_image: {
-        type: String,
-        required: true,
-    },
-    product_description: {
-        type: String,
-        required: true,
-    },
-    signed_escrow_doc: {
-        type: String,
-        // required: true,
-    },
-    delivery_address: {
-        type: String,
-        // required: true,
-    },
-    verified_payment_status: {
-        type: Boolean,
-        default: false,
-    },
-    transaction_status: {
-        type: String,
-        default: "processing", // this is supposed to be pending and then completed when done
-    },
-    seller_confirm_status: {
-        type: Boolean,
-        default: false,
-    },
-    // profit_made: {
-    //   type: Number,
-    //   default: 0,
-    // },
 }, {
     timestamps: true,
 });
-const Product = mongoose_1.default.model("Product", productSchema);
-exports.default = Product;
+const ShippingDetails = mongoose_1.default.model("ShippingDetails", shippingDetailSchema);
+exports.default = ShippingDetails;

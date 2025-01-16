@@ -17,13 +17,16 @@ const axios_1 = __importDefault(require("axios"));
 const paymentForEscrowProductTransaction = (data) => __awaiter(void 0, void 0, void 0, function* () {
     const API_URL = process.env.PAYSTACK_BASE_URL;
     const API_KEY = process.env.PAYSTACK_PAYMENT_KEY;
-    const DEPLOYED_FRONTEND_BASE_URL = process.env.DEPLOYED_FRONTEND_BASE_URL;
-    const callbackURL = `${DEPLOYED_FRONTEND_BASE_URL}/userdashboard/transaction-history`;
-    console.log("callbackUrl", callbackURL);
+    // const DEPLOYED_FRONTEND_BASE_URL = process.env.DEPLOYED_FRONTEND_BASE_URL;
+    const LOCAL_FRONTEND_BASE_URL = process.env.LOCAL_FRONTEND_BASE_URL;
+    // const callbackURL = `${DEPLOYED_FRONTEND_BASE_URL}/userdashboard/transaction-history`;
+    // const callbackURL = `${LOCAL_FRONTEND_BASE_URL}/userdashboard/transaction-history?reference=${data?.reference}`;
+    const callbackURL = `${LOCAL_FRONTEND_BASE_URL}/userdashboard/transaction-history`;
+    // console.log("callbackUrl", callbackURL);
     const response = yield axios_1.default.post(`${API_URL}/transaction/initialize`, {
-        reference: data.reference,
-        amount: data.amount * 100,
-        email: data.email,
+        reference: data === null || data === void 0 ? void 0 : data.reference,
+        amount: (data === null || data === void 0 ? void 0 : data.amount) * 100,
+        email: data === null || data === void 0 ? void 0 : data.email,
         currency: "NGN",
         // channels: ["bank_transfer", "ussd", "card"],
         channels: ["card"],

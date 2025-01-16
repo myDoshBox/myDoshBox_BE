@@ -58,8 +58,11 @@ exports.sendURLEmail = sendURLEmail;
 const sendVerificationEmail = (email, token) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const transport = (0, exports.generateMailTransporter)();
-        const verificationURL = `${process.env.LOCAL_FRONTEND_BASE_URL}/auth/verify-email?token=${token}`;
+        // const verificationURL = `https://mydoshbox.vercel.app/auth/verify-email?token=${token}`;
+        const verificationURL = `${process.env.DEPLOYED_FRONTEND_BASE_URL}/auth/verify-email?token=${token}`;
+        // const verificationURL = `${process.env.LOCAL_FRONTEND_BASE_URL}/auth/verify-email?token=${token}`;
         // const verificationURL = `http://localhost:3000/auth/verify-email?token=${token}`;
+        console.log(verificationURL);
         const supportEmail = "mydoshbox@gmail.com";
         const emailMessage = `
   <!DOCTYPE html>
