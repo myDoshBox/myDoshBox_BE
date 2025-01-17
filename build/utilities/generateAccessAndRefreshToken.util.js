@@ -12,7 +12,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.reIssueAccessToken = exports.generateAccessAndRefreshToken = void 0;
+exports.generateAccessAndRefreshToken = generateAccessAndRefreshToken;
+exports.reIssueAccessToken = reIssueAccessToken;
 const lodash_1 = require("lodash");
 const signAndVerifyToken_util_1 = require("./signAndVerifyToken.util");
 const session_model_1 = require("../modules/sessions/session.model");
@@ -23,7 +24,6 @@ function generateAccessAndRefreshToken(userObject, sessionId, role) {
     const refreshToken = (0, signAndVerifyToken_util_1.signJwt)({ userData: userObject, session: sessionId, role }, { expiresIn: `${process.env.REFRESH_TOKEN_TTL}` });
     return { accessToken, refreshToken };
 }
-exports.generateAccessAndRefreshToken = generateAccessAndRefreshToken;
 function reIssueAccessToken(_a) {
     return __awaiter(this, arguments, void 0, function* ({ refreshToken, }) {
         const { decoded } = (0, signAndVerifyToken_util_1.verifyJwt)(refreshToken);
@@ -52,4 +52,3 @@ function reIssueAccessToken(_a) {
         return accessToken;
     });
 }
-exports.reIssueAccessToken = reIssueAccessToken;

@@ -47,7 +47,7 @@ escrowProductTransactionRouter
   .post(sellerFillOutShippingDetails);
 
 escrowProductTransactionRouter
-  .route("/get-all-shipping-details/buyer/:user_email")
+  .route("/get-all-shipping-details/buyer/:buyer_email")
   .get(getAllShippingDetailsForBuyer);
 
 escrowProductTransactionRouter
@@ -59,7 +59,7 @@ escrowProductTransactionRouter
 //   .get(getAllShippingDetails);
 
 escrowProductTransactionRouter
-  .route("/get-all-shipping-details/:buyer_email")
+  .route("/get-all-shipping-details/:user_email")
   .get(getAllShippingDetails);
 
 escrowProductTransactionRouter

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyJwt = void 0;
+exports.verifyJwt = verifyJwt;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 function verifyJwt(token) {
     try {
@@ -22,4 +22,3 @@ function verifyJwt(token) {
         };
     }
 }
-exports.verifyJwt = verifyJwt;

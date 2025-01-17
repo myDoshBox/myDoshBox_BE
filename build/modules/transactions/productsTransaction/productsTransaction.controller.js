@@ -14,6 +14,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.buyerConfirmsProduct = exports.getAllShippingDetails = exports.getAllShippingDetailsForVendor = exports.getAllShippingDetailsForBuyer = exports.sellerFillOutShippingDetails = exports.sellerConfirmsEscrowProductTransaction = exports.getAllEscrowProductTransactionByUser = exports.getSingleEscrowProductTransaction = exports.verifyEscrowProductTransactionPayment = exports.initiateEscrowProductTransaction = void 0;
 const uuid_1 = require("uuid");
+// import jwt, { JwtPayload } from "jsonwebtoken";
+// import { createSessionAndSendTokens } from "../../../utilities/createSessionAndSendToken.util";
 const productsTransaction_validation_1 = require("./productsTransaction.validation");
 // import { Product } from "../models/Product"; // Import the Product model
 const individualUserAuth_model1_1 = __importDefault(require("../../authentication/individualUserAuth/individualUserAuth.model1")); // Import the User model
@@ -23,7 +25,9 @@ const productsTransaction_model_1 = __importDefault(require("./productsTransacti
 // import axios from "axios";
 const productsTransaction_paystack_1 = require("./productsTransaction.paystack");
 const productTransaction_mail_1 = require("./productTransaction.mail");
+// import { sendVerificationEmail } from "../../../utilities/email.utils";
 const shippingDetails_model_1 = __importDefault(require("./shippingDetails.model"));
+// import mongoose, { SchemaTypes } from "mongoose";
 // import {
 //   sendEscrowInitiationEmail,
 //   sendEscrowInitiationEmailToVendor,
