@@ -295,13 +295,12 @@ const getAllEscrowProductTransactionByUser = (req, res, next) => __awaiter(void 
         //   },
         // });
         // USE THE USERS EMAIL ATTACHED TO THE PRODUCT INSTEAD OF BUYER OR SELLER
-        const transactions = yield productsTransaction_model_1.default.find()
-            .populate({
-            path: "user",
-            match: { email: user_email },
-            select: "email",
-        })
-            .sort({ createdAt: -1 });
+        const transactions = yield productsTransaction_model_1.default.find({
+            $or: [
+                { vendor_email: user_email }, // Age greater than 30
+                { buyer_email: user_email }, // OR City is New York
+            ],
+        }).sort({ createdAt: -1 });
         // Find products where the user (buyer or seller) email matches
         // const transactions = await Product.find({
         //   "user.email": user_email, // assuming you have `user` populated in your product schema with `email`
@@ -695,18 +694,18 @@ const getAllShippingDetails = (req, res, next) => __awaiter(void 0, void 0, void
     try {
         // const user = res?.locals?.user;
         // const { buyer_email, vendor_email } = req.params;
-        const { buyer_email } = req.params;
-        console.log("Buyer Email:", buyer_email);
+        const { user_email } = req.params;
+        console.log("user Email:", user_email);
         // console.log("Vendor Email:", vendor_email);
         // console.log("user", user);
         // if (!buyer_email || !vendor_email) {
         //   return next(errorHandler(400, "Buyer email or vendor email is required"));
         // }
-        if (!buyer_email) {
-            return next((0, errorHandling_middleware_1.errorHandler)(400, "Buyer email is required"));
+        if (!user_email) {
+            return next((0, errorHandling_middleware_1.errorHandler)(400, "User email is required"));
         }
         // Create filter conditions for the query based on provided emails
-        const matchByMails = {};
+        // const matchByMails: noSQLJoinType = {};
         // if (buyer_email || vendor_email) {
         //   // matchByMails["product.buyer_email"] = buyer_email as string;
         //   // matchByMails["product.buyer_email"] = buyer_email;
@@ -720,14 +719,14 @@ const getAllShippingDetails = (req, res, next) => __awaiter(void 0, void 0, void
         //     matchByMails["$or"].push({ "product.vendor_email": vendor_email });
         //   }
         // }
-        if (buyer_email) {
+        if (user_email) {
             // matchByMails["product.buyer_email"] = buyer_email as string;
             // matchByMails["product.buyer_email"] = buyer_email;
             // matchByMails["$or"] = [];
             const matchByMails = {};
             matchByMails.$or = matchByMails.$or || [];
-            if (buyer_email) {
-                matchByMails["$or"].push({ "product.buyer_email": buyer_email });
+            if (user_email) {
+                matchByMails["$or"].push({ "product.buyer_email": user_email });
             }
         }
         // if (vendor_email) {
@@ -735,7 +734,21 @@ const getAllShippingDetails = (req, res, next) => __awaiter(void 0, void 0, void
         //   matchByMails["product.vendor_email"] = buyer_email;
         // }
         // Use aggregate to join ShippingDetails with Product collection
+        // const transactions = await Product.find({
+        //   $or: [
+        //     { vendor_email: user_email }, // Age greater than 30
+        //     { buyer_email: user_email }, // OR City is New York
+        //   ],
+        // }).sort({ createdAt: -1 });
         const transactions = yield shippingDetails_model_1.default.aggregate([
+            {
+                $match: {
+                    $or: [
+                        { vendor_email: user_email }, // Age greater than 30
+                        { buyer_email: user_email }, // OR City is New York
+                    ],
+                },
+            }, // Filter based on buyer or vendor email,
             {
                 $lookup: {
                     from: "products", // name of the 'Product' collection
@@ -745,11 +758,14 @@ const getAllShippingDetails = (req, res, next) => __awaiter(void 0, void 0, void
                 },
             },
             { $unwind: "$product" }, // Unwind to access product details directly,
-            { $match: matchByMails }, // Filter based on buyer or vendor email,
             { $sort: { createdAt: -1 } }, // Sort by creation date
         ]);
         if (!transactions || transactions.length === 0) {
-            return next((0, errorHandling_middleware_1.errorHandler)(404, "you don't have any shipping history at this time"));
+            res.json({
+                transactions: [],
+                status: "success",
+                message: "you do not have any shipping detail at this time",
+            });
         }
         else {
             res.json({
