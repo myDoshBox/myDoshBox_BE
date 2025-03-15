@@ -12,11 +12,11 @@ interface IPayment {
 export const paymentForEscrowProductTransaction = async (data: IPayment) => {
   const API_URL = process.env.PAYSTACK_BASE_URL;
   const API_KEY = process.env.PAYSTACK_PAYMENT_KEY;
-  // const DEPLOYED_FRONTEND_BASE_URL = process.env.DEPLOYED_FRONTEND_BASE_URL;
-  const LOCAL_FRONTEND_BASE_URL = process.env.LOCAL_FRONTEND_BASE_URL;
-  // const callbackURL = `${DEPLOYED_FRONTEND_BASE_URL}/userdashboard/transaction-history`;
+  const DEPLOYED_FRONTEND_BASE_URL = process.env.DEPLOYED_FRONTEND_BASE_URL;
+  // const LOCAL_FRONTEND_BASE_URL = process.env.LOCAL_FRONTEND_BASE_URL;
+  const callbackURL = `${DEPLOYED_FRONTEND_BASE_URL}/userdashboard/transaction-history`;
   // const callbackURL = `${LOCAL_FRONTEND_BASE_URL}/userdashboard/transaction-history?reference=${data?.reference}`;
-  const callbackURL = `${LOCAL_FRONTEND_BASE_URL}/userdashboard/transaction-history`;
+  // const callbackURL = `${LOCAL_FRONTEND_BASE_URL}/userdashboard/transaction-history`;
   // console.log("callbackUrl", callbackURL);
 
   const response = await axios.post(
