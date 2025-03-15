@@ -264,15 +264,13 @@ export const verifyEscrowProductTransactionPayment = async (
         },
         { new: true }
       );
-      console.log("newTerr", newTerr);
 
-      // await Product.updateOne(
-      //   { transaction_id: reference },
-      //   {
-      //     transaction_status: true,
-      //     verified_payment_status: true,
-      //   }
-      // );
+      // if (transaction?.verified_payment_status === false) {
+      //   return next(
+      //     errorHandler(401, "this transaction has not been successful")
+      //   );
+      // } else {
+      // console.log("newTerr", newTerr);
 
       // THIS IS WHEN WE SEND THE MESSAGES, NOT DURING INITIATION
 
@@ -319,6 +317,7 @@ export const verifyEscrowProductTransactionPayment = async (
         status: "success",
         message: "Payment has been successfully verified.",
       });
+      // }
     }
   } catch (error: string | unknown) {
     console.log(error);

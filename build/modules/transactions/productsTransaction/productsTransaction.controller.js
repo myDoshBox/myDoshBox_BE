@@ -208,32 +208,37 @@ const verifyEscrowProductTransactionPayment = (req, res, next) => __awaiter(void
             {
                 verified_payment_status: true,
             }, { new: true });
-            console.log("newTerr", newTerr);
-            // await Product.updateOne(
-            //   { transaction_id: reference },
-            //   {
-            //     transaction_status: true,
-            //     verified_payment_status: true,
-            //   }
-            // );
-            // THIS IS WHEN WE SEND THE MESSAGES, NOT DURING INITIATION
-            // pull out the content of the product table for mail delivery
-            const { buyer_email, transaction_id, vendor_name, vendor_email, product_name, product_price, transaction_total, } = transaction;
-            // console.log(transaction);
-            // const findProductDetails = await Product.findOne({
-            //   email: buyer_email,
-            // });
-            // const buyer_email =
-            // Send email to the initiator
-            yield (0, productTransaction_mail_1.sendEscrowInitiationEmailToInitiator)(buyer_email, transaction_id, transaction_total);
-            // await sendEscrowInitiationEmail(user?.email, transaction_id);
-            // Send email to the vendor
-            yield (0, productTransaction_mail_1.sendEscrowInitiationEmailToVendor)(transaction_id, vendor_name, vendor_email, product_name, product_price);
-            // send response
-            res.json({
-                status: "success",
-                message: "Payment has been successfully verified.",
-            });
+            if ((transaction === null || transaction === void 0 ? void 0 : transaction.verified_payment_status) === false) {
+                return next((0, errorHandling_middleware_1.errorHandler)(401, "this transaction has not been verified"));
+            }
+            else {
+                // console.log("newTerr", newTerr);
+                // await Product.updateOne(
+                //   { transaction_id: reference },
+                //   {
+                //     transaction_status: true,
+                //     verified_payment_status: true,
+                //   }
+                // );
+                // THIS IS WHEN WE SEND THE MESSAGES, NOT DURING INITIATION
+                // pull out the content of the product table for mail delivery
+                const { buyer_email, transaction_id, vendor_name, vendor_email, product_name, product_price, transaction_total, } = transaction;
+                // console.log(transaction);
+                // const findProductDetails = await Product.findOne({
+                //   email: buyer_email,
+                // });
+                // const buyer_email =
+                // Send email to the initiator
+                yield (0, productTransaction_mail_1.sendEscrowInitiationEmailToInitiator)(buyer_email, transaction_id, transaction_total);
+                // await sendEscrowInitiationEmail(user?.email, transaction_id);
+                // Send email to the vendor
+                yield (0, productTransaction_mail_1.sendEscrowInitiationEmailToVendor)(transaction_id, vendor_name, vendor_email, product_name, product_price);
+                // send response
+                res.json({
+                    status: "success",
+                    message: "Payment has been successfully verified.",
+                });
+            }
         }
     }
     catch (error) {
