@@ -1,5 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import { validateFormFields } from "../../../utilities/validation.utilities";
+import IndividualUser from "../../authentication/individualUserAuth/individualUserAuth.model1";
+import ProductTransaction from "../../transactions/productsTransaction/productsTransaction.model";
+import { errorHandler } from "../../../middlewares/errorHandling.middleware";
+import { log } from "console";
 // seller rejects escrow initiated
 /*
     1. accepts:- buyer are given their "create transaction" form to edit
@@ -20,7 +24,7 @@ import { validateFormFields } from "../../../utilities/validation.utilities";
 /////// - if the seller agrees, the normal transaction process continues
 // - onclick of "involve a meditator", a form is filled and mediator gets a mail
 
-export const raiseDispute = (
+export const raiseDispute = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -28,6 +32,8 @@ export const raiseDispute = (
   // dispute form
   const {
     transaction_id, // prefill this
+    buyer_email, // prefill this
+    vendor_email, // prefill this
     product_name,
     product_image,
     reason_for_dispute,
@@ -45,11 +51,32 @@ export const raiseDispute = (
     next
   );
 
-  // try {
+  try {
+    // find the user who initiated the transaction
+    const user = await IndividualUser.findOne({ email: buyer_email });
+    //   find the transaction by id
+    const transaction = await ProductTransaction.findOne({
+      transaction_id: transaction_id,
+    });
 
-  // } catch (error) {
+    log("transaction", transaction);
 
-  // }
+    if (!user || !transaction) {
+      return next(errorHandler(404, "User or transaction not found"));
+    } else if (buyer_email === vendor_email) {
+      return next(
+        errorHandler(400, "You cannot raise a dispute against yourself")
+      );
+    }
+    // else if (transaction.transaction_status === "cancelled") {
+    //   return next(
+    //     errorHandler(400, "This transaction has already been cancelled")
+    //   );
+    // }
+  } catch (error: string | unknown) {
+    console.log("error", error);
+    return next(errorHandler(500, "Internal server error"));
+  }
 };
 
 // FLIP SIDE OF THE LOGIC

@@ -2,14 +2,13 @@ import { NextFunction, Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 // import jwt, { JwtPayload } from "jsonwebtoken";
 // import { createSessionAndSendTokens } from "../../../utilities/createSessionAndSendToken.util";
-// import { validateProductFields } from "./productsTransaction.validation";
-import { validateFormFields } from "../../../utilities/validation.utilities";
+import { validateProductFields } from "./productsTransaction.validation";
 
 // import { Product } from "../models/Product"; // Import the Product model
 import IndividualUser from "../../authentication/individualUserAuth/individualUserAuth.model1"; // Import the User model
 // import { OrganizationUser } from "../../authentication/organizationUserAuth/organizationAuth.model"; // Import the User model
 import { errorHandler } from "../../../middlewares/errorHandling.middleware"; // Import your CustomError class
-import ProductTransaction from "./productsTransaction.model";
+import Product from "./productsTransaction.model";
 // import axios from "axios";
 import {
   paymentForEscrowProductTransaction,
@@ -60,7 +59,7 @@ export const initiateEscrowProductTransaction = async (
   } = req.body;
 
   // Validate required fields
-  validateFormFields(
+  validateProductFields(
     {
       // transaction_id,
       vendor_name,
@@ -178,7 +177,7 @@ export const initiateEscrowProductTransaction = async (
 
       // details are saved in the db
 
-      const newTransaction = new ProductTransaction({
+      const newTransaction = new Product({
         user: user,
         transaction_id,
         vendor_name,
@@ -228,7 +227,7 @@ export const verifyEscrowProductTransactionPayment = async (
 
     console.log("reference", reference);
 
-    const transaction = await ProductTransaction.findOne({
+    const transaction = await Product.findOne({
       transaction_id: reference,
       verified_payment_status: false,
     });
@@ -342,7 +341,7 @@ export const getSingleEscrowProductTransaction = async (
       return next(errorHandler(400, "transaction ID is required"));
     }
 
-    const transaction = await ProductTransaction.findOne({
+    const transaction = await Product.findOne({
       transaction_id: transaction_id,
       // user_id: user?._id,
     });
@@ -396,7 +395,7 @@ export const getAllEscrowProductTransactionByUser = async (
 
     // USE THE USERS EMAIL ATTACHED TO THE PRODUCT INSTEAD OF BUYER OR SELLER
 
-    const transactions = await ProductTransaction.find({
+    const transactions = await Product.find({
       $or: [
         { vendor_email: user_email }, // Age greater than 30
         { buyer_email: user_email }, // OR City is New York
@@ -484,12 +483,12 @@ export const sellerConfirmsEscrowProductTransaction = async (
     //   });
     // }
 
-    const transaction = await ProductTransaction.findOne({
+    const transaction = await Product.findOne({
       transaction_id: transaction_id,
       // user_id: user?._id,
     });
 
-    const transactionWithConfirmationStatus = await ProductTransaction.findOne({
+    const transactionWithConfirmationStatus = await Product.findOne({
       transaction_id: transaction_id,
       seller_confirm_status: false,
       // user_id: user?._id,
@@ -594,7 +593,7 @@ export const sellerFillOutShippingDetails = async (
   } = req.body;
 
   try {
-    validateFormFields(
+    validateProductFields(
       {
         shipping_company,
         delivery_person_name,
@@ -606,7 +605,7 @@ export const sellerFillOutShippingDetails = async (
       next
     );
 
-    const getTransaction = await ProductTransaction.findOne({
+    const getTransaction = await Product.findOne({
       transaction_id: transaction_id,
       seller_confirm_status: false,
     });
@@ -655,14 +654,13 @@ export const sellerFillOutShippingDetails = async (
       await newShippingDetails.save();
 
       // THE seller_confirm_status WILL BE UPDATED TO TRUE AFTER IT HAS BEEN SAVED SO THAT USERS CANNOT RECONFIRM IT
-      const updatedConfirmationStatus =
-        await ProductTransaction.findOneAndUpdate(
-          { _id: getTransaction?._id },
-          {
-            seller_confirm_status: true,
-          },
-          { new: true }
-        );
+      const updatedConfirmationStatus = await Product.findOneAndUpdate(
+        { _id: getTransaction?._id },
+        {
+          seller_confirm_status: true,
+        },
+        { new: true }
+      );
 
       console.log("updatedConfirmationStatus", updatedConfirmationStatus);
 
@@ -1373,12 +1371,11 @@ export const buyerConfirmsProduct = async (
     }
 
     // Update the transaction status of the product to "completed"
-    const updateProductTransactionStatus =
-      await ProductTransaction.findByIdAndUpdate(
-        product_id,
-        { transaction_status: "completed" },
-        { new: true }
-      );
+    const updateProductTransactionStatus = await Product.findByIdAndUpdate(
+      product_id,
+      { transaction_status: "completed" },
+      { new: true }
+    );
 
     if (!updateProductTransactionStatus) {
       return next(errorHandler(500, "Failed to update product status"));
