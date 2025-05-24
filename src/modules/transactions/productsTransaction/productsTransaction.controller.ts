@@ -2,8 +2,9 @@ import { NextFunction, Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 // import jwt, { JwtPayload } from "jsonwebtoken";
 // import { createSessionAndSendTokens } from "../../../utilities/createSessionAndSendToken.util";
-// import { validateFormFields } from "./productsTransaction.validation";
-import { validateFormFields } from "../../../utilities/validation.utilities";
+import { validateProductFields } from "./productsTransaction.validation";
+
+// import { Product } from "../models/Product"; // Import the Product model
 import IndividualUser from "../../authentication/individualUserAuth/individualUserAuth.model1"; // Import the User model
 // import { OrganizationUser } from "../../authentication/organizationUserAuth/organizationAuth.model"; // Import the User model
 import { errorHandler } from "../../../middlewares/errorHandling.middleware"; // Import your CustomError class
@@ -58,7 +59,7 @@ export const initiateEscrowProductTransaction = async (
   } = req.body;
 
   // Validate required fields
-  validateFormFields(
+  validateProductFields(
     {
       // transaction_id,
       vendor_name,
@@ -592,7 +593,7 @@ export const sellerFillOutShippingDetails = async (
   } = req.body;
 
   try {
-    validateFormFields(
+    validateProductFields(
       {
         shipping_company,
         delivery_person_name,
