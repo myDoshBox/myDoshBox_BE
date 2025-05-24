@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import { validateFormFields } from "../../../utilities/validation.utilities";
 // seller rejects escrow initiated
 /*
     1. accepts:- buyer are given their "create transaction" form to edit
@@ -16,9 +17,36 @@ import { Request, Response, NextFunction } from "express";
 // - onclick of resolve, a form is filled and buyer is alerted
 // - onclick of "involve a meditator", a form is filled and mediator gets a mail
 
-const RaiseDispute = (req: Request, res: Response, next: NextFunction) => {
+export const RaiseDispute = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   // dispute form
-  const {} = req.body;
+  const {
+    transaction_id, // prefill this
+    product_name,
+    product_image,
+    reason_for_dispute,
+    dispute_description,
+  } = req.body;
+
+  validateFormFields(
+    {
+      product_name,
+      product_image,
+      transaction_id, // prefill this
+      reason_for_dispute,
+      dispute_description,
+    },
+    next
+  );
+
+  // try {
+
+  // } catch (error) {
+
+  // }
 };
 
 // buyer rejects the goods, then fills the dispute form and send to the seller

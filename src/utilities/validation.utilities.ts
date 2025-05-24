@@ -1,7 +1,7 @@
 import { NextFunction } from "express";
-import { errorHandler } from "../../../middlewares/errorHandling.middleware"; // Adjust the import path as necessary
+import { errorHandler } from "../middlewares/errorHandling.middleware"; // Adjust the import path as necessary
 
-export const validateProductFields = (
+export const validateFormFields = (
   fields: { [key: string]: string },
   next: NextFunction
 ) => {
