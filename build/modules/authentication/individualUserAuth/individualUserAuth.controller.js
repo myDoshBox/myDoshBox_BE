@@ -27,31 +27,31 @@ const individualUserRegistration = (req, res) => __awaiter(void 0, void 0, void 
     try {
         const { email, phone_number, password, confirm_password } = req.body;
         if (!email) {
-            return res.status(400).json({
+            res.status(400).json({
                 status: "fail",
                 message: "Email is required",
             });
         }
         else if (!phone_number) {
-            return res.status(400).json({
+            res.status(400).json({
                 status: "fail",
                 message: "Phone number is required",
             });
         }
         else if (!password) {
-            return res.status(400).json({
+            res.status(400).json({
                 status: "fail",
                 message: "Password is required",
             });
         }
         else if (!confirm_password) {
-            return res.status(400).json({
+            res.status(400).json({
                 status: "fail",
                 message: "Confirm password is required",
             });
         }
         if (password !== confirm_password) {
-            return res.status(401).json({
+            res.status(401).json({
                 status: "fail",
                 message: "Password do not match",
             });
@@ -64,7 +64,7 @@ const individualUserRegistration = (req, res) => __awaiter(void 0, void 0, void 
             email,
         });
         if (individualEmailAlreadyExist || organizationEmailAlreadyExist) {
-            return res.status(400).json({
+            res.status(400).json({
                 status: "false",
                 message: "User already exists, please proceed to login",
             });
@@ -85,16 +85,14 @@ const individualUserRegistration = (req, res) => __awaiter(void 0, void 0, void 
         });
         yield (0, email_utils_1.sendVerificationEmail)(email, verificationToken);
         // Send a response
-        return res.status(201).json({
+        res.status(201).json({
             status: "true",
             message: "Account is unverified! Verification email sent. Verify account to continue. Please note that token expires in an hour",
         });
     }
     catch (error) {
         console.error("Error registering the user:", error);
-        return res
-            .status(500)
-            .json({ message: "Error registering the user", error });
+        res.status(500).json({ message: "Error registering the user", error });
     }
 });
 exports.individualUserRegistration = individualUserRegistration;
@@ -137,7 +135,8 @@ const resetIndividualPassword = (req, res) => __awaiter(void 0, void 0, void 0, 
         // Find the user by email
         const user = yield individualUserAuth_model1_1.default.findOne({ email });
         if (!user) {
-            return res.status(400).json({ message: "User not found!" });
+            res.status(400).json({ message: "User not found!" });
+            return;
         }
         // Update the user's password
         user.password = password;
@@ -165,7 +164,7 @@ const getGoogleUrl = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         ],
         redirect_uri: process.env.GOOGLE_OAUTH_REDIRECT_URL_INDIVIDUAL,
     });
-    return res.json({ authorizeUrl });
+    res.json({ authorizeUrl });
 });
 exports.getGoogleUrl = getGoogleUrl;
 const getUserDetails = (access_token) => __awaiter(void 0, void 0, void 0, function* () {
@@ -187,7 +186,7 @@ const getGoogleUserDetail = (req, res, next) => __awaiter(void 0, void 0, void 0
     try {
         const { code } = req.body;
         if (!code) {
-            return res.status(400).json({ message: "Missing authorization code" });
+            res.status(400).json({ message: "Missing authorization code" });
         }
         const oAuth2Client = new google_auth_library_1.OAuth2Client(process.env.GOOGLE_OAUTH_CLIENT_ID, process.env.GOOGLE_OAUTH_CLIENT_SECRET, process.env.GOOGLE_OAUTH_REDIRECT_URL_INDIVIDUAL);
         const { tokens } = yield oAuth2Client.getToken({
@@ -197,7 +196,7 @@ const getGoogleUserDetail = (req, res, next) => __awaiter(void 0, void 0, void 0
         oAuth2Client.setCredentials(tokens);
         const userDetails = yield (0, exports.getUserDetails)(tokens.access_token);
         if (!userDetails.email_verified) {
-            return res.status(401).json({
+            res.status(401).json({
                 status: "failed",
                 message: "Google user not verified",
             });
@@ -212,13 +211,13 @@ const getGoogleUserDetail = (req, res, next) => __awaiter(void 0, void 0, void 0
         });
         if (individualEmailAlreadyExist &&
             individualEmailAlreadyExist.role === "ind") {
-            return res.status(400).json({
+            res.status(400).json({
                 status: "false",
                 message: "Kindly login with your email and password as account was not registered with google",
             });
         }
         if (organizationEmailAlreadyExist) {
-            return res.status(400).json({
+            res.status(400).json({
                 status: "false",
                 message: "User already exist as an organization. Kindly login as an organization to continue",
             });
@@ -240,7 +239,7 @@ const getGoogleUserDetail = (req, res, next) => __awaiter(void 0, void 0, void 0
                 message: "Individual Google user successfully created",
             };
             const { status, message, user, accessToken, refreshToken } = yield (0, createSessionAndSendToken_util_1.createSessionAndSendTokens)(createSessionAndSendTokensOptions);
-            return res.status(201).json({
+            res.status(201).json({
                 status,
                 message,
                 user,
@@ -249,13 +248,13 @@ const getGoogleUserDetail = (req, res, next) => __awaiter(void 0, void 0, void 0
             });
         }
         const createSessionAndSendTokensOptions = {
-            user: individualEmailAlreadyExist.toObject(),
+            user: individualEmailAlreadyExist === null || individualEmailAlreadyExist === void 0 ? void 0 : individualEmailAlreadyExist.toObject(),
             userAgent: req.get("user-agent") || "",
             role: "g-ind",
             message: "Individual Google user successfully logged in",
         };
         const { status, message, user, accessToken, refreshToken } = yield (0, createSessionAndSendToken_util_1.createSessionAndSendTokens)(createSessionAndSendTokensOptions);
-        return res.status(200).json({
+        res.status(200).json({
             status,
             message,
             user,

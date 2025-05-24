@@ -208,37 +208,31 @@ const verifyEscrowProductTransactionPayment = (req, res, next) => __awaiter(void
             {
                 verified_payment_status: true,
             }, { new: true });
-            if ((transaction === null || transaction === void 0 ? void 0 : transaction.verified_payment_status) === false) {
-                return next((0, errorHandling_middleware_1.errorHandler)(401, "this transaction has not been verified"));
-            }
-            else {
-                // console.log("newTerr", newTerr);
-                // await Product.updateOne(
-                //   { transaction_id: reference },
-                //   {
-                //     transaction_status: true,
-                //     verified_payment_status: true,
-                //   }
-                // );
-                // THIS IS WHEN WE SEND THE MESSAGES, NOT DURING INITIATION
-                // pull out the content of the product table for mail delivery
-                const { buyer_email, transaction_id, vendor_name, vendor_email, product_name, product_price, transaction_total, } = transaction;
-                // console.log(transaction);
-                // const findProductDetails = await Product.findOne({
-                //   email: buyer_email,
-                // });
-                // const buyer_email =
-                // Send email to the initiator
-                yield (0, productTransaction_mail_1.sendEscrowInitiationEmailToInitiator)(buyer_email, transaction_id, transaction_total);
-                // await sendEscrowInitiationEmail(user?.email, transaction_id);
-                // Send email to the vendor
-                yield (0, productTransaction_mail_1.sendEscrowInitiationEmailToVendor)(transaction_id, vendor_name, vendor_email, product_name, product_price);
-                // send response
-                res.json({
-                    status: "success",
-                    message: "Payment has been successfully verified.",
-                });
-            }
+            // if (transaction?.verified_payment_status === false) {
+            //   return next(
+            //     errorHandler(401, "this transaction has not been successful")
+            //   );
+            // } else {
+            // console.log("newTerr", newTerr);
+            // THIS IS WHEN WE SEND THE MESSAGES, NOT DURING INITIATION
+            // pull out the content of the product table for mail delivery
+            const { buyer_email, transaction_id, vendor_name, vendor_email, product_name, product_price, transaction_total, } = transaction;
+            // console.log(transaction);
+            // const findProductDetails = await Product.findOne({
+            //   email: buyer_email,
+            // });
+            // const buyer_email =
+            // Send email to the initiator
+            yield (0, productTransaction_mail_1.sendEscrowInitiationEmailToInitiator)(buyer_email, transaction_id, transaction_total);
+            // await sendEscrowInitiationEmail(user?.email, transaction_id);
+            // Send email to the vendor
+            yield (0, productTransaction_mail_1.sendEscrowInitiationEmailToVendor)(transaction_id, vendor_name, vendor_email, product_name, product_price);
+            // send response
+            res.json({
+                status: "success",
+                message: "Payment has been successfully verified.",
+            });
+            // }
         }
     }
     catch (error) {
@@ -390,10 +384,10 @@ const sellerConfirmsEscrowProductTransaction = (req, res, next) => __awaiter(voi
         // if transactionId === transaction_id && seller_confirm_status === true: this transaction has been confirmed
         // else: continue with the logic
         if (transactionId !== transaction_id) {
-            return next((0, errorHandling_middleware_1.errorHandler)(404, "Invalid transaction."));
+            next((0, errorHandling_middleware_1.errorHandler)(404, "Invalid transaction."));
         }
         else if (sellerConfirmStatus !== false) {
-            return next((0, errorHandling_middleware_1.errorHandler)(404, "This transaction has been confirmed."));
+            next((0, errorHandling_middleware_1.errorHandler)(404, "This transaction has been confirmed."));
         }
         else {
             const vendor_email = transaction === null || transaction === void 0 ? void 0 : transaction.vendor_email;
@@ -403,7 +397,7 @@ const sellerConfirmsEscrowProductTransaction = (req, res, next) => __awaiter(voi
             });
             // const user = res.locals.user;
             if (!checkIfUserExists) {
-                return res.status(401).json({
+                res.status(401).json({
                     status: "error",
                     message: "You do not have an account, please proceed to the signup page to create an account.",
                     // signup_link: `${process.env.LOCAL_FRONTEND_BASE_URL}/signup?redirect=/confirm-escrow/${transaction_id}`,
@@ -433,7 +427,7 @@ const sellerConfirmsEscrowProductTransaction = (req, res, next) => __awaiter(voi
             //     signup_link: `${process.env.LOCAL_FRONTEND_BASE_URL}/signup`,
             //   });
             // }
-            return res.json({
+            res.json({
                 transaction,
                 status: "success",
                 message: "transaction fetched successfully",

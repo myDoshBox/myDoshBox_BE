@@ -298,7 +298,7 @@ exports.sendShippingDetailsEmailToVendor = sendShippingDetailsEmailToVendor;
 //     console.log(err);
 //   }
 // };
-const sendSuccessfulEscrowEmailToInitiator = (...args_1) => __awaiter(void 0, [...args_1], void 0, function* (
+const sendSuccessfulEscrowEmailToInitiator = (...args_2) => __awaiter(void 0, [...args_2], void 0, function* (
 // transaction_id: string | undefined,
 // vendor_name: string | undefined,
 // vendor_email: string | undefined,
@@ -361,7 +361,7 @@ transaction_id = "", vendor_name = "", buyer_email = "", product_name = ""
     }
 });
 exports.sendSuccessfulEscrowEmailToInitiator = sendSuccessfulEscrowEmailToInitiator;
-const sendSuccessfulEscrowEmailToVendor = (...args_1) => __awaiter(void 0, [...args_1], void 0, function* (
+const sendSuccessfulEscrowEmailToVendor = (...args_3) => __awaiter(void 0, [...args_3], void 0, function* (
 // transaction_id: string | undefined,
 // vendor_name: string | undefined,
 // vendor_email: string | undefined,

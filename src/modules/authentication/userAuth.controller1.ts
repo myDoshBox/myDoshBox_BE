@@ -60,7 +60,7 @@ export const verifyUserEmail = async (
     });
 
     if (checkIfBlacklistedToken) {
-      return res.status(400).json({
+      res.status(400).json({
         status: false,
         message:
           "Link has already been used. Kindly attempt login to regenerate confirm email link!",
@@ -75,13 +75,12 @@ export const verifyUserEmail = async (
     // Check if the user exists and is verified
     const user = await checkIfUserExist(email);
 
-    if (!user)
-      return res
-        .status(400)
-        .json({ message: "User with this email does not exist" });
-
-    if (user.email_verified) {
-      return res.status(400).json({ message: "User is already verified." });
+    if (!user) {
+      res.status(400).json({ message: "User with this email does not exist" });
+      return;
+    }
+    if (user?.email_verified) {
+      res.status(400).json({ message: "User is already verified." });
     }
 
     await BlacklistedToken.create({
@@ -90,10 +89,10 @@ export const verifyUserEmail = async (
 
     // Update user's verification status
     user.email_verified = true;
-    await user.save();
+    await user?.save();
 
     // Respond with success message
-    return res.status(200).json({
+    res.status(200).json({
       message: "Email verified successfully. Kindly go ahead to login",
       status: "true",
     });
@@ -102,7 +101,7 @@ export const verifyUserEmail = async (
     console.error("Error verifying email:", error);
 
     if (error.name === "TokenExpiredError") {
-      return res.status(400).json({
+      res.status(400).json({
         status: false,
         message:
           "Your token has expired. Kindly attempt login to regenerate confirm email link!", //expired token
@@ -110,7 +109,7 @@ export const verifyUserEmail = async (
     }
 
     if (error.name === "JsonWebTokenError") {
-      return res.status(400).json({
+      res.status(400).json({
         status: false,
         message: "Invalid Token!!", // invalid token
       });
@@ -149,7 +148,7 @@ export const UserLogin = async (req: Request, res: Response) => {
 
     if (individualUserToLogin) {
       if (individualUserToLogin.role === "g-ind") {
-        return res.status(400).json({
+        res.status(400).json({
           message: "Your account was created with Google. Kindly login Google.",
         });
       }
@@ -163,7 +162,7 @@ export const UserLogin = async (req: Request, res: Response) => {
         await sendVerificationEmail(email, verificationToken);
         console.log(sendVerificationEmail(email, verificationToken));
 
-        return res.status(200).json({
+        res.status(200).json({
           status: "false",
           message:
             "Account is unverified! Verfication email sent. verify account to continue",
@@ -174,7 +173,7 @@ export const UserLogin = async (req: Request, res: Response) => {
         user_password
       );
       if (!passwordMatch) {
-        return res.status(422).json({
+        res.status(422).json({
           error:
             "Incorrect Password, please enter the correct password or proceed to reset password",
         });
@@ -196,7 +195,7 @@ export const UserLogin = async (req: Request, res: Response) => {
 
       delete userWithoutPasswordForSession.password;
 
-      return res.status(200).json({
+      res.status(200).json({
         status,
         message,
         user: userWithoutPasswordForSession,
@@ -205,7 +204,7 @@ export const UserLogin = async (req: Request, res: Response) => {
       });
     } else {
       if (!organizationUserToLogin) {
-        return res.status(400).json({
+        res.status(400).json({
           message:
             "You do not have an account, please proceed to the signup page to create an account.",
         });
@@ -213,7 +212,7 @@ export const UserLogin = async (req: Request, res: Response) => {
 
       if (organizationUserToLogin) {
         if (organizationUserToLogin.role === "g-org") {
-          return res.status(400).json({
+          res.status(400).json({
             message:
               "Your account was created with Google. Kindly login Google.",
           });
@@ -228,7 +227,7 @@ export const UserLogin = async (req: Request, res: Response) => {
             organizationUserToLogin.organization_email,
             verificationToken
           );
-          return res.status(200).json({
+          res.status(200).json({
             status: "true",
             message:
               "Account is unverified! Verification email sent. Verify account to continue. Please note that token expires in an hour",
@@ -240,7 +239,7 @@ export const UserLogin = async (req: Request, res: Response) => {
         );
 
         if (!passwordMatch) {
-          return res.status(422).json({ error: "Incorrect Password" });
+          res.status(422).json({ error: "Incorrect Password" });
         }
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { password, ...userWithoutPassword } =
@@ -260,7 +259,7 @@ export const UserLogin = async (req: Request, res: Response) => {
 
         delete userWithoutPasswordForSession.password;
 
-        return res.status(200).json({
+        res.status(200).json({
           status,
           message,
           user: userWithoutPasswordForSession,

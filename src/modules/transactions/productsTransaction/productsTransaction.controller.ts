@@ -254,16 +254,16 @@ export const verifyEscrowProductTransactionPayment = async (
       //   verified_payment_status: true,
       // });
 
-      const newTerr = await Product.findOneAndUpdate(
-        { _id: transaction?._id },
-        // {
-        //   transaction_id: reference,
-        // }
-        {
-          verified_payment_status: true,
-        },
-        { new: true }
-      );
+      // const newTerr = await Product.findOneAndUpdate(
+      //   { _id: transaction?._id },
+      //   // {
+      //   //   transaction_id: reference,
+      //   // }
+      //   {
+      //     verified_payment_status: true,
+      //   },
+      //   { new: true }
+      // );
 
       // if (transaction?.verified_payment_status === false) {
       //   return next(
@@ -507,9 +507,9 @@ export const sellerConfirmsEscrowProductTransaction = async (
     // else: continue with the logic
 
     if (transactionId !== transaction_id) {
-      return next(errorHandler(404, "Invalid transaction."));
+      next(errorHandler(404, "Invalid transaction."));
     } else if (sellerConfirmStatus !== false) {
-      return next(errorHandler(404, "This transaction has been confirmed."));
+      next(errorHandler(404, "This transaction has been confirmed."));
     } else {
       const vendor_email = transaction?.vendor_email;
 
@@ -522,7 +522,7 @@ export const sellerConfirmsEscrowProductTransaction = async (
       // const user = res.locals.user;
 
       if (!checkIfUserExists) {
-        return res.status(401).json({
+        res.status(401).json({
           status: "error",
           message:
             "You do not have an account, please proceed to the signup page to create an account.",
@@ -556,7 +556,7 @@ export const sellerConfirmsEscrowProductTransaction = async (
       //   });
       // }
 
-      return res.json({
+      res.json({
         transaction,
         status: "success",
         message: "transaction fetched successfully",
@@ -1144,15 +1144,15 @@ export const getAllShippingDetails = async (
 //   }
 // };
 
-interface ShippingDetailsWithProduct {
-  transaction_status: string;
-  product_id: string;
-  transaction_id: string;
-  vendor_name: string;
-  vendor_email: string;
-  buyer_email: string;
-  product_name: string;
-}
+// interface ShippingDetailsWithProduct {
+//   transaction_status: string;
+//   product_id: string;
+//   transaction_id: string;
+//   vendor_name: string;
+//   vendor_email: string;
+//   buyer_email: string;
+//   product_name: string;
+// }
 
 // export const buyerConfirmsProduct = async (
 //   req: Request,

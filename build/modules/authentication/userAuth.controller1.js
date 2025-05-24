@@ -15,23 +15,13 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -91,7 +81,7 @@ const verifyUserEmail = (req, res) => __awaiter(void 0, void 0, void 0, function
             token,
         });
         if (checkIfBlacklistedToken) {
-            return res.status(400).json({
+            res.status(400).json({
                 status: false,
                 message: "Link has already been used. Kindly attempt login to regenerate confirm email link!",
             });
@@ -99,21 +89,21 @@ const verifyUserEmail = (req, res) => __awaiter(void 0, void 0, void 0, function
         const { email } = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
         // Check if the user exists and is verified
         const user = yield checkIfUserExist(email);
-        if (!user)
-            return res
-                .status(400)
-                .json({ message: "User with this email does not exist" });
-        if (user.email_verified) {
-            return res.status(400).json({ message: "User is already verified." });
+        if (!user) {
+            res.status(400).json({ message: "User with this email does not exist" });
+            return;
+        }
+        if (user === null || user === void 0 ? void 0 : user.email_verified) {
+            res.status(400).json({ message: "User is already verified." });
         }
         yield blacklistedToken_model_1.BlacklistedToken.create({
             token,
         });
         // Update user's verification status
         user.email_verified = true;
-        yield user.save();
+        yield (user === null || user === void 0 ? void 0 : user.save());
         // Respond with success message
-        return res.status(200).json({
+        res.status(200).json({
             message: "Email verified successfully. Kindly go ahead to login",
             status: "true",
         });
@@ -122,13 +112,13 @@ const verifyUserEmail = (req, res) => __awaiter(void 0, void 0, void 0, function
     catch (error) {
         console.error("Error verifying email:", error);
         if (error.name === "TokenExpiredError") {
-            return res.status(400).json({
+            res.status(400).json({
                 status: false,
                 message: "Your token has expired. Kindly attempt login to regenerate confirm email link!", //expired token
             });
         }
         if (error.name === "JsonWebTokenError") {
-            return res.status(400).json({
+            res.status(400).json({
                 status: false,
                 message: "Invalid Token!!", // invalid token
             });
@@ -159,7 +149,7 @@ const UserLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         // }
         if (individualUserToLogin) {
             if (individualUserToLogin.role === "g-ind") {
-                return res.status(400).json({
+                res.status(400).json({
                     message: "Your account was created with Google. Kindly login Google.",
                 });
             }
@@ -167,14 +157,14 @@ const UserLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 const verificationToken = jsonwebtoken_1.default.sign({ email }, process.env.JWT_SECRET, { expiresIn: 60 * 60 });
                 yield (0, email_utils_1.sendVerificationEmail)(email, verificationToken);
                 console.log((0, email_utils_1.sendVerificationEmail)(email, verificationToken));
-                return res.status(200).json({
+                res.status(200).json({
                     status: "false",
                     message: "Account is unverified! Verfication email sent. verify account to continue",
                 });
             }
             const passwordMatch = yield individualUserToLogin.comparePassword(user_password);
             if (!passwordMatch) {
-                return res.status(422).json({
+                res.status(422).json({
                     error: "Incorrect Password, please enter the correct password or proceed to reset password",
                 });
             }
@@ -186,7 +176,7 @@ const UserLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 message: "Individual user successfully logged in",
             });
             delete userWithoutPasswordForSession.password;
-            return res.status(200).json({
+            res.status(200).json({
                 status,
                 message,
                 user: userWithoutPasswordForSession,
@@ -196,27 +186,27 @@ const UserLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         }
         else {
             if (!organizationUserToLogin) {
-                return res.status(400).json({
+                res.status(400).json({
                     message: "You do not have an account, please proceed to the signup page to create an account.",
                 });
             }
             if (organizationUserToLogin) {
                 if (organizationUserToLogin.role === "g-org") {
-                    return res.status(400).json({
+                    res.status(400).json({
                         message: "Your account was created with Google. Kindly login Google.",
                     });
                 }
                 if (!organizationUserToLogin.email_verified) {
                     const verificationToken = jsonwebtoken_1.default.sign({ email: organizationUserToLogin.organization_email }, process.env.JWT_SECRET, { expiresIn: 60 * 60 });
                     yield (0, email_utils_1.sendVerificationEmail)(organizationUserToLogin.organization_email, verificationToken);
-                    return res.status(200).json({
+                    res.status(200).json({
                         status: "true",
                         message: "Account is unverified! Verification email sent. Verify account to continue. Please note that token expires in an hour",
                     });
                 }
                 const passwordMatch = yield organizationUserToLogin.comparePassword(user_password);
                 if (!passwordMatch) {
-                    return res.status(422).json({ error: "Incorrect Password" });
+                    res.status(422).json({ error: "Incorrect Password" });
                 }
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 const _a = organizationUserToLogin.toObject(), { password } = _a, userWithoutPassword = __rest(_a, ["password"]);
@@ -227,7 +217,7 @@ const UserLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                     message: "Organization user successfully logged in",
                 });
                 delete userWithoutPasswordForSession.password;
-                return res.status(200).json({
+                res.status(200).json({
                     status,
                     message,
                     user: userWithoutPasswordForSession,

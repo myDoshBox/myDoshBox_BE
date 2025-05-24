@@ -20,7 +20,7 @@ export const errorHandler = (
     err.status = "fail";
   }
 
-  return res.status(err.statusCode || 500).json({
+  res.status(err.statusCode || 500).json({
     status: err.status,
     message: err.message,
     errstack: err.statusCode !== 500 ? null : err.stack,

@@ -39,7 +39,7 @@ app.use(deserializeUser_middleware_1.default);
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: false }));
 app.get("/", (req, res) => {
-    return res.json({ msg: "welcome to doshbox api updated test" });
+    res.json({ msg: "welcome to doshbox api updated test" });
 });
 app.use("/auth/organization", organizationAuth_route_1.default);
 app.use("/auth/individual", individualAuth_route_1.default);

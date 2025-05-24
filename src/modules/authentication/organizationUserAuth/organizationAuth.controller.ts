@@ -45,39 +45,39 @@ export const organizationUserSignup = async (req: Request, res: Response) => {
     } = req.body;
 
     if (!organization_name) {
-      return res.status(400).json({
+      res.status(400).json({
         status: "fail",
         message: "Organization name is required",
       });
     } else if (!organization_email) {
-      return res.status(400).json({
+      res.status(400).json({
         status: "fail",
         message: "Organization email is required",
       });
     } else if (!contact_email) {
-      return res.status(400).json({
+      res.status(400).json({
         status: "fail",
         message: "Contact email is required",
       });
     } else if (!contact_number) {
-      return res.status(400).json({
+      res.status(400).json({
         status: "fail",
         message: "Contact number is required",
       });
     } else if (!password) {
-      return res.status(400).json({
+      res.status(400).json({
         status: "fail",
         message: "Password is required",
       });
     } else if (!password_confirmation) {
-      return res.status(400).json({
+      res.status(400).json({
         status: "fail",
         message: "Password confirmation  is required",
       });
     }
 
     if (password !== password_confirmation) {
-      return res.status(401).json({
+      res.status(401).json({
         status: "fail",
         message: "Passwords do not match",
       });
@@ -91,7 +91,7 @@ export const organizationUserSignup = async (req: Request, res: Response) => {
     });
 
     if (organizationEmailAlreadyExist || individualEmailAlreadyExist) {
-      return res.status(409).json({
+      res.status(409).json({
         status: "failed",
         message: "User with email already exist",
       });
@@ -122,7 +122,7 @@ export const organizationUserSignup = async (req: Request, res: Response) => {
 
     await sendVerificationEmail(organization_email, verificationToken);
 
-    return res.status(201).json({
+    res.status(201).json({
       status: "true",
       message:
         "Account is unverified! Verification email sent. Verify account to continue. Please note that token expires in an hour",
@@ -130,7 +130,7 @@ export const organizationUserSignup = async (req: Request, res: Response) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error("Error registering the user:", error);
-    return res
+    res
       .status(500)
       .json({ message: "Error registering the user", error });
   }
@@ -151,7 +151,8 @@ export const organizationUserResetPassword = catchAsync(
 
     // 2) If token has not expired, and there is org, set the new password
     if (!org) {
-      return next(new AppError("Token is invalid or has expired", 400));
+      next(new AppError("Token is invalid or has expired", 400));
+      return
     }
     org.password = req.body.password;
     org.passwordResetToken = undefined;

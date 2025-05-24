@@ -42,43 +42,43 @@ const organizationUserSignup = (req, res) => __awaiter(void 0, void 0, void 0, f
     try {
         const { organization_name, organization_email, contact_email, contact_number, password, password_confirmation, } = req.body;
         if (!organization_name) {
-            return res.status(400).json({
+            res.status(400).json({
                 status: "fail",
                 message: "Organization name is required",
             });
         }
         else if (!organization_email) {
-            return res.status(400).json({
+            res.status(400).json({
                 status: "fail",
                 message: "Organization email is required",
             });
         }
         else if (!contact_email) {
-            return res.status(400).json({
+            res.status(400).json({
                 status: "fail",
                 message: "Contact email is required",
             });
         }
         else if (!contact_number) {
-            return res.status(400).json({
+            res.status(400).json({
                 status: "fail",
                 message: "Contact number is required",
             });
         }
         else if (!password) {
-            return res.status(400).json({
+            res.status(400).json({
                 status: "fail",
                 message: "Password is required",
             });
         }
         else if (!password_confirmation) {
-            return res.status(400).json({
+            res.status(400).json({
                 status: "fail",
                 message: "Password confirmation  is required",
             });
         }
         if (password !== password_confirmation) {
-            return res.status(401).json({
+            res.status(401).json({
                 status: "fail",
                 message: "Passwords do not match",
             });
@@ -90,7 +90,7 @@ const organizationUserSignup = (req, res) => __awaiter(void 0, void 0, void 0, f
             organization_email,
         });
         if (organizationEmailAlreadyExist || individualEmailAlreadyExist) {
-            return res.status(409).json({
+            res.status(409).json({
                 status: "failed",
                 message: "User with email already exist",
             });
@@ -112,7 +112,7 @@ const organizationUserSignup = (req, res) => __awaiter(void 0, void 0, void 0, f
             expiresIn: 60 * 60,
         });
         yield (0, email_utils_1.sendVerificationEmail)(organization_email, verificationToken);
-        return res.status(201).json({
+        res.status(201).json({
             status: "true",
             message: "Account is unverified! Verification email sent. Verify account to continue. Please note that token expires in an hour",
         });
@@ -120,7 +120,7 @@ const organizationUserSignup = (req, res) => __awaiter(void 0, void 0, void 0, f
     }
     catch (error) {
         console.error("Error registering the user:", error);
-        return res
+        res
             .status(500)
             .json({ message: "Error registering the user", error });
     }
@@ -138,7 +138,8 @@ exports.organizationUserResetPassword = (0, catchAsync_1.default)((req, res, nex
     });
     // 2) If token has not expired, and there is org, set the new password
     if (!org) {
-        return next(new appError_1.default("Token is invalid or has expired", 400));
+        next(new appError_1.default("Token is invalid or has expired", 400));
+        return;
     }
     org.password = req.body.password;
     org.passwordResetToken = undefined;
