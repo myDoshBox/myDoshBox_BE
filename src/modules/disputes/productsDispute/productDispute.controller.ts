@@ -13,11 +13,14 @@ import { validateFormFields } from "../../../utilities/validation.utilities";
 // seller fills the "raise dispute form"
 // - buyer gets an email
 // - goes to the platform "dispute interface" and "view details"
-// - the popup with 2 buttons to "resolve" or "involve a mediator"
-// - onclick of resolve, a form is filled and buyer is alerted
+// - the popup with 3 buttons to "cancel transaction" "resolve" or "involve a mediator"
+// - onclick of cancel transaction, the buyer is alerted and the transaction_status on transaction table is set to "cancelled" and dispute status is set to "resolved"
+// - onclick of resolve, the transaction form that the buyer filled is shown to the buyer to edit and resubmit, then seller is alerted via email.
+/////// - if the seller still refuses, the only option left is to involve a mediator
+/////// - if the seller agrees, the normal transaction process continues
 // - onclick of "involve a meditator", a form is filled and mediator gets a mail
 
-export const RaiseDispute = (
+export const raiseDispute = (
   req: Request,
   res: Response,
   next: NextFunction
@@ -49,6 +52,7 @@ export const RaiseDispute = (
   // }
 };
 
+// FLIP SIDE OF THE LOGIC
 // buyer rejects the goods, then fills the dispute form and send to the seller
 /*
     1. accepts:- fills the dispute resolution form

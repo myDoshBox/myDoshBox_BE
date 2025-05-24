@@ -139,7 +139,7 @@ const productSchema = new mongoose.Schema(
   }
 );
 
-const Product = mongoose.model<IProduct>("Product", productSchema);
-// const Product = mongoose.model<IProduct>("ProductTransaction", productSchema);
+// const Product = mongoose.model<IProduct>("Product", productSchema);
+const Product = mongoose.model<IProduct>("ProductTransaction", productSchema);
 
 export default Product;
