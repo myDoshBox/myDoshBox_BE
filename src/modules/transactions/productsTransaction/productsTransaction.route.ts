@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
-  sellerConfirmsEscrowProductTransaction,
+  // sellerConfirmsAnEscrowProductTransaction,
+  sellerConfirmsAnEscrowProductTransaction,
   sellerFillOutShippingDetails,
   buyerConfirmsProduct,
   getAllEscrowProductTransactionByUser,
@@ -38,9 +39,13 @@ escrowProductTransactionRouter
   .route("/get-all-escrow-product-transaction/:user_email")
   .get(getAllEscrowProductTransactionByUser);
 
+// escrowProductTransactionRouter
+//   .route("/seller-confirm-escrow-product-transaction")
+//   .post(sellerConfirmsAnEscrowProductTransaction);
+
 escrowProductTransactionRouter
-  .route("/seller-confirm-escrow-product-transaction")
-  .post(sellerConfirmsEscrowProductTransaction);
+  .route("/get-all-escrow-product-transaction/:user_email")
+  .get(sellerConfirmsAnEscrowProductTransaction);
 
 escrowProductTransactionRouter
   .route("/seller-fill-out-shipping-details")

@@ -11,6 +11,6 @@ const escrowProductDisputeRouter = Router();
 
 escrowProductDisputeRouter
   .route("/raise-dispute/:transaction_id")
-  .get(raiseDispute);
+  .post(raiseDispute);
 
 export default escrowProductDisputeRouter;
