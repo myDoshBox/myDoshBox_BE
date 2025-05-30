@@ -445,7 +445,7 @@ export const getAllEscrowProductTransactionByUser = async (
   }
 };
 
-export const sellerConfirmsEscrowProductTransaction = async (
+export const sellerConfirmsAnEscrowProductTransaction = async (
   req: Request,
   res: Response,
   next: NextFunction
@@ -509,9 +509,9 @@ export const sellerConfirmsEscrowProductTransaction = async (
     // else: continue with the logic
 
     if (transactionId !== transaction_id) {
-      next(errorHandler(404, "Invalid transaction."));
+      return next(errorHandler(404, "Invalid transaction."));
     } else if (sellerConfirmStatus !== false) {
-      next(errorHandler(404, "This transaction has been confirmed."));
+      return next(errorHandler(404, "This transaction has been confirmed."));
     } else {
       const vendor_email = transaction?.vendor_email;
 
@@ -524,7 +524,7 @@ export const sellerConfirmsEscrowProductTransaction = async (
       // const user = res.locals.user;
 
       if (!checkIfUserExists) {
-        res.status(401).json({
+        return res.status(401).json({
           status: "error",
           message:
             "You do not have an account, please proceed to the signup page to create an account.",
@@ -558,7 +558,7 @@ export const sellerConfirmsEscrowProductTransaction = async (
       //   });
       // }
 
-      res.json({
+      return res.json({
         transaction,
         status: "success",
         message: "transaction fetched successfully",
