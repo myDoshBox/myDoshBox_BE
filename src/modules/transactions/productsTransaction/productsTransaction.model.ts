@@ -8,7 +8,7 @@ import mongoose, { Schema, Document } from "mongoose";
 //   "Home Appliances",
 // ];
 
-interface IProduct extends Document {
+interface IProductTransaction extends Document {
   user: mongoose.Schema.Types.ObjectId; // Reference to the User model
   transaction_id: string;
   buyer_email: string;
@@ -32,7 +32,7 @@ interface IProduct extends Document {
   // timestamps: unknown;
 }
 
-const productSchema = new mongoose.Schema(
+const productTransactionSchema = new mongoose.Schema(
   {
     user: {
       type: Schema.Types.ObjectId,
@@ -122,7 +122,7 @@ const productSchema = new mongoose.Schema(
 
     transaction_status: {
       type: String,
-      default: "processing", // this is supposed to be pending and then completed when done
+      default: "processing", // default to #processing, #cancelled when the initiator stops it, #inDispute when a dispute is raised and then #completed when done
     },
 
     seller_confirm_status: {
@@ -139,6 +139,9 @@ const productSchema = new mongoose.Schema(
   }
 );
 
-const Product = mongoose.model<IProduct>("Product", productSchema);
+const ProductTransaction = mongoose.model<IProductTransaction>(
+  "Product",
+  productTransactionSchema
+);
 
-export default Product;
+export default ProductTransaction;

@@ -16,8 +16,8 @@ const generateAccessAndRefreshToken_util_1 = require("./generateAccessAndRefresh
 const createSessionAndSendTokens = (options) => __awaiter(void 0, void 0, void 0, function* () {
     // const { user, userAgent, role, message } = options;
     const { user, userAgent, role, message } = options;
-    const session = yield (0, createSession_util_1.createSession)(user._id.toString(), userAgent, role);
-    const { accessToken, refreshToken } = (0, generateAccessAndRefreshToken_util_1.generateAccessAndRefreshToken)(user, session._id, role);
+    const session = yield createSession_util_1.createSession(user._id.toString(), userAgent, role);
+    const { accessToken, refreshToken } = generateAccessAndRefreshToken_util_1.generateAccessAndRefreshToken(user, session._id, role);
     return {
         status: "success",
         message,

@@ -8,7 +8,7 @@ import { validateProductFields } from "./productsTransaction.validation";
 import IndividualUser from "../../authentication/individualUserAuth/individualUserAuth.model1"; // Import the User model
 // import { OrganizationUser } from "../../authentication/organizationUserAuth/organizationAuth.model"; // Import the User model
 import { errorHandler } from "../../../middlewares/errorHandling.middleware"; // Import your CustomError class
-import Product from "./productsTransaction.model";
+import productTransaction from "./productsTransaction.model";
 // import axios from "axios";
 import {
   paymentForEscrowProductTransaction,
@@ -177,7 +177,7 @@ export const initiateEscrowProductTransaction = async (
 
       // details are saved in the db
 
-      const newTransaction = new Product({
+      const newTransaction = new productTransaction({
         user: user,
         transaction_id,
         vendor_name,
@@ -227,7 +227,7 @@ export const verifyEscrowProductTransactionPayment = async (
 
     console.log("reference", reference);
 
-    const transaction = await Product.findOne({
+    const transaction = await productTransaction.findOne({
       transaction_id: reference,
       verified_payment_status: false,
     });
@@ -341,7 +341,7 @@ export const getSingleEscrowProductTransaction = async (
       return next(errorHandler(400, "transaction ID is required"));
     }
 
-    const transaction = await Product.findOne({
+    const transaction = await productTransaction.findOne({
       transaction_id: transaction_id,
       // user_id: user?._id,
     });
@@ -395,12 +395,14 @@ export const getAllEscrowProductTransactionByUser = async (
 
     // USE THE USERS EMAIL ATTACHED TO THE PRODUCT INSTEAD OF BUYER OR SELLER
 
-    const transactions = await Product.find({
-      $or: [
-        { vendor_email: user_email }, // Age greater than 30
-        { buyer_email: user_email }, // OR City is New York
-      ],
-    }).sort({ createdAt: -1 });
+    const transactions = await productTransaction
+      .find({
+        $or: [
+          { vendor_email: user_email }, // Age greater than 30
+          { buyer_email: user_email }, // OR City is New York
+        ],
+      })
+      .sort({ createdAt: -1 });
 
     // Find products where the user (buyer or seller) email matches
     // const transactions = await Product.find({
@@ -483,12 +485,12 @@ export const sellerConfirmsEscrowProductTransaction = async (
     //   });
     // }
 
-    const transaction = await Product.findOne({
+    const transaction = await productTransaction.findOne({
       transaction_id: transaction_id,
       // user_id: user?._id,
     });
 
-    const transactionWithConfirmationStatus = await Product.findOne({
+    const transactionWithConfirmationStatus = await productTransaction.findOne({
       transaction_id: transaction_id,
       seller_confirm_status: false,
       // user_id: user?._id,
@@ -605,7 +607,7 @@ export const sellerFillOutShippingDetails = async (
       next
     );
 
-    const getTransaction = await Product.findOne({
+    const getTransaction = await productTransaction.findOne({
       transaction_id: transaction_id,
       seller_confirm_status: false,
     });
@@ -654,13 +656,14 @@ export const sellerFillOutShippingDetails = async (
       await newShippingDetails.save();
 
       // THE seller_confirm_status WILL BE UPDATED TO TRUE AFTER IT HAS BEEN SAVED SO THAT USERS CANNOT RECONFIRM IT
-      const updatedConfirmationStatus = await Product.findOneAndUpdate(
-        { _id: getTransaction?._id },
-        {
-          seller_confirm_status: true,
-        },
-        { new: true }
-      );
+      const updatedConfirmationStatus =
+        await productTransaction.findOneAndUpdate(
+          { _id: getTransaction?._id },
+          {
+            seller_confirm_status: true,
+          },
+          { new: true }
+        );
 
       console.log("updatedConfirmationStatus", updatedConfirmationStatus);
 
@@ -949,19 +952,19 @@ export const getAllShippingDetails = async (
     //   }
     // }
 
-    if (user_email) {
-      // matchByMails["product.buyer_email"] = buyer_email as string;
-      // matchByMails["product.buyer_email"] = buyer_email;
+    // if (user_email) {
+    //   // matchByMails["product.buyer_email"] = buyer_email as string;
+    //   // matchByMails["product.buyer_email"] = buyer_email;
 
-      // matchByMails["$or"] = [];
-      const matchByMails: { $or?: { [key: string]: string }[] } = {};
+    //   // matchByMails["$or"] = [];
+    //   const matchByMails: { $or?: { [key: string]: string }[] } = {};
 
-      matchByMails.$or = matchByMails.$or || [];
+    //   matchByMails.$or = matchByMails.$or || [];
 
-      if (user_email) {
-        matchByMails["$or"].push({ "product.buyer_email": user_email });
-      }
-    }
+    //   if (user_email) {
+    //     matchByMails["$or"].push({ "product.buyer_email": user_email });
+    //   }
+    // }
 
     // if (vendor_email) {
     //   // matchByMails["product.vendor_email"] = buyer_email as string;
@@ -1371,11 +1374,12 @@ export const buyerConfirmsProduct = async (
     }
 
     // Update the transaction status of the product to "completed"
-    const updateProductTransactionStatus = await Product.findByIdAndUpdate(
-      product_id,
-      { transaction_status: "completed" },
-      { new: true }
-    );
+    const updateProductTransactionStatus =
+      await productTransaction.findByIdAndUpdate(
+        product_id,
+        { transaction_status: "completed" },
+        { new: true }
+      );
 
     if (!updateProductTransactionStatus) {
       return next(errorHandler(500, "Failed to update product status"));

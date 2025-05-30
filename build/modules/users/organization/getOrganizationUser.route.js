@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const getOrganizationUser_controller_1 = require("./getOrganizationUser.controller");
-const organizationUsersRoutes = (0, express_1.Router)();
+const organizationUsersRoutes = express_1.Router();
 // Route to get all users
 organizationUsersRoutes.route("/orguser").get(getOrganizationUser_controller_1.getAllUsers);
 // Route to get a single user by ID

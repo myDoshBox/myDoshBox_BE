@@ -1,11 +1,7 @@
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -114,13 +110,13 @@ const verifyUserEmail = (req, res) => __awaiter(void 0, void 0, void 0, function
         if (error.name === "TokenExpiredError") {
             res.status(400).json({
                 status: false,
-                message: "Your token has expired. Kindly attempt login to regenerate confirm email link!", //expired token
+                message: "Your token has expired. Kindly attempt login to regenerate confirm email link!",
             });
         }
         if (error.name === "JsonWebTokenError") {
             res.status(400).json({
                 status: false,
-                message: "Invalid Token!!", // invalid token
+                message: "Invalid Token!!",
             });
         }
         res.status(500).json({ message: "Error verifying email" });
@@ -155,8 +151,8 @@ const UserLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             }
             if (!individualUserToLogin.email_verified) {
                 const verificationToken = jsonwebtoken_1.default.sign({ email }, process.env.JWT_SECRET, { expiresIn: 60 * 60 });
-                yield (0, email_utils_1.sendVerificationEmail)(email, verificationToken);
-                console.log((0, email_utils_1.sendVerificationEmail)(email, verificationToken));
+                yield email_utils_1.sendVerificationEmail(email, verificationToken);
+                console.log(email_utils_1.sendVerificationEmail(email, verificationToken));
                 res.status(200).json({
                     status: "false",
                     message: "Account is unverified! Verfication email sent. verify account to continue",
@@ -169,7 +165,7 @@ const UserLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 });
             }
             const userWithoutPassword = __rest(individualUserToLogin.toObject(), []);
-            const { status, message, user: userWithoutPasswordForSession, accessToken, refreshToken, } = yield (0, createSessionAndSendToken_util_1.createSessionAndSendTokens)({
+            const { status, message, user: userWithoutPasswordForSession, accessToken, refreshToken, } = yield createSessionAndSendToken_util_1.createSessionAndSendTokens({
                 user: userWithoutPassword,
                 userAgent: req.get("user-agent") || "",
                 role: individualUserToLogin.role,
@@ -198,7 +194,7 @@ const UserLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 }
                 if (!organizationUserToLogin.email_verified) {
                     const verificationToken = jsonwebtoken_1.default.sign({ email: organizationUserToLogin.organization_email }, process.env.JWT_SECRET, { expiresIn: 60 * 60 });
-                    yield (0, email_utils_1.sendVerificationEmail)(organizationUserToLogin.organization_email, verificationToken);
+                    yield email_utils_1.sendVerificationEmail(organizationUserToLogin.organization_email, verificationToken);
                     res.status(200).json({
                         status: "true",
                         message: "Account is unverified! Verification email sent. Verify account to continue. Please note that token expires in an hour",
@@ -210,7 +206,7 @@ const UserLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 }
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 const _a = organizationUserToLogin.toObject(), { password } = _a, userWithoutPassword = __rest(_a, ["password"]);
-                const { status, message, user: userWithoutPasswordForSession, accessToken, refreshToken, } = yield (0, createSessionAndSendToken_util_1.createSessionAndSendTokens)({
+                const { status, message, user: userWithoutPasswordForSession, accessToken, refreshToken, } = yield createSessionAndSendToken_util_1.createSessionAndSendTokens({
                     user: userWithoutPassword,
                     userAgent: req.get("user-agent") || "",
                     role: organizationUserToLogin.role,
@@ -308,7 +304,7 @@ exports.UserLogin = UserLogin;
 //     return res.status(500).json({ message: "Error Logging in user", error });
 //   }
 // };
-exports.OrganizationUserForgotPassword = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+exports.OrganizationUserForgotPassword = catchAsync_1.default((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     // 1) Get user based on POSTed email
     const { email } = req.body;
     try {
@@ -336,14 +332,14 @@ exports.OrganizationUserForgotPassword = (0, catchAsync_1.default)((req, res, ne
         const resetURL = `${req.protocol}://${req.get("host")}/auth/organization/resetPassword/${resetToken}`;
         // sendURLEmail([org?.organization_email, user?.email].filter(Boolean), resetURL);
         const validEmails = [org === null || org === void 0 ? void 0 : org.organization_email, user === null || user === void 0 ? void 0 : user.email].filter((email) => typeof email === "string");
-        (0, email_utils_1.sendURLEmail)(validEmails, resetURL);
+        email_utils_1.sendURLEmail(validEmails, resetURL);
         res.status(200).json({ message: "success" });
     }
     catch (error) {
         return next(new appError_1.default("There is an error processing the request.", 500));
     }
 }));
-exports.organizationUserResetPassword = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+exports.organizationUserResetPassword = catchAsync_1.default((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     // 1) Get user based on the token
     // const token = req.params.token;
     const hashedToken = crypto
@@ -356,7 +352,6 @@ exports.organizationUserResetPassword = (0, catchAsync_1.default)((req, res, nex
     });
     const user = yield individualUserAuth_model1_1.default.findOne({
         passwordResetToken: hashedToken,
-        // passwordResetExpires: { $gt: Date.now() },
     });
     // 2) If token has not expired, and there is a user, set the new password
     if (!org && !user) {
@@ -384,7 +379,7 @@ exports.organizationUserResetPassword = (0, catchAsync_1.default)((req, res, nex
         createSendToken(user, 200, res);
     }
 }));
-exports.organizationUserUpdatePassword = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+exports.organizationUserUpdatePassword = catchAsync_1.default((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password } = req.body;
     try {

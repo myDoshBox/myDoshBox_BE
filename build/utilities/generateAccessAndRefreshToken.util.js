@@ -19,17 +19,17 @@ const session_model_1 = require("../modules/sessions/session.model");
 const organizationAuth_model_1 = __importDefault(require("../modules/authentication/organizationUserAuth/organizationAuth.model"));
 const individualUserAuth_model1_1 = __importDefault(require("../modules/authentication/individualUserAuth/individualUserAuth.model1"));
 function generateAccessAndRefreshToken(userObject, sessionId, role) {
-    const accessToken = (0, signAndVerifyToken_util_1.signJwt)({ userData: userObject, session: sessionId, role }, { expiresIn: `${process.env.ACCESS_TOKEN_TTL}` });
-    const refreshToken = (0, signAndVerifyToken_util_1.signJwt)({ userData: userObject, session: sessionId, role }, { expiresIn: `${process.env.REFRESH_TOKEN_TTL}` });
+    const accessToken = signAndVerifyToken_util_1.signJwt({ userData: userObject, session: sessionId, role }, { expiresIn: `${process.env.ACCESS_TOKEN_TTL}` });
+    const refreshToken = signAndVerifyToken_util_1.signJwt({ userData: userObject, session: sessionId, role }, { expiresIn: `${process.env.REFRESH_TOKEN_TTL}` });
     return { accessToken, refreshToken };
 }
 exports.generateAccessAndRefreshToken = generateAccessAndRefreshToken;
-function reIssueAccessToken(_a) {
-    return __awaiter(this, arguments, void 0, function* ({ refreshToken, }) {
-        const { decoded } = (0, signAndVerifyToken_util_1.verifyJwt)(refreshToken);
-        if (!decoded || !(0, lodash_1.get)(decoded, "session"))
+function reIssueAccessToken({ refreshToken, }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const { decoded } = signAndVerifyToken_util_1.verifyJwt(refreshToken);
+        if (!decoded || !lodash_1.get(decoded, "session"))
             return false;
-        const session = yield session_model_1.Session.findById((0, lodash_1.get)(decoded, "session"));
+        const session = yield session_model_1.Session.findById(lodash_1.get(decoded, "session"));
         if (!session || !session.valid)
             return false;
         let user;
@@ -48,7 +48,7 @@ function reIssueAccessToken(_a) {
         }
         if (!user)
             return false;
-        const accessToken = (0, signAndVerifyToken_util_1.signJwt)({ userData: user, session: session._id, role: session.role }, { expiresIn: process.env.ACCESS_TOKEN_TTL });
+        const accessToken = signAndVerifyToken_util_1.signJwt({ userData: user, session: session._id, role: session.role }, { expiresIn: process.env.ACCESS_TOKEN_TTL });
         return accessToken;
     });
 }

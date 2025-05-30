@@ -1,11 +1,7 @@
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -27,8 +23,7 @@ const mongoose_1 = __importStar(require("mongoose"));
 const productSchema = new mongoose_1.default.Schema({
     user: {
         type: mongoose_1.Schema.Types.ObjectId,
-        ref: "IndividualUser", // Reference to User model
-        // required: true,
+        ref: "IndividualUser",
     },
     transaction_id: {
         type: String,
@@ -84,11 +79,9 @@ const productSchema = new mongoose_1.default.Schema({
     },
     signed_escrow_doc: {
         type: String,
-        // required: true,
     },
     delivery_address: {
         type: String,
-        // required: true,
     },
     verified_payment_status: {
         type: Boolean,
@@ -96,16 +89,12 @@ const productSchema = new mongoose_1.default.Schema({
     },
     transaction_status: {
         type: String,
-        default: "processing", // this is supposed to be pending and then completed when done
+        default: "processing",
     },
     seller_confirm_status: {
         type: Boolean,
         default: false,
     },
-    // profit_made: {
-    //   type: Number,
-    //   default: 0,
-    // },
 }, {
     timestamps: true,
 });

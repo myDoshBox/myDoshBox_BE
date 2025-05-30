@@ -12,6 +12,8 @@ interface IProductDispute extends Document {
   user: mongoose.Schema.Types.ObjectId; // Reference to the User model
   transaction: mongoose.Schema.Types.ObjectId; // Reference to the Transaction model
   transaction_id: string;
+  buyer_email: string;
+  vendor_email: string;
   product_name: string;
   product_image: string;
   reason_for_dispute: string;
@@ -29,11 +31,21 @@ const productDisputeSchema = new mongoose.Schema(
 
     transaction: {
       type: Schema.Types.ObjectId,
-      ref: "ProductTransaction", // Reference to User model
+      ref: "Product", // Reference to User model
       // required: true,
     },
 
     transaction_id: {
+      type: String,
+      required: true,
+    },
+
+    buyer_email: {
+      type: String,
+      required: true,
+    },
+
+    vendor_email: {
       type: String,
       required: true,
     },
@@ -68,9 +80,9 @@ const productDisputeSchema = new mongoose.Schema(
   }
 );
 
-const Product = mongoose.model<IProductDispute>(
-  "Product",
+const ProductDispute = mongoose.model<IProductDispute>(
+  "ProductDispute",
   productDisputeSchema
 );
 
-export default Product;
+export default ProductDispute;

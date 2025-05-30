@@ -1,11 +1,7 @@
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -27,14 +23,11 @@ const mongoose_1 = __importStar(require("mongoose"));
 const shippingDetailSchema = new mongoose_1.default.Schema({
     user: {
         type: mongoose_1.Schema.Types.ObjectId,
-        ref: "IndividualUser", // Reference to User model
-        // required: true,
+        ref: "IndividualUser",
     },
     product: {
         type: mongoose_1.Schema.Types.ObjectId,
-        ref: "Product", // Reference to product model
-        // required: true,
-        //   WE HAVE TO MAKE THIS UNIQUE
+        ref: "Product",
     },
     shipping_company: {
         type: String,
@@ -50,7 +43,6 @@ const shippingDetailSchema = new mongoose_1.default.Schema({
     },
     delivery_person_email: {
         type: String,
-        // required: true,
     },
     delivery_date: {
         type: String,

@@ -2,8 +2,10 @@ import { Request, Response, NextFunction } from "express";
 import { validateFormFields } from "../../../utilities/validation.utilities";
 import IndividualUser from "../../authentication/individualUserAuth/individualUserAuth.model1";
 import ProductTransaction from "../../transactions/productsTransaction/productsTransaction.model";
+import ProductDispute from "./productDispute.model";
 import { errorHandler } from "../../../middlewares/errorHandling.middleware";
-import { log } from "console";
+import { error, log } from "console";
+// import productTransaction from "../../transactions/productsTransaction/productsTransaction.model";
 // seller rejects escrow initiated
 /*
     1. accepts:- buyer are given their "create transaction" form to edit
@@ -59,20 +61,76 @@ export const raiseDispute = async (
       transaction_id: transaction_id,
     });
 
-    log("transaction", transaction);
+    const transactionStatus: string | undefined =
+      transaction?.transaction_status as string | undefined;
 
-    if (!user || !transaction) {
-      return next(errorHandler(404, "User or transaction not found"));
+    // log("transaction", transaction);
+    // log("user", user);
+
+    if (!user) {
+      return next(errorHandler(404, "User not found"));
+    } else if (!transaction) {
+      return next(errorHandler(404, "Transaction not found"));
     } else if (buyer_email === vendor_email) {
       return next(
         errorHandler(400, "You cannot raise a dispute against yourself")
       );
+    } else if (transactionStatus === "completed") {
+      return next(
+        errorHandler(
+          400,
+          "You cannot raise a dispute for this transaction because it has already been completed"
+        )
+      );
+    } else if (transactionStatus === "cancelled") {
+      return next(
+        errorHandler(
+          400,
+          "You cannot raise a dispute for this transaction because it has already been cancelled"
+        )
+      );
+    } else if (transactionStatus === "inDispute") {
+      return next(
+        errorHandler(
+          400,
+          "You cannot raise a dispute for this transaction because it is already in dispute"
+        )
+      );
     }
-    // else if (transaction.transaction_status === "cancelled") {
-    //   return next(
-    //     errorHandler(400, "This transaction has already been cancelled")
-    //   );
-    // }
+
+    // we want to update the transaction status to "inDispute" when a dispute is raised
+    const updateProductTransactionStatus =
+      await ProductTransaction.findByIdAndUpdate(
+        transaction._id,
+        { transaction_status: "inDispute" },
+        { new: true } // to return the updated document
+      );
+
+    if (!updateProductTransactionStatus) {
+      return next(errorHandler(500, "Failed to update transaction status"));
+    }
+
+    // detaiils of the dispute saved to DB
+    const newProductDispute = new ProductDispute({
+      user: user,
+      transaction: transaction,
+      transaction_id,
+      product_name,
+      product_image,
+      buyer_email,
+      vendor_email,
+      reason_for_dispute,
+      dispute_description,
+    });
+
+    await newProductDispute.save();
+
+    // send mail to the buyer that the seller has raised a dispute
+
+    res.json({
+      status: "success",
+      message: "Dispute has been raised successfully",
+    });
   } catch (error: string | unknown) {
     console.log("error", error);
     return next(errorHandler(500, "Internal server error"));

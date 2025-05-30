@@ -32,9 +32,6 @@ const paymentForEscrowProductTransaction = (data) => __awaiter(void 0, void 0, v
         // channels: ["bank_transfer", "ussd", "card"],
         channels: ["card"],
         callback_url: callbackURL,
-        // callback_url: `${DEPLOYED_FRONTEND_BASE_URL}/userdashboard/transaction?reference=${data.reference}`,
-        // callback_url: `http://localhost:3000/userdashboard/agreement?reference=${data.reference}`,
-        // callback_url: `http://localhost:3000?reference=${data.reference}`,
     }, {
         headers: {
             Authorization: `Bearer ${API_KEY}`,

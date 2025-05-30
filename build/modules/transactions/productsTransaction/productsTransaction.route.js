@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const productsTransaction_controller_1 = require("./productsTransaction.controller");
 // import protectRoutes from "../../../middlewares/protectRoutes.middleware";
-const escrowProductTransactionRouter = (0, express_1.Router)();
+const escrowProductTransactionRouter = express_1.Router();
 // we need a middleware that checks if you should be in here
 escrowProductTransactionRouter
     .route("/initiate-escrow-product-transaction")

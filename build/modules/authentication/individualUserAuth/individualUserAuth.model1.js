@@ -20,7 +20,7 @@ const crypto_1 = __importDefault(require("crypto"));
 const individualUserSchema = new mongoose_1.Schema({
     orguser: {
         type: mongoose_1.Schema.Types.ObjectId,
-        ref: "orgUser", // Reference to User model
+        ref: "orgUser",
     },
     email: {
         type: String,
@@ -63,7 +63,7 @@ individualUserSchema.pre("save", function (next) {
         if (this.isModified("password")) {
             try {
                 const saltRounds = 10;
-                this.password = yield (0, bcrypt_1.hash)(this.password, saltRounds);
+                this.password = yield bcrypt_1.hash(this.password, saltRounds);
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
             }
             catch (err) {
@@ -75,7 +75,7 @@ individualUserSchema.pre("save", function (next) {
 });
 individualUserSchema.methods.comparePassword = function (candidatePassword) {
     return __awaiter(this, void 0, void 0, function* () {
-        return yield (0, bcrypt_1.compare)(candidatePassword, this.password);
+        return yield bcrypt_1.compare(candidatePassword, this.password);
     });
 };
 individualUserSchema.methods.createPasswordResetToken = function () {
@@ -95,5 +95,5 @@ individualUserSchema.methods.comparePasswordResetToken = function (token) {
     const hashedToken = crypto_1.default.createHash("sha256").update(token).digest("hex");
     return ((_a = this.passwordResetToken) === null || _a === void 0 ? void 0 : _a.token) === hashedToken;
 };
-const IndividualUser = (0, mongoose_1.model)("IndividualUser", individualUserSchema);
+const IndividualUser = mongoose_1.model("IndividualUser", individualUserSchema);
 exports.default = IndividualUser;

@@ -32,15 +32,15 @@ passwordTokenSchema.pre("save", function (next) {
     return __awaiter(this, void 0, void 0, function* () {
         // Hash the token
         if (this.isModified("token")) {
-            this.token = yield (0, bcrypt_1.hash)(this.token, 10);
+            this.token = yield bcrypt_1.hash(this.token, 10);
         }
         next();
     });
 });
 passwordTokenSchema.methods.compareToken = function (token) {
     return __awaiter(this, void 0, void 0, function* () {
-        const result = yield (0, bcrypt_1.compare)(token, this.token);
+        const result = yield bcrypt_1.compare(token, this.token);
         return result;
     });
 };
-exports.default = (0, mongoose_1.model)("PasswordToken", passwordTokenSchema);
+exports.default = mongoose_1.model("PasswordToken", passwordTokenSchema);
