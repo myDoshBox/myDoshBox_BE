@@ -72,7 +72,7 @@ const productDisputeSchema = new mongoose.Schema(
 
     dispute_status: {
       type: String,
-      default: "processing", // this is supposed to be pending and then completed when done
+      default: "processing", // this is supposed to be processing, and then resolved when done
     },
   },
   {

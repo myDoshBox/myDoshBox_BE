@@ -1,16 +1,16 @@
 import { Router } from "express";
 import {
   // sellerConfirmsAnEscrowProductTransaction,
-  sellerConfirmsAnEscrowProductTransaction,
+  // sellerConfirmsAnEscrowProductTransaction,
   sellerFillOutShippingDetails,
   buyerConfirmsProduct,
   getAllEscrowProductTransactionByUser,
-  getSingleEscrowProductTransaction,
+  // getSingleEscrowProductTransaction,
   initiateEscrowProductTransaction,
   verifyEscrowProductTransactionPayment,
   getAllShippingDetails,
-  getAllShippingDetailsForBuyer,
-  getAllShippingDetailsForVendor,
+  // getAllShippingDetailsForBuyer,
+  // getAllShippingDetailsForVendor,
   // buyerConProd,
 } from "./productsTransaction.controller";
 // import protectRoutes from "../../../middlewares/protectRoutes.middleware";
@@ -31,9 +31,9 @@ escrowProductTransactionRouter
   .route("/verify-escrow-product-transaction-payment")
   .put(verifyEscrowProductTransactionPayment);
 
-escrowProductTransactionRouter
-  .route("/get-single-escrow-product-transaction/:transaction_id")
-  .get(getSingleEscrowProductTransaction);
+// escrowProductTransactionRouter
+//   .route("/get-single-escrow-product-transaction/:transaction_id")
+//   .get(getSingleEscrowProductTransaction);
 
 escrowProductTransactionRouter
   .route("/get-all-escrow-product-transaction/:user_email")
@@ -43,21 +43,25 @@ escrowProductTransactionRouter
 //   .route("/seller-confirm-escrow-product-transaction")
 //   .post(sellerConfirmsAnEscrowProductTransaction);
 
-escrowProductTransactionRouter
-  .route("/get-all-escrow-product-transaction/:user_email")
-  .get(sellerConfirmsAnEscrowProductTransaction);
+// escrowProductTransactionRouter
+//   .route("/get-all-escrow-product-transaction/:user_email")
+//   .get(sellerConfirmsAnEscrowProductTransaction);
 
 escrowProductTransactionRouter
   .route("/seller-fill-out-shipping-details")
   .post(sellerFillOutShippingDetails);
 
 escrowProductTransactionRouter
-  .route("/get-all-shipping-details/buyer/:buyer_email")
-  .get(getAllShippingDetailsForBuyer);
+  .route("/seller-fill-out-shipping-details")
+  .post(sellerFillOutShippingDetails);
 
-escrowProductTransactionRouter
-  .route("/get-all-shipping-details/vendor/:vendor_email")
-  .get(getAllShippingDetailsForVendor);
+// escrowProductTransactionRouter
+//   .route("/get-all-shipping-details/buyer/:buyer_email")
+//   .get(getAllShippingDetailsForBuyer);
+
+// escrowProductTransactionRouter
+//   .route("/get-all-shipping-details/vendor/:vendor_email")
+//   .get(getAllShippingDetailsForVendor);
 
 // escrowProductTransactionRouter
 //   .route("/get-all-shipping-details/:buyer_email?/:vendor_email")

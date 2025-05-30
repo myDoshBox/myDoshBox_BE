@@ -148,3 +148,73 @@ export const raiseDispute = async (
         
     
  */
+
+// cancel escrow function
+export const cancelEscrow = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {};
+
+// resolve dispute
+export const resolveDispute = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {};
+// export const resolveDispute = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   // dispute resolution form
+//   const { transaction_id, resolution_description } = req.body;
+
+//   validateFormFields(
+//     {
+//       transaction_id,
+//       resolution_description,
+//     },
+//     next
+//   );
+
+//   try {
+//     // find the transaction by id
+//     const transaction = await ProductTransaction.findOne({
+//       transaction_id: transaction_id,
+//     });
+
+//     if (!transaction) {
+//       return next(errorHandler(404, "Transaction not found"));
+//     }
+
+//     // update the transaction status to "resolved"
+//     const updatedTransaction = await ProductTransaction.findByIdAndUpdate(
+//       transaction._id,
+//       { transaction_status: "resolved" },
+//       { new: true }
+//     );
+
+//     if (!updatedTransaction) {
+//       return next(errorHandler(500, "Failed to update transaction status"));
+//     }
+
+//     // send mail to the buyer and seller that the dispute has been resolved
+
+//     res.json({
+//       status: "success",
+//       message: "Dispute has been resolved successfully",
+//     });
+//   } catch (error: string | unknown) {
+//     console.log("error", error);
+//     return next(errorHandler(500, "Internal server error"));
+//   }
+// };
+
+// involve a mediator
+
+export const involveAMediator = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {};

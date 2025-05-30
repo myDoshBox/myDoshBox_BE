@@ -326,43 +326,43 @@ export const verifyEscrowProductTransactionPayment = async (
   }
 };
 
-export const getSingleEscrowProductTransaction = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    // const user = res.locals.user;
-    const { transaction_id } = req.params;
+// export const getSingleEscrowProductTransaction = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   try {
+//     // const user = res.locals.user;
+//     const { transaction_id } = req.params;
 
-    // console.log(user);
+//     // console.log(user);
 
-    if (!transaction_id) {
-      return next(errorHandler(400, "transaction ID is required"));
-    }
+//     if (!transaction_id) {
+//       return next(errorHandler(400, "transaction ID is required"));
+//     }
 
-    const transaction = await productTransaction.findOne({
-      transaction_id: transaction_id,
-      // user_id: user?._id,
-    });
+//     const transaction = await productTransaction.findOne({
+//       transaction_id: transaction_id,
+//       // user_id: user?._id,
+//     });
 
-    console.log(transaction);
+//     console.log(transaction);
 
-    if (!transaction) {
-      return next(errorHandler(404, "transaction not found"));
-    } else {
-      res.json({
-        transaction,
-        status: "success",
-        message: "transaction fetched successfully",
-      });
-    }
-  } catch (error: string | unknown) {
-    console.log(error);
-    // return next(errorHandler(500, "server error"));
-    return next(errorHandler(500, "server error"));
-  }
-};
+//     if (!transaction) {
+//       return next(errorHandler(404, "transaction not found"));
+//     } else {
+//       res.json({
+//         transaction,
+//         status: "success",
+//         message: "transaction fetched successfully",
+//       });
+//     }
+//   } catch (error: string | unknown) {
+//     console.log(error);
+//     // return next(errorHandler(500, "server error"));
+//     return next(errorHandler(500, "server error"));
+//   }
+// };
 
 export const getAllEscrowProductTransactionByUser = async (
   req: Request,
@@ -445,131 +445,131 @@ export const getAllEscrowProductTransactionByUser = async (
   }
 };
 
-export const sellerConfirmsAnEscrowProductTransaction = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  // when the mail link is clicked
-  // we need to check if they have an account, if they do,
-  // we redirect them to login if they weren't previously logged in and lead them straight to the page to confirm escrow
-  // we need to check if they have an account, if they don't,
-  // they are redirected to a signup
-  // they signup and are redirected to the page for confirming the escrow
-  // when they accept/confirm, a message/popup to tell the seller the next steps.
-  // mail is sent to the buyer that the seller has agreed and will be sending the goods
-  // the mail contains a link to the page where the buyer can click on so that they are redirected to where they can confirm that they like the product and close the escrow.
+// export const sellerConfirmsAnEscrowProductTransaction = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   // when the mail link is clicked
+//   // we need to check if they have an account, if they do,
+//   // we redirect them to login if they weren't previously logged in and lead them straight to the page to confirm escrow
+//   // we need to check if they have an account, if they don't,
+//   // they are redirected to a signup
+//   // they signup and are redirected to the page for confirming the escrow
+//   // when they accept/confirm, a message/popup to tell the seller the next steps.
+//   // mail is sent to the buyer that the seller has agreed and will be sending the goods
+//   // the mail contains a link to the page where the buyer can click on so that they are redirected to where they can confirm that they like the product and close the escrow.
 
-  const { transaction_id } = req.body;
+//   const { transaction_id } = req.body;
 
-  try {
-    // const user = res?.locals?.user;
+//   try {
+//     // const user = res?.locals?.user;
 
-    // if (!user) {
-    //   // res.json({
-    //   //   status: "error",
-    //   //   message: "all transactions fetched successfully",
-    //   //   signup_link: `${process.env.LOCAL_FRONTEND_BASE_URL}/signup`,
-    //   // });
+//     // if (!user) {
+//     //   // res.json({
+//     //   //   status: "error",
+//     //   //   message: "all transactions fetched successfully",
+//     //   //   signup_link: `${process.env.LOCAL_FRONTEND_BASE_URL}/signup`,
+//     //   // });
 
-    //   // res.status(401).json({
-    //   //   status: "error",
-    //   //   message: "Unauthorized. Please log in to confirm the escrow transaction.",
-    //   //   login_link: `/login?redirect=/confirm-escrow/${transaction_id}`,
-    //   // });
+//     //   // res.status(401).json({
+//     //   //   status: "error",
+//     //   //   message: "Unauthorized. Please log in to confirm the escrow transaction.",
+//     //   //   login_link: `/login?redirect=/confirm-escrow/${transaction_id}`,
+//     //   // });
 
-    //   res.status(401).json({
-    //     status: "error",
-    //     message: "Unauthorized. Please log in to confirm the escrow transaction.",
-    //     login_link: `${process.env.LOCAL_FRONTEND_BASE_URL}/login?redirect=/confirm-escrow/${transaction_id}`,
-    //   });
-    // }
+//     //   res.status(401).json({
+//     //     status: "error",
+//     //     message: "Unauthorized. Please log in to confirm the escrow transaction.",
+//     //     login_link: `${process.env.LOCAL_FRONTEND_BASE_URL}/login?redirect=/confirm-escrow/${transaction_id}`,
+//     //   });
+//     // }
 
-    const transaction = await productTransaction.findOne({
-      transaction_id: transaction_id,
-      // user_id: user?._id,
-    });
+//     const transaction = await productTransaction.findOne({
+//       transaction_id: transaction_id,
+//       // user_id: user?._id,
+//     });
 
-    const transactionWithConfirmationStatus = await productTransaction.findOne({
-      transaction_id: transaction_id,
-      seller_confirm_status: false,
-      // user_id: user?._id,
-    });
+//     const transactionWithConfirmationStatus = await productTransaction.findOne({
+//       transaction_id: transaction_id,
+//       seller_confirm_status: false,
+//       // user_id: user?._id,
+//     });
 
-    // if (!transaction) {
-    //   return next(errorHandler(404, "Transaction not found."));
-    // }
+//     // if (!transaction) {
+//     //   return next(errorHandler(404, "Transaction not found."));
+//     // }
 
-    const transactionId = transaction?.transaction_id;
-    const sellerConfirmStatus =
-      transactionWithConfirmationStatus?.seller_confirm_status;
+//     const transactionId = transaction?.transaction_id;
+//     const sellerConfirmStatus =
+//       transactionWithConfirmationStatus?.seller_confirm_status;
 
-    // if transactionId !== transaction_id from req.body: invalid transaction
-    // if transactionId === transaction_id && seller_confirm_status === true: this transaction has been confirmed
-    // else: continue with the logic
+//     // if transactionId !== transaction_id from req.body: invalid transaction
+//     // if transactionId === transaction_id && seller_confirm_status === true: this transaction has been confirmed
+//     // else: continue with the logic
 
-    if (transactionId !== transaction_id) {
-      return next(errorHandler(404, "Invalid transaction."));
-    } else if (sellerConfirmStatus !== false) {
-      return next(errorHandler(404, "This transaction has been confirmed."));
-    } else {
-      const vendor_email = transaction?.vendor_email;
+//     if (transactionId !== transaction_id) {
+//       return next(errorHandler(404, "Invalid transaction."));
+//     } else if (sellerConfirmStatus !== false) {
+//       return next(errorHandler(404, "This transaction has been confirmed."));
+//     } else {
+//       const vendor_email = transaction?.vendor_email;
 
-      console.log("vendor_email", vendor_email);
+//       console.log("vendor_email", vendor_email);
 
-      const checkIfUserExists = await IndividualUser.findOne({
-        email: vendor_email,
-      });
+//       const checkIfUserExists = await IndividualUser.findOne({
+//         email: vendor_email,
+//       });
 
-      // const user = res.locals.user;
+//       // const user = res.locals.user;
 
-      if (!checkIfUserExists) {
-        return res.status(401).json({
-          status: "error",
-          message:
-            "You do not have an account, please proceed to the signup page to create an account.",
-          // signup_link: `${process.env.LOCAL_FRONTEND_BASE_URL}/signup?redirect=/confirm-escrow/${transaction_id}`,
-          // signup_link: `${process.env.LOCAL_FRONTEND_BASE_URL}/signup`,
-        });
-      }
+//       if (!checkIfUserExists) {
+//         return res.status(401).json({
+//           status: "error",
+//           message:
+//             "You do not have an account, please proceed to the signup page to create an account.",
+//           // signup_link: `${process.env.LOCAL_FRONTEND_BASE_URL}/signup?redirect=/confirm-escrow/${transaction_id}`,
+//           // signup_link: `${process.env.LOCAL_FRONTEND_BASE_URL}/signup`,
+//         });
+//       }
 
-      // THIS MAIL SENDS EVEN THOUGH THE PERSON IS VERIFIED. LOGIN ALREADY TAKES CARE OF THIS
-      // if (!checkIfUserExists?.email_verified) {
-      //   const verificationToken = jwt.sign(
-      //     { vendor_email },
-      //     process.env.JWT_SECRET as string,
-      //     { expiresIn: 60 * 60 }
-      //   );
-      //   await sendVerificationEmail(vendor_email, verificationToken);
-      //   return res.status(200).json({
-      //     status: "false",
-      //     message:
-      //       "Account is unverified! Verfication email sent. verify account to continue",
-      //   });
-      // }
+//       // THIS MAIL SENDS EVEN THOUGH THE PERSON IS VERIFIED. LOGIN ALREADY TAKES CARE OF THIS
+//       // if (!checkIfUserExists?.email_verified) {
+//       //   const verificationToken = jwt.sign(
+//       //     { vendor_email },
+//       //     process.env.JWT_SECRET as string,
+//       //     { expiresIn: 60 * 60 }
+//       //   );
+//       //   await sendVerificationEmail(vendor_email, verificationToken);
+//       //   return res.status(200).json({
+//       //     status: "false",
+//       //     message:
+//       //       "Account is unverified! Verfication email sent. verify account to continue",
+//       //   });
+//       // }
 
-      // if (checkIfUserExists) {
-      //   res.status(401).json({
-      //     status: "error",
-      //     message:
-      //       "You do not have an account, please proceed to the signup page to create an account.",
-      //     // signup_link: `${process.env.LOCAL_FRONTEND_BASE_URL}/signup?redirect=/confirm-escrow/${transaction_id}`,
-      //     signup_link: `${process.env.LOCAL_FRONTEND_BASE_URL}/signup`,
-      //   });
-      // }
+//       // if (checkIfUserExists) {
+//       //   res.status(401).json({
+//       //     status: "error",
+//       //     message:
+//       //       "You do not have an account, please proceed to the signup page to create an account.",
+//       //     // signup_link: `${process.env.LOCAL_FRONTEND_BASE_URL}/signup?redirect=/confirm-escrow/${transaction_id}`,
+//       //     signup_link: `${process.env.LOCAL_FRONTEND_BASE_URL}/signup`,
+//       //   });
+//       // }
 
-      return res.json({
-        transaction,
-        status: "success",
-        message: "transaction fetched successfully",
-      });
-    }
+//       return res.json({
+//         transaction,
+//         status: "success",
+//         message: "transaction fetched successfully",
+//       });
+//     }
 
-    // we need to fetch the details from the product document probably by hitting the getbytransactionid endpoint
-  } catch (error) {
-    res.status(500).json({ message: "Error Logging in user", error });
-  }
-};
+//     // we need to fetch the details from the product document probably by hitting the getbytransactionid endpoint
+//   } catch (error) {
+//     res.status(500).json({ message: "Error Logging in user", error });
+//   }
+// };
 
 export const sellerFillOutShippingDetails = async (
   req: Request,
@@ -704,145 +704,145 @@ export const sellerFillOutShippingDetails = async (
   }
 };
 
-export const getAllShippingDetailsForBuyer = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    // const user = res?.locals?.user;
-    // const { buyer_email, vendor_email } = req.params;
-    const { buyer_email } = req.params;
+// export const getAllShippingDetailsForBuyer = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   try {
+//     // const user = res?.locals?.user;
+//     // const { buyer_email, vendor_email } = req.params;
+//     const { buyer_email } = req.params;
 
-    console.log("Buyer Email:", buyer_email);
-    // console.log("Vendor Email:", vendor_email);
+//     console.log("Buyer Email:", buyer_email);
+//     // console.log("Vendor Email:", vendor_email);
 
-    // if (!buyer_email || !vendor_email) {
-    //   return next(errorHandler(400, "Buyer email or vendor email is required"));
-    // }
+//     // if (!buyer_email || !vendor_email) {
+//     //   return next(errorHandler(400, "Buyer email or vendor email is required"));
+//     // }
 
-    if (!buyer_email) {
-      return next(errorHandler(400, "Buyer email is required"));
-    }
+//     if (!buyer_email) {
+//       return next(errorHandler(400, "Buyer email is required"));
+//     }
 
-    // Create filter conditions for the query based on provided emails
-    const matchByMails: noSQLJoinType = {};
+//     // Create filter conditions for the query based on provided emails
+//     const matchByMails: noSQLJoinType = {};
 
-    if (buyer_email) {
-      // matchByMails["product.buyer_email"] = buyer_email as string;
-      matchByMails["product.buyer_email"] = buyer_email;
-    }
+//     if (buyer_email) {
+//       // matchByMails["product.buyer_email"] = buyer_email as string;
+//       matchByMails["product.buyer_email"] = buyer_email;
+//     }
 
-    // if (vendor_email) {
-    //   // matchByMails["product.vendor_email"] = buyer_email as string;
-    //   matchByMails["product.vendor_email"] = buyer_email;
-    // }
+//     // if (vendor_email) {
+//     //   // matchByMails["product.vendor_email"] = buyer_email as string;
+//     //   matchByMails["product.vendor_email"] = buyer_email;
+//     // }
 
-    // Use aggregate to join ShippingDetails with Product collection
+//     // Use aggregate to join ShippingDetails with Product collection
 
-    const transactions = await ShippingDetails.aggregate([
-      {
-        $lookup: {
-          from: "products", // name of the 'Product' collection
-          localField: "product", // field in ShippingDetails that references Product
-          foreignField: "_id", // field in Product collection
-          as: "product",
-        },
-      },
-      { $unwind: "$product" }, // Unwind to access product details directly,
-      { $match: matchByMails }, // Filter based on buyer or vendor email,
-      { $sort: { createdAt: -1 } }, // Sort by creation date
-    ]);
+//     const transactions = await ShippingDetails.aggregate([
+//       {
+//         $lookup: {
+//           from: "products", // name of the 'Product' collection
+//           localField: "product", // field in ShippingDetails that references Product
+//           foreignField: "_id", // field in Product collection
+//           as: "product",
+//         },
+//       },
+//       { $unwind: "$product" }, // Unwind to access product details directly,
+//       { $match: matchByMails }, // Filter based on buyer or vendor email,
+//       { $sort: { createdAt: -1 } }, // Sort by creation date
+//     ]);
 
-    // console.log(transactions);
+//     // console.log(transactions);
 
-    if (!transactions || transactions.length === 0) {
-      return next(
-        errorHandler(404, "you don't have any shipping history at this time")
-      );
-    } else {
-      res.json({
-        transactions,
-        status: "success",
-        message: "all shipping details fetched successfully",
-      });
-    }
-  } catch (error: string | unknown) {
-    console.log(error);
-    // return next(errorHandler(500, "server error"));
-    return next(errorHandler(500, "server error"));
-  }
-};
+//     if (!transactions || transactions.length === 0) {
+//       return next(
+//         errorHandler(404, "you don't have any shipping history at this time")
+//       );
+//     } else {
+//       res.json({
+//         transactions,
+//         status: "success",
+//         message: "all shipping details fetched successfully",
+//       });
+//     }
+//   } catch (error: string | unknown) {
+//     console.log(error);
+//     // return next(errorHandler(500, "server error"));
+//     return next(errorHandler(500, "server error"));
+//   }
+// };
 
-export const getAllShippingDetailsForVendor = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    // const user = res?.locals?.user;
-    // const { buyer_email, vendor_email } = req.params;
-    const { vendor_email } = req.params;
+// export const getAllShippingDetailsForVendor = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   try {
+//     // const user = res?.locals?.user;
+//     // const { buyer_email, vendor_email } = req.params;
+//     const { vendor_email } = req.params;
 
-    console.log("Vendor Email:", vendor_email);
-    // console.log("Vendor Email:", vendor_email);
+//     console.log("Vendor Email:", vendor_email);
+//     // console.log("Vendor Email:", vendor_email);
 
-    // if (!buyer_email || !vendor_email) {
-    //   return next(errorHandler(400, "Buyer email or vendor email is required"));
-    // }
+//     // if (!buyer_email || !vendor_email) {
+//     //   return next(errorHandler(400, "Buyer email or vendor email is required"));
+//     // }
 
-    if (!vendor_email) {
-      return next(errorHandler(400, "Vendor email is required"));
-    }
+//     if (!vendor_email) {
+//       return next(errorHandler(400, "Vendor email is required"));
+//     }
 
-    // Create filter conditions for the query based on provided emails
-    const matchByMails: noSQLJoinType = {};
+//     // Create filter conditions for the query based on provided emails
+//     const matchByMails: noSQLJoinType = {};
 
-    if (vendor_email) {
-      // matchByMails["product.buyer_email"] = buyer_email as string;
-      matchByMails["product.vendor_email"] = vendor_email;
-    }
+//     if (vendor_email) {
+//       // matchByMails["product.buyer_email"] = buyer_email as string;
+//       matchByMails["product.vendor_email"] = vendor_email;
+//     }
 
-    // if (vendor_email) {
-    //   // matchByMails["product.vendor_email"] = buyer_email as string;
-    //   matchByMails["product.vendor_email"] = buyer_email;
-    // }
+//     // if (vendor_email) {
+//     //   // matchByMails["product.vendor_email"] = buyer_email as string;
+//     //   matchByMails["product.vendor_email"] = buyer_email;
+//     // }
 
-    // Use aggregate to join ShippingDetails with Product collection
+//     // Use aggregate to join ShippingDetails with Product collection
 
-    const transactions = await ShippingDetails.aggregate([
-      {
-        $lookup: {
-          from: "products", // name of the 'Product' collection
-          localField: "product", // field in ShippingDetails that references Product
-          foreignField: "_id", // field in Product collection
-          as: "product",
-        },
-      },
-      { $unwind: "$product" }, // Unwind to access product details directly,
-      { $match: matchByMails }, // Filter based on buyer or vendor email,
-      { $sort: { createdAt: -1 } }, // Sort by creation date
-    ]);
+//     const transactions = await ShippingDetails.aggregate([
+//       {
+//         $lookup: {
+//           from: "products", // name of the 'Product' collection
+//           localField: "product", // field in ShippingDetails that references Product
+//           foreignField: "_id", // field in Product collection
+//           as: "product",
+//         },
+//       },
+//       { $unwind: "$product" }, // Unwind to access product details directly,
+//       { $match: matchByMails }, // Filter based on buyer or vendor email,
+//       { $sort: { createdAt: -1 } }, // Sort by creation date
+//     ]);
 
-    // console.log(transactions);
+//     // console.log(transactions);
 
-    if (!transactions || transactions.length === 0) {
-      return next(
-        errorHandler(404, "you don't have any shipping history at this time")
-      );
-    } else {
-      res.json({
-        transactions,
-        status: "success",
-        message: "all shipping details fetched successfully",
-      });
-    }
-  } catch (error: string | unknown) {
-    console.log(error);
-    // return next(errorHandler(500, "server error"));
-    return next(errorHandler(500, "server error"));
-  }
-};
+//     if (!transactions || transactions.length === 0) {
+//       return next(
+//         errorHandler(404, "you don't have any shipping history at this time")
+//       );
+//     } else {
+//       res.json({
+//         transactions,
+//         status: "success",
+//         message: "all shipping details fetched successfully",
+//       });
+//     }
+//   } catch (error: string | unknown) {
+//     console.log(error);
+//     // return next(errorHandler(500, "server error"));
+//     return next(errorHandler(500, "server error"));
+//   }
+// };
 
 // export const getAllShippingDetails = async (
 //   req: Request,
