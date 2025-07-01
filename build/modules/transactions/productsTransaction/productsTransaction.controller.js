@@ -27,6 +27,7 @@ const productsTransaction_paystack_1 = require("./productsTransaction.paystack")
 const productTransaction_mail_1 = require("./productTransaction.mail");
 // import { sendVerificationEmail } from "../../../utilities/email.utils";
 const shippingDetails_model_1 = __importDefault(require("./shippingDetails.model"));
+const productDispute_model_1 = __importDefault(require("../../disputes/productsDispute/productDispute.model"));
 // import mongoose, { SchemaTypes } from "mongoose";
 // import {
 //   sendEscrowInitiationEmail,
@@ -1041,9 +1042,14 @@ exports.getAllShippingDetails = getAllShippingDetails;
 // };
 const buyerConfirmsProduct = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const { transaction_id } = req.body;
+    // const { transaction_id } = req.params;
     if (!transaction_id) {
         return next((0, errorHandling_middleware_1.errorHandler)(400, "Transaction ID is required"));
     }
+    const disputeDetails = yield productDispute_model_1.default.findOne({
+        transaction_id: transaction_id,
+    });
+    const disputStatus = disputeDetails === null || disputeDetails === void 0 ? void 0 : disputeDetails.dispute_status;
     try {
         // Find the ShippingDetails entry by looking up the transaction_id in the Product
         const fetchShippingDetails = yield shippingDetails_model_1.default.aggregate([
@@ -1076,13 +1082,21 @@ const buyerConfirmsProduct = (req, res, next) => __awaiter(void 0, void 0, void 
             return next((0, errorHandling_middleware_1.errorHandler)(404, "No shipping details found or transaction completed"));
         }
         const { transaction_status, product_id, vendor_name, vendor_email, buyer_email, product_name, } = fetchShippingDetails[0];
-        if (transaction_status !== "processing") {
+        if (transaction_status === "completed") {
             return next((0, errorHandling_middleware_1.errorHandler)(400, "This transaction is already completed"));
         }
         // Update the transaction status of the product to "completed"
         const updateProductTransactionStatus = yield productsTransaction_model_1.default.findByIdAndUpdate(product_id, { transaction_status: "completed" }, { new: true });
         if (!updateProductTransactionStatus) {
             return next((0, errorHandling_middleware_1.errorHandler)(500, "Failed to update product status"));
+        }
+        if (disputStatus !== "resolved") {
+            yield productDispute_model_1.default.findByIdAndUpdate(disputeDetails === null || disputeDetails === void 0 ? void 0 : disputeDetails._id, {
+                $set: {
+                    dispute_status: "resolved",
+                },
+            }, { new: true, runValidators: true, useFindAndModify: false } // to return the updated document
+            );
         }
         // Send success emails
         yield (0, productTransaction_mail_1.sendSuccessfulEscrowEmailToInitiator)(transaction_id, vendor_name, buyer_email, product_name);

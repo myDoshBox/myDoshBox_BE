@@ -24,6 +24,7 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const errorHandling_middleware_1 = require("./middlewares/errorHandling.middleware");
 const productsTransaction_route_1 = __importDefault(require("./modules/transactions/productsTransaction/productsTransaction.route"));
 const productDispute_route_1 = __importDefault(require("./modules/disputes/productsDispute/productDispute.route"));
+const mediator_route_1 = __importDefault(require("./modules/mediator/mediator.route"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 // app.use(cors());
@@ -51,6 +52,8 @@ app.use("/users", individualUsers_route_1.default);
 app.use("/transactions", productsTransaction_route_1.default);
 // disputes
 app.use("/disputes", productDispute_route_1.default);
+// mediator
+app.use("/mediators", mediator_route_1.default);
 app.use(errorHandler_util_1.errorHandler);
 const devSpec = (0, swagger_jsdoc_1.default)(devSwagger_1.options);
 const prodSpec = (0, swagger_jsdoc_1.default)(prodSwagger_1.options);

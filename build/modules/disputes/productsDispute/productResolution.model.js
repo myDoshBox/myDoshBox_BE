@@ -34,37 +34,26 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
-const mediatorSchema = new mongoose_1.default.Schema({
+const productResolutionSchema = new mongoose_1.default.Schema({
     dispute: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: "ProductDispute", // Reference to User model
         // required: true,
     },
-    first_name: {
-        type: String,
-    },
-    middle_name: {
-        type: String,
-    },
-    last_name: {
+    dispute_id: {
         type: String,
         required: true,
     },
-    mediator_email: {
+    resolution_description: {
         type: String,
         required: true,
-        unique: true,
     },
-    mediator_phone_number: {
+    resolution_status: {
         type: String,
-    },
-    password: {
-        type: String,
-        required: true,
-        select: false, // Exclude password by default
+        default: "processing", // this is supposed to default to #processing, #resolving when both parties choose the resolve button #resolved when done, and then #cancelled if the user cancels the escrow transaction
     },
 }, {
     timestamps: true,
 });
-const MediatorModel = mongoose_1.default.model("Mediator", mediatorSchema);
-exports.default = MediatorModel;
+const ProductResolution = mongoose_1.default.model("ProductResolution", productResolutionSchema);
+exports.default = ProductResolution;

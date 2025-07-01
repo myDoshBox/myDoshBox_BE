@@ -45,6 +45,11 @@ const productDisputeSchema = new mongoose_1.default.Schema({
         ref: "Product", // Reference to User model
         // required: true,
     },
+    mediator: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: "Mediator", // Reference to User model
+        // required: true,
+    },
     transaction_id: {
         type: String,
         required: true,
@@ -53,7 +58,15 @@ const productDisputeSchema = new mongoose_1.default.Schema({
         type: String,
         required: true,
     },
+    vendor_name: {
+        type: String,
+        required: true,
+    },
     vendor_email: {
+        type: String,
+        required: true,
+    },
+    vendor_phone_number: {
         type: String,
         required: true,
     },
@@ -76,6 +89,10 @@ const productDisputeSchema = new mongoose_1.default.Schema({
     dispute_status: {
         type: String,
         default: "processing", // this is supposed to default to #processing, #resolving when both parties choose the resolve button #resolved when done, and then #cancelled if the user cancels the escrow transaction
+    },
+    dispute_resolution_method: {
+        type: String,
+        default: "unresolved", // #unresolved as default, #dipute parties# when resolved by the people involved, #mediator
     },
 }, {
     timestamps: true,

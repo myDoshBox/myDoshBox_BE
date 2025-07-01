@@ -18,6 +18,8 @@ const individualUserAuth_model1_1 = __importDefault(require("../../authenticatio
 const productsTransaction_model_1 = __importDefault(require("../../transactions/productsTransaction/productsTransaction.model"));
 const productDispute_model_1 = __importDefault(require("./productDispute.model"));
 const errorHandling_middleware_1 = require("../../../middlewares/errorHandling.middleware");
+const console_1 = require("console");
+const productDispute_mail_1 = require("./productDispute.mail");
 // import productTransaction from "../../transactions/productsTransaction/productsTransaction.model";
 // seller rejects escrow initiated
 /*
@@ -41,7 +43,9 @@ const raiseDispute = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
     // dispute form
     const { transaction_id, // prefill this
     buyer_email, // prefill this
+    vendor_name, // prefill this
     vendor_email, // prefill this
+    vendor_phone_number, // prefill this
     product_name, product_image, reason_for_dispute, dispute_description, } = req.body;
     (0, validation_utilities_1.validateFormFields)({
         product_name,
@@ -93,12 +97,16 @@ const raiseDispute = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
             product_name,
             product_image,
             buyer_email,
+            vendor_name,
             vendor_email,
+            vendor_phone_number,
             reason_for_dispute,
             dispute_description,
         });
         yield newProductDispute.save();
         // send mail to the buyer that the seller has raised a dispute
+        yield (0, productDispute_mail_1.sendDisputeMailToBuyer)(buyer_email, product_name, dispute_description);
+        yield (0, productDispute_mail_1.sendDisputeMailToSeller)(vendor_email, product_name, dispute_description);
         res.json({
             status: "success",
             message: "Dispute has been raised successfully",
@@ -187,6 +195,17 @@ const cancelEscrow = (req, res, next) => __awaiter(void 0, void 0, void 0, funct
             return next((0, errorHandling_middleware_1.errorHandler)(500, "Failed to update dispute status"));
         }
         // send mail to the buyer and seller that the dispute has been cancelled
+        // send mail to the buyer that the seller has raised a dispute
+        // await sendTransactionCancellationMailToBuyer(
+        //   buyer_email,
+        //   product_name,
+        //   dispute_description
+        // );
+        // await sendTransactionCancellationMailToSeller(
+        //   vendor_email,
+        //   product_name,
+        //   dispute_description
+        // );
         res.json({
             status: "success",
             message: "Dispute has been cancelled successfully",
@@ -263,19 +282,72 @@ exports.cancelEscrow = cancelEscrow;
 const buyerResolveDispute = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     // when buyer clicks on the resolution button, they get the form that they used in initializing transaction for an update requested in the dispute
     // every field in the form should be prefilled
-    const { transaction_id, vendor_name, vendor_phone_number, vendor_email, transaction_type, product_name, product_quantity, product_price, transaction_total, product_image, product_description, signed_escrow_doc, delivery_address, } = req.body;
-    // const { transaction_id } = req.params;
+    const { vendor_name, vendor_phone_number, vendor_email, transaction_type, product_name, product_quantity, product_price, transaction_total, product_image, product_description, signed_escrow_doc, delivery_address, } = req.body;
+    const { transaction_id } = req.params;
     try {
-        const userResolvingDispute = yield productsTransaction_model_1.default.findOne({
+        const productDetails = yield productsTransaction_model_1.default.findOne({
             transaction_id: transaction_id,
-            // transaction_status: "inDispute",
+            transaction_status: "inDispute",
         });
-        const transactionStatus = userResolvingDispute === null || userResolvingDispute === void 0 ? void 0 : userResolvingDispute.transaction_status;
-        console.log("transactionStatus", transactionStatus);
-        console.log("userResolvingDispute", userResolvingDispute);
+        const disputeDetails = yield productDispute_model_1.default.findOne({
+            transaction_id: transaction_id,
+        });
+        if (!productDetails) {
+            return next((0, errorHandling_middleware_1.errorHandler)(404, "No dispute found for this transaction"));
+        }
+        else if (!disputeDetails) {
+            return next((0, errorHandling_middleware_1.errorHandler)(404, "Dispute does not exist"));
+        }
+        const updateTransaction = yield productsTransaction_model_1.default.findByIdAndUpdate(productDetails === null || productDetails === void 0 ? void 0 : productDetails._id, {
+            $set: {
+                vendor_name: vendor_name || productDetails.vendor_name,
+                vendor_phone_number: vendor_phone_number || productDetails.vendor_phone_number,
+                vendor_email: vendor_email || productDetails.vendor_email,
+                transaction_type: transaction_type || productDetails.transaction_type,
+                product_name: product_name || productDetails.product_name,
+                product_quantity: product_quantity || productDetails.product_quantity,
+                product_price: product_price || productDetails.product_price,
+                transaction_total: transaction_total || productDetails.transaction_total,
+                product_image: product_image || productDetails.product_image,
+                product_description: product_description || productDetails.product_description,
+                signed_escrow_doc: signed_escrow_doc || productDetails.signed_escrow_doc,
+                delivery_address: delivery_address || productDetails.delivery_address,
+            },
+        }, { new: true, runValidators: true, useFindAndModify: false } // to return the updated document
+        );
+        const updateDispute = yield productDispute_model_1.default.findByIdAndUpdate(disputeDetails === null || disputeDetails === void 0 ? void 0 : disputeDetails._id, {
+            $set: {
+                dispute_status: "resolving",
+            },
+        }, { new: true, runValidators: true, useFindAndModify: false } // to return the updated document
+        );
+        // const updateDispute = await ProductDispute.findByIdAndUpdate(
+        //   productDetails?._id,
+        //   {
+        //     $set: {
+        //       vendor_name: vendor_name || disputeDetails?.vendor_name,
+        //       vendor_phone_number:
+        //         vendor_phone_number || disputeDetails?.vendor_phone_number,
+        //       vendor_email: vendor_email || disputeDetails?.vendor_email,
+        //       product_name: product_name || disputeDetails?.product_name,
+        //       product_image: product_image || disputeDetails?.product_image,
+        //       reason_for_dispute: disputeDetails?.reason_for_dispute,
+        //       dispute_description: disputeDetails?.dispute_description,
+        //     },
+        //   },
+        //   { new: true, runValidators: true, useFindAndModify: false } // to return the updated document
+        // );
+        (0, console_1.log)("updatedTransaction", updateTransaction);
+        (0, console_1.log)("updateDispute", updateDispute);
+        if (!updateTransaction) {
+            return next((0, errorHandling_middleware_1.errorHandler)(500, "Failed to update transaction"));
+        }
+        // if (!updateDispute) {
+        //   return next(errorHandler(500, "Failed to update transaction"));
+        // }
         res.json({
             status: "success",
-            message: "Dispute resolution form fetched successfully",
+            message: "Transaction form updated successfully and dispute is being resolved",
             // userResolvingDispute,
         });
     }
@@ -397,7 +469,44 @@ exports.buyerResolveDispute = buyerResolveDispute;
 //   }
 // };
 // seller resolve dispute
-const sellerResolveDispute = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () { });
+const sellerResolveDispute = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    // dispute resolution form
+    const { resolution_description } = req.body;
+    const { dispute_id } = req.params;
+    (0, validation_utilities_1.validateFormFields)({
+        resolution_description,
+    }, next);
+    try {
+        // find the dispute by id
+        const disputeDetails = yield productDispute_model_1.default.findOne({
+            dispute_id: dispute_id,
+        });
+        const disputeStatus = disputeDetails === null || disputeDetails === void 0 ? void 0 : disputeDetails.dispute_status;
+        if (!disputeDetails) {
+            return next((0, errorHandling_middleware_1.errorHandler)(404, "This dispute does not exist"));
+        }
+        else if (disputeStatus === "resolved") {
+            return next((0, errorHandling_middleware_1.errorHandler)(400, "This dispute has been resolved"));
+        }
+        else if (disputeStatus === "cancelled") {
+            return next((0, errorHandling_middleware_1.errorHandler)(400, "This dispute has been cancelled"));
+        }
+        // update the transaction status to "resolved"
+        const updatedTransaction = yield productsTransaction_model_1.default.findByIdAndUpdate(disputeDetails === null || disputeDetails === void 0 ? void 0 : disputeDetails._id, { transaction_status: "resolved" }, { new: true });
+        if (!updatedTransaction) {
+            return next((0, errorHandling_middleware_1.errorHandler)(500, "Failed to update transaction status"));
+        }
+        // send mail to the buyer and seller that the dispute has been resolved
+        res.json({
+            status: "success",
+            message: "Dispute has been resolved successfully",
+        });
+    }
+    catch (error) {
+        console.log("error", error);
+        return next((0, errorHandling_middleware_1.errorHandler)(500, "Internal server error"));
+    }
+});
 exports.sellerResolveDispute = sellerResolveDispute;
 // export const resolveDispute = async (
 //   req: Request,

@@ -16,5 +16,5 @@ escrowProductDisputeRouter
     .get(productDispute_controller_1.getAllDisputes);
 escrowProductDisputeRouter
     .route("/buyer-resolve-conflict/:transaction_id")
-    .get(productDispute_controller_1.buyerResolveDispute);
+    .put(productDispute_controller_1.buyerResolveDispute);
 exports.default = escrowProductDisputeRouter;
