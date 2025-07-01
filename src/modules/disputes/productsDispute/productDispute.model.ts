@@ -8,17 +8,21 @@ import mongoose, { Schema, Document } from "mongoose";
 //   "Home Appliances",
 // ];
 
-interface IProductDispute extends Document {
+export interface IProductDispute extends Document {
   user: mongoose.Schema.Types.ObjectId; // Reference to the User model
   transaction: mongoose.Schema.Types.ObjectId; // Reference to the Transaction model
+  mediator: mongoose.Schema.Types.ObjectId; // Reference to the Transaction model
   transaction_id: string;
   buyer_email: string;
   vendor_email: string;
+  vendor_name: string;
+  vendor_phone_number: string;
   product_name: string;
   product_image: string;
   reason_for_dispute: string;
   dispute_description: string;
   dispute_status: boolean;
+  dispute_resolution_method: boolean;
 }
 
 const productDisputeSchema = new mongoose.Schema(
@@ -35,6 +39,12 @@ const productDisputeSchema = new mongoose.Schema(
       // required: true,
     },
 
+    mediator: {
+      type: Schema.Types.ObjectId,
+      ref: "Mediator", // Reference to User model
+      // required: true,
+    },
+
     transaction_id: {
       type: String,
       required: true,
@@ -45,7 +55,17 @@ const productDisputeSchema = new mongoose.Schema(
       required: true,
     },
 
+    vendor_name: {
+      type: String,
+      required: true,
+    },
+
     vendor_email: {
+      type: String,
+      required: true,
+    },
+
+    vendor_phone_number: {
       type: String,
       required: true,
     },
@@ -72,7 +92,12 @@ const productDisputeSchema = new mongoose.Schema(
 
     dispute_status: {
       type: String,
-      default: "processing", // this is supposed to be processing, and then resolved when done
+      default: "processing", // this is supposed to default to #processing, #resolving when both parties choose the resolve button #resolved when done, and then #cancelled if the user cancels the escrow transaction
+    },
+
+    dispute_resolution_method: {
+      type: String,
+      default: "unresolved", // #unresolved as default, #dipute parties# when resolved by the people involved, #mediator
     },
   },
   {

@@ -51,9 +51,9 @@ escrowProductTransactionRouter
   .route("/seller-fill-out-shipping-details")
   .post(sellerFillOutShippingDetails);
 
-escrowProductTransactionRouter
-  .route("/seller-fill-out-shipping-details")
-  .post(sellerFillOutShippingDetails);
+// escrowProductTransactionRouter
+//   .route("/seller-fill-out-shipping-details")
+//   .post(sellerFillOutShippingDetails);
 
 // escrowProductTransactionRouter
 //   .route("/get-all-shipping-details/buyer/:buyer_email")
@@ -74,6 +74,10 @@ escrowProductTransactionRouter
 escrowProductTransactionRouter
   .route("/buyer-confirms-product")
   .put(buyerConfirmsProduct);
+
+// escrowProductTransactionRouter
+//   .route("/buyer-confirms-product/:transaction_id")
+//   .put(buyerConfirmsProduct);
 
 // escrowProductTransactionRouter
 //   .route("/pay-for-escrow-product-transaction")

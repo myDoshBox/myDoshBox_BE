@@ -14,22 +14,23 @@ const signAndVerifyToken_util_1 = require("./../utilities/signAndVerifyToken.uti
 const generateAccessAndRefreshToken_util_1 = require("../utilities/generateAccessAndRefreshToken.util");
 const deserializeUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
-    const accessToken = lodash_1.get(req, "cookies.accessToken") || ((_a = lodash_1.get(req, "headers.authorization", "")) === null || _a === void 0 ? void 0 : _a.replace(/^Bearer\s/, ""));
-    const refreshToken = lodash_1.get(req, "cookies.refreshToken") || lodash_1.get(req, "headers.x-refresh");
+    const accessToken = (0, lodash_1.get)(req, "cookies.accessToken") ||
+        ((_a = (0, lodash_1.get)(req, "headers.authorization", "")) === null || _a === void 0 ? void 0 : _a.replace(/^Bearer\s/, ""));
+    const refreshToken = (0, lodash_1.get)(req, "cookies.refreshToken") || (0, lodash_1.get)(req, "headers.x-refresh");
     if (!accessToken) {
         return next();
     }
-    const { decoded, expired } = signAndVerifyToken_util_1.verifyJwt(accessToken);
+    const { decoded, expired } = (0, signAndVerifyToken_util_1.verifyJwt)(accessToken);
     if (decoded) {
         res.locals.user = decoded;
         return next();
     }
     if (expired && refreshToken) {
-        const newAccessToken = yield generateAccessAndRefreshToken_util_1.reIssueAccessToken({ refreshToken });
+        const newAccessToken = yield (0, generateAccessAndRefreshToken_util_1.reIssueAccessToken)({ refreshToken });
         if (newAccessToken) {
             res.setHeader("x-access-token", newAccessToken);
         }
-        const result = signAndVerifyToken_util_1.verifyJwt(newAccessToken);
+        const result = (0, signAndVerifyToken_util_1.verifyJwt)(newAccessToken);
         res.locals.user = result.decoded;
         return next();
     }

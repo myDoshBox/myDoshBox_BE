@@ -83,7 +83,7 @@ const individualUserRegistration = (req, res) => __awaiter(void 0, void 0, void 
         }, process.env.JWT_SECRET, {
             expiresIn: 2 * 60,
         });
-        yield email_utils_1.sendVerificationEmail(email, verificationToken);
+        yield (0, email_utils_1.sendVerificationEmail)(email, verificationToken);
         // Send a response
         res.status(201).json({
             status: "true",
@@ -194,7 +194,7 @@ const getGoogleUserDetail = (req, res, next) => __awaiter(void 0, void 0, void 0
             redirect_uri: process.env.GOOGLE_OAUTH_REDIRECT_URL_INDIVIDUAL,
         });
         oAuth2Client.setCredentials(tokens);
-        const userDetails = yield exports.getUserDetails(tokens.access_token);
+        const userDetails = yield (0, exports.getUserDetails)(tokens.access_token);
         if (!userDetails.email_verified) {
             res.status(401).json({
                 status: "failed",
@@ -238,7 +238,7 @@ const getGoogleUserDetail = (req, res, next) => __awaiter(void 0, void 0, void 0
                 role: newUser.role,
                 message: "Individual Google user successfully created",
             };
-            const { status, message, user, accessToken, refreshToken } = yield createSessionAndSendToken_util_1.createSessionAndSendTokens(createSessionAndSendTokensOptions);
+            const { status, message, user, accessToken, refreshToken } = yield (0, createSessionAndSendToken_util_1.createSessionAndSendTokens)(createSessionAndSendTokensOptions);
             res.status(201).json({
                 status,
                 message,
@@ -253,7 +253,7 @@ const getGoogleUserDetail = (req, res, next) => __awaiter(void 0, void 0, void 0
             role: "g-ind",
             message: "Individual Google user successfully logged in",
         };
-        const { status, message, user, accessToken, refreshToken } = yield createSessionAndSendToken_util_1.createSessionAndSendTokens(createSessionAndSendTokensOptions);
+        const { status, message, user, accessToken, refreshToken } = yield (0, createSessionAndSendToken_util_1.createSessionAndSendTokens)(createSessionAndSendTokensOptions);
         res.status(200).json({
             status,
             message,

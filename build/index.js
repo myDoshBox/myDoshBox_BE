@@ -25,9 +25,9 @@ const errorHandling_middleware_1 = require("./middlewares/errorHandling.middlewa
 const productsTransaction_route_1 = __importDefault(require("./modules/transactions/productsTransaction/productsTransaction.route"));
 const productDispute_route_1 = __importDefault(require("./modules/disputes/productsDispute/productDispute.route"));
 dotenv_1.default.config();
-const app = express_1.default();
+const app = (0, express_1.default)();
 // app.use(cors());
-app.use(cors_1.default({
+app.use((0, cors_1.default)({
     origin: "*",
     credentials: false,
 }));
@@ -49,14 +49,15 @@ app.use("/user", getOrganizationUser_route_1.default);
 app.use("/users", individualUsers_route_1.default);
 // transaction
 app.use("/transactions", productsTransaction_route_1.default);
+// disputes
 app.use("/disputes", productDispute_route_1.default);
 app.use(errorHandler_util_1.errorHandler);
-const devSpec = swagger_jsdoc_1.default(devSwagger_1.options);
-const prodSpec = swagger_jsdoc_1.default(prodSwagger_1.options);
+const devSpec = (0, swagger_jsdoc_1.default)(devSwagger_1.options);
+const prodSpec = (0, swagger_jsdoc_1.default)(prodSwagger_1.options);
 app.use("/dev-api-docs", swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(devSpec));
 app.use("/api-docs", swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(prodSpec));
 const PORT = process.env.PORT;
-dbconn_config_1.default()
+(0, dbconn_config_1.default)()
     .then(() => {
     try {
         console.log("connected to mongoose");

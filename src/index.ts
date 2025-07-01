@@ -22,6 +22,7 @@ import dotenv from "dotenv";
 import { errorHandlingMiddleware } from "./middlewares/errorHandling.middleware";
 import escrowProductTransactionRouter from "./modules/transactions/productsTransaction/productsTransaction.route";
 import escrowProductDisputeRouter from "./modules/disputes/productsDispute/productDispute.route";
+import mediatorRouter from "./modules/mediator/mediator.route";
 
 dotenv.config();
 
@@ -61,7 +62,12 @@ app.use("/users", individualUsersRoutes);
 
 // transaction
 app.use("/transactions", escrowProductTransactionRouter);
+
+// disputes
 app.use("/disputes", escrowProductDisputeRouter);
+
+// mediator
+app.use("/mediators", mediatorRouter);
 
 app.use(errorHandler);
 

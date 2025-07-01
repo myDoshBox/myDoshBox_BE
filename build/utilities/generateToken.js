@@ -12,7 +12,7 @@ const generateAccessToken = (userId) => {
 };
 exports.generateAccessToken = generateAccessToken;
 const generateAccessAndRefreshToken = (userId) => {
-    const accessToken = exports.generateAccessToken(userId);
+    const accessToken = (0, exports.generateAccessToken)(userId);
     const refreshToken = jsonwebtoken_1.default.sign({ userId }, process.env.REFRESH_TOKEN_SECRET || "secret", {
         expiresIn: "7d",
     });

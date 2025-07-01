@@ -111,7 +111,7 @@ const organizationUserSignup = (req, res) => __awaiter(void 0, void 0, void 0, f
         }, process.env.JWT_SECRET, {
             expiresIn: 60 * 60,
         });
-        yield email_utils_1.sendVerificationEmail(organization_email, verificationToken);
+        yield (0, email_utils_1.sendVerificationEmail)(organization_email, verificationToken);
         res.status(201).json({
             status: "true",
             message: "Account is unverified! Verification email sent. Verify account to continue. Please note that token expires in an hour",
@@ -126,7 +126,7 @@ const organizationUserSignup = (req, res) => __awaiter(void 0, void 0, void 0, f
     }
 });
 exports.organizationUserSignup = organizationUserSignup;
-exports.organizationUserResetPassword = catchAsync_1.default((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+exports.organizationUserResetPassword = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     // 1) Get user based on the token
     const hashedToken = crypto_1.default
         .createHash("sha256")

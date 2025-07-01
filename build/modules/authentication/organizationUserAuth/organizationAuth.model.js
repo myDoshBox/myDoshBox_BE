@@ -78,7 +78,7 @@ organizationalSchema.pre("save", function (next) {
 });
 organizationalSchema.methods.comparePassword = function (candidatePassword) {
     return __awaiter(this, void 0, void 0, function* () {
-        return yield bcrypt_1.compare(candidatePassword, this.password);
+        return yield (0, bcrypt_1.compare)(candidatePassword, this.password);
     });
 };
 organizationalSchema.methods.createPasswordResetToken = function () {

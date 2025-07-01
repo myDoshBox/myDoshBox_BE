@@ -31,33 +31,33 @@ const generateMailTransporter = () => {
 };
 exports.generateMailTransporter = generateMailTransporter;
 const sendOtpEmail = (otp, email) => __awaiter(void 0, void 0, void 0, function* () {
-    const transport = exports.generateMailTransporter();
+    const transport = (0, exports.generateMailTransporter)();
     // const { email, message: customMessage } = options; // Renamed the variable to avoid conflict
     const emailMessage = `Hi, we just received a request that you forgot your password. Here is your OTP to create a new password: ${otp}`;
     transport.sendMail({
         to: email,
         from: process.env.VERIFICATION_EMAIL,
         subject: "Reset Password Token",
-        html: emailMessage,
+        html: emailMessage, // Assign the HTML string directly to the html property
     });
 });
 exports.sendOtpEmail = sendOtpEmail;
 const sendURLEmail = (email, resetURL) => __awaiter(void 0, void 0, void 0, function* () {
     // const validEmails = email.filter(Boolean) as string[];
-    const transport = exports.generateMailTransporter();
+    const transport = (0, exports.generateMailTransporter)();
     // const { email, message: customMessage } = options; // Renamed the variable to avoid conflict
     const emailMessage = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetURL}.\nIf you didn't forget your password, please ignore this email!`;
     transport.sendMail({
         to: email,
         from: process.env.VERIFICATION_EMAIL,
         subject: "Reset Password Token",
-        html: emailMessage,
+        html: emailMessage, // Assign the HTML string directly to the html property
     });
 });
 exports.sendURLEmail = sendURLEmail;
 const sendVerificationEmail = (email, token) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const transport = exports.generateMailTransporter();
+        const transport = (0, exports.generateMailTransporter)();
         // const verificationURL = `https://mydoshbox.vercel.app/auth/verify-email?token=${token}`;
         const verificationURL = `${process.env.DEPLOYED_FRONTEND_BASE_URL}/auth/verify-email?token=${token}`;
         // const verificationURL = `${process.env.LOCAL_FRONTEND_BASE_URL}/auth/verify-email?token=${token}`;
@@ -105,7 +105,7 @@ const sendVerificationEmail = (email, token) => __awaiter(void 0, void 0, void 0
             to: email,
             from: process.env.VERIFICATION_EMAIL,
             subject: "Verify Your Email Address",
-            html: emailMessage,
+            html: emailMessage, // Assign the HTML string directly to the html property
         });
         console.log("info mesage id: " + (info === null || info === void 0 ? void 0 : info.messageId));
         console.log("info accepted: " + (info === null || info === void 0 ? void 0 : info.accepted));

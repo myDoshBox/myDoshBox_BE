@@ -16,7 +16,7 @@ const sendEscrowInitiationEmailToInitiator = (buyer_email,
 //   token: string,
 transaction_id, transaction_total) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const transport = email_utils_1.generateMailTransporter();
+        const transport = (0, email_utils_1.generateMailTransporter)();
         // const transactionURL = `${DEPLOYED_FRONTEND_BASE_URL}/product-transaction/userdashboard/initiate-escrow-product-transaction?transaction=${transaction_id}`;
         // const verificationURL = `http://localhost:3000/auth/verify-email?token=${token}`;
         const supportEmail = "mydoshbox@gmail.com";
@@ -52,7 +52,7 @@ transaction_id, transaction_total) => __awaiter(void 0, void 0, void 0, function
             to: buyer_email,
             from: process.env.VERIFICATION_EMAIL,
             subject: "Escrow Transaction Initiated Successfully",
-            html: emailMessage,
+            html: emailMessage, // Assign the HTML string directly to the html property
         });
         console.log("info mesage id: " + (info === null || info === void 0 ? void 0 : info.messageId));
         console.log("info accepted: " + (info === null || info === void 0 ? void 0 : info.accepted));
@@ -69,7 +69,7 @@ const sendEscrowInitiationEmailToVendor = (transaction_id, vendor_name, vendor_e
 //   token: string,
 ) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const transport = email_utils_1.generateMailTransporter();
+        const transport = (0, email_utils_1.generateMailTransporter)();
         // const transactionURL = `${DEPLOYED_FRONTEND_BASE_URL}/product-transaction/confirm-escrow-product-transaction?transaction=${transaction_id}`;
         // const transactionURL = `http://localhost:3000/userdashboard/confirm-escrow-product-transaction?transaction=${transaction_id}`;
         // const verificationURL = `http://localhost:3000/auth/verify-email?token=${token}`;
@@ -115,7 +115,7 @@ const sendEscrowInitiationEmailToVendor = (transaction_id, vendor_name, vendor_e
             to: vendor_email,
             from: process.env.VERIFICATION_EMAIL,
             subject: "Escrow Transaction Initiation by Buyer",
-            html: emailMessage,
+            html: emailMessage, // Assign the HTML string directly to the html property
         });
         console.log("info mesage id: " + (info === null || info === void 0 ? void 0 : info.messageId));
         console.log("info accepted: " + (info === null || info === void 0 ? void 0 : info.accepted));
@@ -129,7 +129,7 @@ exports.sendEscrowInitiationEmailToVendor = sendEscrowInitiationEmailToVendor;
 // SHIPPING DETAILS MAIL
 const sendShippingDetailsEmailToInitiator = (buyer_email, shipping_company, delivery_person_name, delivery_person_number, delivery_date, pick_up_address) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const transport = email_utils_1.generateMailTransporter();
+        const transport = (0, email_utils_1.generateMailTransporter)();
         // const transactionURL = `${DEPLOYED_FRONTEND_BASE_URL}/product-transaction/userdashboard/initiate-escrow-product-transaction?transaction=${transaction_id}`;
         // const verificationURL = `http://localhost:3000/auth/verify-email?token=${token}`;
         const supportEmail = "mydoshbox@gmail.com";
@@ -175,7 +175,7 @@ const sendShippingDetailsEmailToInitiator = (buyer_email, shipping_company, deli
             to: buyer_email,
             from: process.env.VERIFICATION_EMAIL,
             subject: "Shipping Details from Vendor",
-            html: emailMessage,
+            html: emailMessage, // Assign the HTML string directly to the html property
         });
         console.log("info mesage id: " + (info === null || info === void 0 ? void 0 : info.messageId));
         console.log("info accepted: " + (info === null || info === void 0 ? void 0 : info.accepted));
@@ -186,11 +186,11 @@ const sendShippingDetailsEmailToInitiator = (buyer_email, shipping_company, deli
     }
 });
 exports.sendShippingDetailsEmailToInitiator = sendShippingDetailsEmailToInitiator;
-const sendShippingDetailsEmailToVendor = (transaction_id = "", vendor_name = "", vendor_email = "", product_name = ""
+const sendShippingDetailsEmailToVendor = (...args_1) => __awaiter(void 0, [...args_1], void 0, function* (transaction_id = "", vendor_name = "", vendor_email = "", product_name = ""
 //   token: string,
-) => __awaiter(void 0, void 0, void 0, function* () {
+) {
     try {
-        const transport = email_utils_1.generateMailTransporter();
+        const transport = (0, email_utils_1.generateMailTransporter)();
         // const transactionURL = `${DEPLOYED_FRONTEND_BASE_URL}/product-transaction/confirm-escrow-product-transaction?transaction=${transaction_id}`;
         // const transactionURL = `http://localhost:3000/userdashboard/confirm-escrow-product-transaction?transaction=${transaction_id}`;
         // const verificationURL = `http://localhost:3000/auth/verify-email?token=${token}`;
@@ -228,7 +228,7 @@ const sendShippingDetailsEmailToVendor = (transaction_id = "", vendor_name = "",
             to: vendor_email,
             from: process.env.VERIFICATION_EMAIL,
             subject: "Escrow Transaction Successfully Confirmed With Shipping Details",
-            html: emailMessage,
+            html: emailMessage, // Assign the HTML string directly to the html property
         });
         console.log("info mesage id: " + (info === null || info === void 0 ? void 0 : info.messageId));
         console.log("info accepted: " + (info === null || info === void 0 ? void 0 : info.accepted));
@@ -298,7 +298,7 @@ exports.sendShippingDetailsEmailToVendor = sendShippingDetailsEmailToVendor;
 //     console.log(err);
 //   }
 // };
-const sendSuccessfulEscrowEmailToInitiator = (
+const sendSuccessfulEscrowEmailToInitiator = (...args_1) => __awaiter(void 0, [...args_1], void 0, function* (
 // transaction_id: string | undefined,
 // vendor_name: string | undefined,
 // vendor_email: string | undefined,
@@ -306,9 +306,9 @@ const sendSuccessfulEscrowEmailToInitiator = (
 transaction_id = "", vendor_name = "", buyer_email = "", product_name = ""
 // product_price: number
 //   token: string,
-) => __awaiter(void 0, void 0, void 0, function* () {
+) {
     try {
-        const transport = email_utils_1.generateMailTransporter();
+        const transport = (0, email_utils_1.generateMailTransporter)();
         // const transactionURL = `${DEPLOYED_FRONTEND_BASE_URL}/product-transaction/confirm-escrow-product-transaction?transaction=${transaction_id}`;
         // const transactionURL = `http://localhost:3000/product-transaction/confirm-escrow-product-transaction?transaction=${transaction_id}`;
         // const verificationURL = `http://localhost:3000/auth/verify-email?token=${token}`;
@@ -350,7 +350,7 @@ transaction_id = "", vendor_name = "", buyer_email = "", product_name = ""
             to: buyer_email,
             from: process.env.VERIFICATION_EMAIL,
             subject: "Successfully Completion of Escrow Transaction",
-            html: emailMessage,
+            html: emailMessage, // Assign the HTML string directly to the html property
         });
         console.log("info mesage id: " + (info === null || info === void 0 ? void 0 : info.messageId));
         console.log("info accepted: " + (info === null || info === void 0 ? void 0 : info.accepted));
@@ -361,7 +361,7 @@ transaction_id = "", vendor_name = "", buyer_email = "", product_name = ""
     }
 });
 exports.sendSuccessfulEscrowEmailToInitiator = sendSuccessfulEscrowEmailToInitiator;
-const sendSuccessfulEscrowEmailToVendor = (
+const sendSuccessfulEscrowEmailToVendor = (...args_1) => __awaiter(void 0, [...args_1], void 0, function* (
 // transaction_id: string | undefined,
 // vendor_name: string | undefined,
 // vendor_email: string | undefined,
@@ -369,9 +369,9 @@ const sendSuccessfulEscrowEmailToVendor = (
 transaction_id = "", vendor_name = "", vendor_email = "", product_name = ""
 // product_price: number
 //   token: string,
-) => __awaiter(void 0, void 0, void 0, function* () {
+) {
     try {
-        const transport = email_utils_1.generateMailTransporter();
+        const transport = (0, email_utils_1.generateMailTransporter)();
         // const transactionURL = `${DEPLOYED_FRONTEND_BASE_URL}/product-transaction/confirm-escrow-product-transaction?transaction=${transaction_id}`;
         // const transactionURL = `http://localhost:3000/product-transaction/confirm-escrow-product-transaction?transaction=${transaction_id}`;
         // const verificationURL = `http://localhost:3000/auth/verify-email?token=${token}`;
@@ -409,7 +409,7 @@ transaction_id = "", vendor_name = "", vendor_email = "", product_name = ""
             to: vendor_email,
             from: process.env.VERIFICATION_EMAIL,
             subject: "Successful Completion of This Escrow",
-            html: emailMessage,
+            html: emailMessage, // Assign the HTML string directly to the html property
         });
         console.log("info mesage id: " + (info === null || info === void 0 ? void 0 : info.messageId));
         console.log("info accepted: " + (info === null || info === void 0 ? void 0 : info.accepted));

@@ -25,6 +25,7 @@ import {
 // import { sendVerificationEmail } from "../../../utilities/email.utils";
 import ShippingDetails from "./shippingDetails.model";
 import { noSQLJoinType } from "./productsTransaction.interfaces";
+import ProductDispute from "../../disputes/productsDispute/productDispute.model";
 // import mongoose, { SchemaTypes } from "mongoose";
 // import {
 //   sendEscrowInitiationEmail,
@@ -1320,10 +1321,19 @@ export const buyerConfirmsProduct = async (
   next: NextFunction
 ) => {
   const { transaction_id } = req.body;
+  // const { transaction_id } = req.params;
 
   if (!transaction_id) {
     return next(errorHandler(400, "Transaction ID is required"));
   }
+
+  const disputeDetails = await ProductDispute.findOne({
+    transaction_id: transaction_id,
+  });
+
+  const disputStatus: string | undefined = disputeDetails?.dispute_status as
+    | string
+    | undefined;
 
   try {
     // Find the ShippingDetails entry by looking up the transaction_id in the Product
@@ -1369,7 +1379,7 @@ export const buyerConfirmsProduct = async (
       product_name,
     } = fetchShippingDetails[0];
 
-    if (transaction_status !== "processing") {
+    if (transaction_status === "completed") {
       return next(errorHandler(400, "This transaction is already completed"));
     }
 
@@ -1383,6 +1393,18 @@ export const buyerConfirmsProduct = async (
 
     if (!updateProductTransactionStatus) {
       return next(errorHandler(500, "Failed to update product status"));
+    }
+
+    if (disputStatus !== "resolved") {
+      await ProductDispute.findByIdAndUpdate(
+        disputeDetails?._id,
+        {
+          $set: {
+            dispute_status: "resolved",
+          },
+        },
+        { new: true, runValidators: true, useFindAndModify: false } // to return the updated document
+      );
     }
 
     // Send success emails

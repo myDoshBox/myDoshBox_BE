@@ -15,7 +15,7 @@ const sessionSchema = new Schema<ISession>(
       type: mongoose.Schema.Types.ObjectId,
       ref: "IndividualUser",
     },
-    role: { type: String, enum: ["org", "ind", "g-org", "g-ind"] },
+    role: { type: String, enum: ["org", "ind", "g-org", "g-ind", "mediator"] },
     valid: { type: Boolean, default: true },
     userAgent: { type: String },
   },

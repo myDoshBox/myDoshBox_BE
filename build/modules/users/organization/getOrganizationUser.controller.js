@@ -69,7 +69,7 @@ exports.getUserById = getUserById;
 // Update user by ID
 const updateUserById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const _a = req.body, { email } = _a, updateData = __rest(_a, ["email"]);
-    if (email && !validator_utils_1.emailValidator(email)) {
+    if (email && !(0, validator_utils_1.emailValidator)(email)) {
         res.status(400).json({
             status: "fail",
             message: "Invalid email format",

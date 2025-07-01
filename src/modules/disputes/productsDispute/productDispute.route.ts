@@ -1,6 +1,9 @@
 import { Router } from "express";
 import {
   raiseDispute,
+  cancelEscrow,
+  getAllDisputes,
+  buyerResolveDispute,
   // buyerConProd,
 } from "./productDispute.controller";
 // import protectRoutes from "../../../middlewares/protectRoutes.middleware";
@@ -12,5 +15,17 @@ const escrowProductDisputeRouter = Router();
 escrowProductDisputeRouter
   .route("/raise-dispute/:transaction_id")
   .post(raiseDispute);
+
+escrowProductDisputeRouter
+  .route("/cancel-dispute/:transaction_id")
+  .post(cancelEscrow);
+
+escrowProductDisputeRouter
+  .route("/fetch-all-dispute/:user_email")
+  .get(getAllDisputes);
+
+escrowProductDisputeRouter
+  .route("/buyer-resolve-conflict/:transaction_id")
+  .put(buyerResolveDispute);
 
 export default escrowProductDisputeRouter;

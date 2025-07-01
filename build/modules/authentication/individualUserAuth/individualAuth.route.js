@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const individualUserAuth_controller_1 = require("../individualUserAuth/individualUserAuth.controller");
 const individualUserAuth_controller_2 = require("../individualUserAuth/individualUserAuth.controller");
-const individualrouter = express_1.Router();
+const individualrouter = (0, express_1.Router)();
 /**
  * @swagger
  * tags:
