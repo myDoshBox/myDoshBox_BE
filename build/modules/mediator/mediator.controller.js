@@ -49,7 +49,13 @@ const onboardAMediator = (req, res, next) => __awaiter(void 0, void 0, void 0, f
         });
         // console.log(findMediator);
         if (findMediator) {
-            return next((0, errorHandling_middleware_1.errorHandler)(204, "Mediator already exist, please proceed to login"));
+            // return next(
+            //   errorHandler(204, "Mediator already exist, please proceed to login")
+            // );
+            res.status(204).json({
+                status: false,
+                message: "Mediator already exist, please proceed to login",
+            });
         }
         const hashedPassword = bcrypt_1.default.hashSync(password, 10);
         // console.log(hashedPassword);

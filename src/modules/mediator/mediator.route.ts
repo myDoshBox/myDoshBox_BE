@@ -21,6 +21,8 @@ mediatorRouter.route("/fetch-all-mediators").get(getAllMediators);
 
 mediatorRouter.route("/involve-a-mediator/:dispute_id").put(involveAMediator);
 
+mediatorRouter.route("/resolve-dispute/:dispute_id").post(involveAMediator);
+
 mediatorRouter
   .route("/fetch-all-mediator-dispute/:mediator_email")
   .get(getAllDisputeForAMediator);

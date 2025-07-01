@@ -9,6 +9,7 @@ mediatorRouter.route("/onboard-mediator").post(mediator_controller_1.onboardAMed
 mediatorRouter.route("/mediator-login").post(mediator_controller_1.mediatorLogin);
 mediatorRouter.route("/fetch-all-mediators").get(mediator_controller_1.getAllMediators);
 mediatorRouter.route("/involve-a-mediator/:dispute_id").put(mediator_controller_1.involveAMediator);
+mediatorRouter.route("/resolve-dispute/:dispute_id").post(mediator_controller_1.involveAMediator);
 mediatorRouter
     .route("/fetch-all-mediator-dispute/:mediator_email")
     .get(mediator_controller_1.getAllDisputeForAMediator);
