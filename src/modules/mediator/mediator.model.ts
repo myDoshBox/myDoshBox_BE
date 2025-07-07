@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IMediator extends Document {
-  dispute: mongoose.Schema.Types.ObjectId; // Reference to the User model
+  dispute: mongoose.Schema.Types.ObjectId[]; // Reference to the User model
   first_name: string;
   middle_name: string;
   last_name: string;
@@ -12,14 +12,17 @@ export interface IMediator extends Document {
 
 const mediatorSchema = new mongoose.Schema(
   {
-    dispute: {
-      type: Schema.Types.ObjectId,
-      ref: "ProductDispute", // Reference to User model
-      // required: true,
-    },
+    disputes: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "ProductDispute", // Reference to User model
+        // required: true,
+      },
+    ],
 
     first_name: {
       type: String,
+      required: true,
     },
 
     middle_name: {

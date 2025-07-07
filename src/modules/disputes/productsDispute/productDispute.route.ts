@@ -2,7 +2,7 @@ import { Router } from "express";
 import {
   raiseDispute,
   cancelEscrow,
-  getAllDisputes,
+  getAllDisputesByUser,
   buyerResolveDispute,
   // buyerConProd,
 } from "./productDispute.controller";
@@ -22,7 +22,7 @@ escrowProductDisputeRouter
 
 escrowProductDisputeRouter
   .route("/fetch-all-dispute/:user_email")
-  .get(getAllDisputes);
+  .get(getAllDisputesByUser);
 
 escrowProductDisputeRouter
   .route("/buyer-resolve-conflict/:transaction_id")

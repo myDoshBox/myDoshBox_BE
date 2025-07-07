@@ -1,3 +1,5 @@
+import { IProductDispute } from "./productDispute.model";
+
 export interface BuyerResolveDisputeParams {
   transaction_id: string;
 }
@@ -20,4 +22,25 @@ export interface BuyerResolveDisputeBody {
 export interface BuyerResolveDisputeResponse {
   status: string;
   message: string;
+  data: {
+    // transaction: any; // Replace with IProductTransaction if schema is defined
+    dispute: IProductDispute;
+  };
+}
+
+export interface SellerResolveDisputeParams {
+  transaction_id: string;
+}
+
+export interface SellerResolveDisputeBody {
+  resolution_description: string;
+}
+
+export interface SellerResolveDisputeResponse {
+  status: string;
+  message: string;
+  data: {
+    // transaction: any; // Replace with IProductTransaction if schema is defined
+    dispute: IProductDispute;
+  };
 }
