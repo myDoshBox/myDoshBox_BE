@@ -411,7 +411,7 @@ export const getAllDisputeForAMediator = async (
 // trigger mails for both buyers and sellers after the dispute is resolved
 // and then update the dispute status to resolved
 // and then update the transaction status to completed
-export const resolveDispute = async (
+export const mediatorResolveDispute = async (
   req: Request<ResolveDisputeParams, {}, ResolveDisputeBody>,
   res: Response<ResolveDisputeResponse>,
   next: NextFunction

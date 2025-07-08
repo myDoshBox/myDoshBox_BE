@@ -5,7 +5,7 @@ import {
   getAllMediators,
   involveAMediator,
   getAllDisputeForAMediator,
-  resolveDispute,
+  mediatorResolveDispute,
   // buyerConProd,
 } from "./mediator.controller";
 // import protectRoutes from "../../../middlewares/protectRoutes.middleware";
@@ -24,7 +24,9 @@ mediatorRouter
   .route("/involve-a-mediator/:transaction_id")
   .post(involveAMediator);
 
-mediatorRouter.route("/resolve-dispute/:transaction_id").post(resolveDispute);
+mediatorRouter
+  .route("/resolve-dispute/:transaction_id")
+  .post(mediatorResolveDispute);
 
 mediatorRouter
   .route("/fetch-all-mediator-dispute/:mediator_email")
