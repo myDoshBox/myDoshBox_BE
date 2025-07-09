@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "ts-node-dev --poll ./src/index.ts",
     "build": "rimraf ./build && tsc",
-    "vercel-build": "rimraf ./build && tsc",
+    "vercel-build": "npm run build && node ./build/index.js",
     "start": "npm run build && node ./build/index.js"
   },
   "dependencies": {
