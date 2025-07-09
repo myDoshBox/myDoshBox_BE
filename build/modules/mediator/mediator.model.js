@@ -35,13 +35,16 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const mediatorSchema = new mongoose_1.default.Schema({
-    dispute: {
-        type: mongoose_1.Schema.Types.ObjectId,
-        ref: "ProductDispute", // Reference to User model
-        // required: true,
-    },
+    disputes: [
+        {
+            type: mongoose_1.Schema.Types.ObjectId,
+            ref: "ProductDispute", // Reference to User model
+            // required: true,
+        },
+    ],
     first_name: {
         type: String,
+        required: true,
     },
     middle_name: {
         type: String,

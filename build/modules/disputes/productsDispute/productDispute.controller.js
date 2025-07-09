@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sellerResolveDispute = exports.buyerResolveDispute = exports.cancelEscrow = exports.getAllDisputes = exports.raiseDispute = void 0;
+exports.sellerResolveDispute = exports.buyerResolveDispute = exports.cancelEscrow = exports.getAllDisputesByUser = exports.raiseDispute = void 0;
 const validation_utilities_1 = require("../../../utilities/validation.utilities");
 const individualUserAuth_model1_1 = __importDefault(require("../../authentication/individualUserAuth/individualUserAuth.model1"));
 const productsTransaction_model_1 = __importDefault(require("../../transactions/productsTransaction/productsTransaction.model"));
@@ -130,7 +130,7 @@ exports.raiseDispute = raiseDispute;
         
     
  */
-const getAllDisputes = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+const getAllDisputesByUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { user_email } = req.params;
         if (!user_email) {
@@ -155,7 +155,7 @@ const getAllDisputes = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
         return next((0, errorHandling_middleware_1.errorHandler)(500, "Internal server error"));
     }
 });
-exports.getAllDisputes = getAllDisputes;
+exports.getAllDisputesByUser = getAllDisputesByUser;
 // cancel escrow function
 const cancelEscrow = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const { transaction_id } = req.body;
@@ -298,6 +298,14 @@ const buyerResolveDispute = (req, res, next) => __awaiter(void 0, void 0, void 0
         else if (!disputeDetails) {
             return next((0, errorHandling_middleware_1.errorHandler)(404, "Dispute does not exist"));
         }
+        // Check dispute status
+        if (!["Not in Dispute", "processing"].includes(disputeDetails.dispute_status)) {
+            return next((0, errorHandling_middleware_1.errorHandler)(400, `Cannot update dispute: Current status is ${disputeDetails.dispute_status}`));
+        }
+        if (disputeDetails.dispute_resolution_method === "mediator" &&
+            disputeDetails.mediator) {
+            return next((0, errorHandling_middleware_1.errorHandler)(400, "Cannot resolve dispute: A mediator is assigned to this dispute"));
+        }
         const updateTransaction = yield productsTransaction_model_1.default.findByIdAndUpdate(productDetails === null || productDetails === void 0 ? void 0 : productDetails._id, {
             $set: {
                 vendor_name: vendor_name || productDetails.vendor_name,
@@ -313,14 +321,30 @@ const buyerResolveDispute = (req, res, next) => __awaiter(void 0, void 0, void 0
                 signed_escrow_doc: signed_escrow_doc || productDetails.signed_escrow_doc,
                 delivery_address: delivery_address || productDetails.delivery_address,
             },
-        }, { new: true, runValidators: true, useFindAndModify: false } // to return the updated document
+        }, { new: true, runValidators: true } // to return the updated document
         );
-        const updateDispute = yield productDispute_model_1.default.findByIdAndUpdate(disputeDetails === null || disputeDetails === void 0 ? void 0 : disputeDetails._id, {
+        if (!updateTransaction) {
+            return next((0, errorHandling_middleware_1.errorHandler)(500, "Failed to update transaction"));
+        }
+        // const updateDispute = await ProductDispute.findByIdAndUpdate(
+        //   disputeDetails?._id,
+        //   {
+        //     $set: {
+        //       dispute_status: "resolving",
+        //     },
+        //   },
+        //   { new: true, runValidators: true, useFindAndModify: false } // to return the updated document
+        // );
+        // Update ProductDispute status
+        const updateDispute = yield productDispute_model_1.default.findByIdAndUpdate(disputeDetails._id, {
             $set: {
                 dispute_status: "resolving",
+                dispute_resolution_method: disputeDetails.dispute_resolution_method || "dispute_parties",
             },
-        }, { new: true, runValidators: true, useFindAndModify: false } // to return the updated document
-        );
+        }, { new: true, runValidators: true }).populate("transaction user mediator");
+        if (!updateDispute) {
+            return next((0, errorHandling_middleware_1.errorHandler)(500, "Failed to update transaction"));
+        }
         // const updateDispute = await ProductDispute.findByIdAndUpdate(
         //   productDetails?._id,
         //   {
@@ -339,15 +363,19 @@ const buyerResolveDispute = (req, res, next) => __awaiter(void 0, void 0, void 0
         // );
         (0, console_1.log)("updatedTransaction", updateTransaction);
         (0, console_1.log)("updateDispute", updateDispute);
-        if (!updateTransaction) {
-            return next((0, errorHandling_middleware_1.errorHandler)(500, "Failed to update transaction"));
-        }
+        yield Promise.all([
+            (0, productDispute_mail_1.sendBuyerResolutionMailToBuyer)(updateDispute.buyer_email, updateDispute.product_name),
+            (0, productDispute_mail_1.sendBuyerResolutionMailToSeller)(updateDispute.vendor_email, updateDispute.product_name),
+        ]);
         // if (!updateDispute) {
         //   return next(errorHandler(500, "Failed to update transaction"));
         // }
         res.json({
             status: "success",
             message: "Transaction form updated successfully and dispute is being resolved",
+            data: {
+                dispute: updateDispute,
+            },
             // userResolvingDispute,
         });
     }
@@ -472,34 +500,96 @@ exports.buyerResolveDispute = buyerResolveDispute;
 const sellerResolveDispute = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     // dispute resolution form
     const { resolution_description } = req.body;
-    const { dispute_id } = req.params;
+    const { transaction_id } = req.params;
     (0, validation_utilities_1.validateFormFields)({
         resolution_description,
     }, next);
     try {
         // find the dispute by id
+        // const disputeDetails = await ProductDispute.findOne({
+        //   dispute_id: dispute_id,
+        // });
+        // const disputeStatus: string | undefined = disputeDetails?.dispute_status as
+        //   | string
+        //   | undefined;
+        // if (!disputeDetails) {
+        //   return next(errorHandler(404, "This dispute does not exist"));
+        // } else if (disputeStatus === "resolved") {
+        //   return next(errorHandler(400, "This dispute has been resolved"));
+        // } else if (disputeStatus === "cancelled") {
+        //   return next(errorHandler(400, "This dispute has been cancelled"));
+        // }
+        // if (
+        //   disputeDetails.dispute_resolution_method === "mediator" &&
+        //   disputeDetails.mediator
+        // ) {
+        //   return next(
+        //     errorHandler(
+        //       400,
+        //       "Cannot resolve dispute: A mediator is assigned to this dispute"
+        //     )
+        //   );
+        // }
+        // Find the dispute and transaction
         const disputeDetails = yield productDispute_model_1.default.findOne({
-            dispute_id: dispute_id,
+            transaction_id,
+        }).populate("transaction user");
+        const productDetails = yield productsTransaction_model_1.default.findOne({
+            transaction_id,
+            transaction_status: "inDispute",
         });
-        const disputeStatus = disputeDetails === null || disputeDetails === void 0 ? void 0 : disputeDetails.dispute_status;
         if (!disputeDetails) {
-            return next((0, errorHandling_middleware_1.errorHandler)(404, "This dispute does not exist"));
+            return next((0, errorHandling_middleware_1.errorHandler)(404, "Dispute does not exist"));
         }
-        else if (disputeStatus === "resolved") {
+        if (!productDetails) {
+            return next((0, errorHandling_middleware_1.errorHandler)(404, "No dispute found for this transaction"));
+        }
+        // Check dispute status
+        if (disputeDetails.dispute_status === "resolved") {
             return next((0, errorHandling_middleware_1.errorHandler)(400, "This dispute has been resolved"));
         }
-        else if (disputeStatus === "cancelled") {
+        if (disputeDetails.dispute_status === "cancelled") {
             return next((0, errorHandling_middleware_1.errorHandler)(400, "This dispute has been cancelled"));
         }
         // update the transaction status to "resolved"
-        const updatedTransaction = yield productsTransaction_model_1.default.findByIdAndUpdate(disputeDetails === null || disputeDetails === void 0 ? void 0 : disputeDetails._id, { transaction_status: "resolved" }, { new: true });
+        // const updatedTransaction = await ProductTransaction.findByIdAndUpdate(
+        //   disputeDetails?._id,
+        //   { transaction_status: "resolved" },
+        //   { new: true }
+        // );
+        // if (!updatedTransaction) {
+        //   return next(errorHandler(500, "Failed to update transaction status"));
+        // }
+        // Update ProductTransaction status
+        const updatedTransaction = yield productsTransaction_model_1.default.findByIdAndUpdate(productDetails._id, { $set: { transaction_status: "completed" } }, { new: true, runValidators: true });
         if (!updatedTransaction) {
             return next((0, errorHandling_middleware_1.errorHandler)(500, "Failed to update transaction status"));
         }
+        // Update ProductDispute with resolution details
+        const updateDispute = yield productDispute_model_1.default.findByIdAndUpdate(disputeDetails._id, {
+            $set: {
+                dispute_status: "resolving",
+                dispute_resolution_method: disputeDetails.dispute_resolution_method || "dispute_parties",
+            },
+        }, { new: true, runValidators: true }).populate("transaction user mediator");
+        if (!updateDispute) {
+            return next((0, errorHandling_middleware_1.errorHandler)(500, "Failed to update transaction"));
+        }
         // send mail to the buyer and seller that the dispute has been resolved
+        yield Promise.all([
+            (0, productDispute_mail_1.sendSellerResolutionMailToBuyer)(updateDispute.buyer_email, updateDispute.product_name),
+            (0, productDispute_mail_1.sendSellerResolutionMailToSeller)(updateDispute.vendor_email, updateDispute.product_name),
+        ]);
+        // if (!updateDispute) {
+        //   return next(errorHandler(500, "Failed to update transaction"));
+        // }
         res.json({
             status: "success",
-            message: "Dispute has been resolved successfully",
+            message: "Transaction form updated successfully and dispute is being resolved",
+            data: {
+                dispute: updateDispute,
+            },
+            // userResolvingDispute,
         });
     }
     catch (error) {

@@ -23,7 +23,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resolveDispute = exports.getAllDisputeForAMediator = exports.involveAMediator = exports.getAllMediators = exports.mediatorLogin = exports.onboardAMediator = void 0;
+exports.mediatorResolveDispute = exports.getAllDisputeForAMediator = exports.involveAMediator = exports.getAllMediators = exports.mediatorLogin = exports.onboardAMediator = void 0;
 const validation_utilities_1 = require("../../utilities/validation.utilities");
 const mediator_model_1 = __importDefault(require("./mediator.model"));
 const errorHandling_middleware_1 = require("../../middlewares/errorHandling.middleware");
@@ -31,6 +31,8 @@ const mediator_mail_1 = require("./mediator.mail");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const createSessionAndSendToken_util_1 = require("../../utilities/createSessionAndSendToken.util");
 const productDispute_model_1 = __importDefault(require("../disputes/productsDispute/productDispute.model"));
+// import ProductResolution from "../disputes/productsDispute/productResolution.model";
+const productDispute_mail_1 = require("../disputes/productsDispute/productDispute.mail");
 // this works but its not returning any response in its body
 const onboardAMediator = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const { first_name, middle_name, last_name, mediator_email, mediator_phone_number, password, } = req.body;
@@ -49,13 +51,7 @@ const onboardAMediator = (req, res, next) => __awaiter(void 0, void 0, void 0, f
         });
         // console.log(findMediator);
         if (findMediator) {
-            // return next(
-            //   errorHandler(204, "Mediator already exist, please proceed to login")
-            // );
-            res.status(204).json({
-                status: false,
-                message: "Mediator already exist, please proceed to login",
-            });
+            return next((0, errorHandling_middleware_1.errorHandler)(400, "Mediator already exist, please proceed to login"));
         }
         const hashedPassword = bcrypt_1.default.hashSync(password, 10);
         // console.log(hashedPassword);
@@ -69,7 +65,7 @@ const onboardAMediator = (req, res, next) => __awaiter(void 0, void 0, void 0, f
         });
         yield addNewMediatorToSystem.save();
         yield (0, mediator_mail_1.sendMediatorLoginDetailsMail)(first_name, mediator_email, password);
-        res.json({
+        res.status(200).json({
             // addNewMediatorToSystem,
             status: "success",
             message: "Mediator has been added successfully and a mail sent",
@@ -92,7 +88,7 @@ const mediatorLogin = (req, res, next) => __awaiter(void 0, void 0, void 0, func
             mediator_email,
         }).select("+password");
         if (!mediatorToLogin) {
-            return next((0, errorHandling_middleware_1.errorHandler)(401, "Invalid email or password"));
+            return next((0, errorHandling_middleware_1.errorHandler)(401, "Invalid email"));
         }
         const isPasswordValid = yield bcrypt_1.default.compare(password, mediatorToLogin === null || mediatorToLogin === void 0 ? void 0 : mediatorToLogin.password);
         if (!isPasswordValid) {
@@ -136,7 +132,140 @@ const getAllMediators = (req, res, next) => __awaiter(void 0, void 0, void 0, fu
     }
 });
 exports.getAllMediators = getAllMediators;
-const involveAMediator = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () { });
+const involveAMediator = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { transaction_id } = req.params;
+    if (!transaction_id) {
+        return next((0, errorHandling_middleware_1.errorHandler)(400, "Transaction ID is required"));
+    }
+    try {
+        const dispute = yield productDispute_model_1.default.findOne({ transaction_id }).populate("transaction user mediator");
+        if (!dispute) {
+            return next((0, errorHandling_middleware_1.errorHandler)(400, "Dispute not found"));
+        }
+        if ((dispute === null || dispute === void 0 ? void 0 : dispute.dispute_status) === "resolved" ||
+            (dispute === null || dispute === void 0 ? void 0 : dispute.dispute_status) === "cancelled") {
+            return next((0, errorHandling_middleware_1.errorHandler)(400, `Cannot involve a mediator: Dispute is ${dispute === null || dispute === void 0 ? void 0 : dispute.dispute_status}`));
+        }
+        // Check if a mediator is already assigned
+        let currentMediator = null;
+        let needsReassignment = false;
+        if (dispute === null || dispute === void 0 ? void 0 : dispute.mediator) {
+            // Fetch the current mediator's open disputes
+            // currentMediator = await MediatorModel.findById(dispute?.mediator)
+            //   .select("-password")
+            //   .populate({
+            //     path: "disputes",
+            //     match: { dispute_status: { $in: ["processing", "resolving"] } },
+            //   });
+            // if (currentMediator && (currentMediator.dispute?.length || 0) >= 5) {
+            //   needsReassignment = true;
+            // }
+            return next((0, errorHandling_middleware_1.errorHandler)(400, "A mediator is already assigned to this dispute"));
+        }
+        // find a mediator with fewer than 5 open disputes
+        const mediators = yield mediator_model_1.default.find()
+            .select("-password")
+            .populate({
+            path: "disputes",
+            match: { dispute_status: { $in: ["processing", "resolving"] } },
+        });
+        // const availableMediator = mediators.find(
+        //   (mediator: IMediator) =>
+        //     (mediator.dispute?.length || 0) < 5 &&
+        //     (mediator?._id as string).toString() !== dispute.mediator?.toString()
+        // );
+        const availableMediator = mediators.find((mediator) => {
+            var _a, _b;
+            return (((_a = mediator.dispute) === null || _a === void 0 ? void 0 : _a.length) || 0) < 5 &&
+                (mediator === null || mediator === void 0 ? void 0 : mediator._id).toString() !== ((_b = dispute.mediator) === null || _b === void 0 ? void 0 : _b.toString()) &&
+                mediator.mediator_email !== dispute.buyer_email &&
+                mediator.mediator_email !== dispute.vendor_email;
+        });
+        // find a mediator with fewer than 5 open disputes
+        // const availableMediator = mediators.find(
+        //   (mediator: IMediator) =>
+        //     (mediator?.dispute?.length || 0) < 5 &&
+        //     mediator?._id !== dispute?.mediator
+        // );
+        if (!availableMediator) {
+            return next((0, errorHandling_middleware_1.errorHandler)(404, "No available mediators with fewer than 5 open disputes"));
+        }
+        // Update ProductDispute with mediator and resolution method
+        // const updatedDispute = await ProductDispute.findOneAndUpdate(
+        //   { _id: dispute?._id },
+        //   {
+        //     $set: {
+        //       mediator: availableMediator?._id,
+        //       dispute_resolution_method: "mediator",
+        //       dispute_status: "resolving",
+        //     },
+        //   },
+        //   { new: true, runValidators: true }
+        // ).populate("transaction user mediator");
+        const updatedDispute = yield productDispute_model_1.default.findByIdAndUpdate({ _id: dispute === null || dispute === void 0 ? void 0 : dispute._id }, {
+            $set: {
+                mediator: availableMediator === null || availableMediator === void 0 ? void 0 : availableMediator._id,
+                dispute_resolution_method: "mediator",
+                dispute_status: "resolving",
+            },
+        }, { new: true, runValidators: true }).populate("transaction user mediator");
+        if (!updatedDispute) {
+            return next((0, errorHandling_middleware_1.errorHandler)(500, "Failed to update dispute with mediator"));
+        }
+        // Update Mediator with the dispute
+        // const updatedMediator = await MediatorModel.findByIdAndUpdate(
+        //   availableMediator?._id,
+        //   { $addToSet: { disputes: dispute?._id } },
+        //   { new: true, runValidators: true }
+        // ).select("-password");
+        // if (!updatedMediator) {
+        //   return next(errorHandler(500, "Failed to update mediator with dispute"));
+        // }
+        const updatedMediator = yield mediator_model_1.default.findByIdAndUpdate(availableMediator._id, { $addToSet: { disputes: dispute._id } }, { new: true, runValidators: true }).select("-password");
+        if (!updatedMediator) {
+            return next((0, errorHandling_middleware_1.errorHandler)(500, "Failed to update mediator with dispute"));
+        }
+        // Create a ProductResolution document
+        // const newResolution = new ProductResolution({
+        //   dispute: dispute?._id,
+        //   dispute_id: dispute?.transaction_id,
+        //   resolution_description: "Mediation initiated for dispute",
+        //   resolution_status: "processing",
+        // });
+        // await newResolution.save();
+        // send email to mediator
+        let mediator_email = updatedMediator === null || updatedMediator === void 0 ? void 0 : updatedMediator.mediator_email;
+        let mediator_first_name = updatedMediator === null || updatedMediator === void 0 ? void 0 : updatedMediator.first_name;
+        let buyer_email = updatedDispute === null || updatedDispute === void 0 ? void 0 : updatedDispute.buyer_email;
+        let vendor_email = updatedDispute === null || updatedDispute === void 0 ? void 0 : updatedDispute.vendor_email;
+        let product_name = updatedDispute === null || updatedDispute === void 0 ? void 0 : updatedDispute.product_name;
+        // Send emails
+        try {
+            yield Promise.all([
+                (0, mediator_mail_1.sendMediatorInvolvementMailToMediator)(mediator_email, mediator_first_name),
+                (0, productDispute_mail_1.sendMediatorInvolvementMailToBuyer)(buyer_email, product_name),
+                (0, productDispute_mail_1.sendMediatorInvolvementMailToSeller)(vendor_email, product_name),
+            ]);
+            console.log("Emails sent to mediator, buyer, and seller");
+        }
+        catch (emailError) {
+            console.error("Error sending emails:", emailError);
+            // Continue despite email failure
+        }
+        res.status(200).json({
+            status: "success",
+            message: "Mediator assigned to dispute successfully",
+            data: {
+                dispute: updatedDispute,
+                mediator: updatedMediator.toObject(),
+            },
+        });
+    }
+    catch (error) {
+        console.error("Error involving mediator:", error);
+        return next((0, errorHandling_middleware_1.errorHandler)(500, "Internal server error"));
+    }
+});
 exports.involveAMediator = involveAMediator;
 const getAllDisputeForAMediator = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const { mediator_email } = req.params;
@@ -170,5 +299,59 @@ exports.getAllDisputeForAMediator = getAllDisputeForAMediator;
 // trigger mails for both buyers and sellers after the dispute is resolved
 // and then update the dispute status to resolved
 // and then update the transaction status to completed
-const resolveDispute = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () { });
-exports.resolveDispute = resolveDispute;
+const mediatorResolveDispute = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { transaction_id } = req.params;
+    const { dispute_fault, resolution_description } = req.body;
+    if (!transaction_id) {
+        return next((0, errorHandling_middleware_1.errorHandler)(400, "Transaction ID is required"));
+    }
+    if (!dispute_fault || !["buyer", "seller"].includes(dispute_fault)) {
+        return next((0, errorHandling_middleware_1.errorHandler)(400, "Fault must be either a buyer or seller"));
+    }
+    if (!resolution_description) {
+        return next((0, errorHandling_middleware_1.errorHandler)(400, "Resolution description must be provided"));
+    }
+    try {
+        const dispute = yield productDispute_model_1.default.findOne({ transaction_id }).populate("transaction user mediator");
+        if (!dispute) {
+            return next((0, errorHandling_middleware_1.errorHandler)(400, "dispute not raised for this transaction"));
+        }
+        if (!(dispute === null || dispute === void 0 ? void 0 : dispute.mediator)) {
+            return next((0, errorHandling_middleware_1.errorHandler)(400, "No mediator has been assigned to this dispute"));
+        }
+        if ((dispute === null || dispute === void 0 ? void 0 : dispute.dispute_status) !== "resolving") {
+            return next((0, errorHandling_middleware_1.errorHandler)(400, `Cannot resolve dispute as it is in ${dispute === null || dispute === void 0 ? void 0 : dispute.dispute_status}`));
+        }
+        const updatedDispute = yield productDispute_model_1.default.findByIdAndUpdate(dispute === null || dispute === void 0 ? void 0 : dispute._id, {
+            $set: {
+                dispute_status: "resolved",
+                dispute_fault,
+                resolution_description,
+            },
+        }, { new: true, runValidators: true }).populate("transaction user mediator");
+        if (!updatedDispute) {
+            return next((0, errorHandling_middleware_1.errorHandler)(400, "dispute not resolved successfully"));
+        }
+        let buyer_email = updatedDispute === null || updatedDispute === void 0 ? void 0 : updatedDispute.buyer_email;
+        let vendor_email = updatedDispute === null || updatedDispute === void 0 ? void 0 : updatedDispute.vendor_email;
+        let product_name = updatedDispute === null || updatedDispute === void 0 ? void 0 : updatedDispute.product_name;
+        let resolution_description_result = updatedDispute === null || updatedDispute === void 0 ? void 0 : updatedDispute.resolution_description;
+        let dispute_fault_result = updatedDispute === null || updatedDispute === void 0 ? void 0 : updatedDispute.dispute_fault;
+        yield Promise.all([
+            (0, mediator_mail_1.sendResolutionMailToBuyer)(buyer_email, product_name, resolution_description_result, dispute_fault_result),
+            (0, mediator_mail_1.sendResolutionMailToSeller)(vendor_email, product_name, resolution_description_result, dispute_fault_result),
+        ]);
+        res.status(200).json({
+            status: "success",
+            message: "Dispute resolved successfully",
+            data: {
+                dispute: updatedDispute,
+            },
+        });
+    }
+    catch (error) {
+        console.error("Error resolving dispute", error);
+        return next((0, errorHandling_middleware_1.errorHandler)(500, "Internal Server Error"));
+    }
+});
+exports.mediatorResolveDispute = mediatorResolveDispute;

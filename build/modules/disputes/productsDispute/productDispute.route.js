@@ -13,7 +13,7 @@ escrowProductDisputeRouter
     .post(productDispute_controller_1.cancelEscrow);
 escrowProductDisputeRouter
     .route("/fetch-all-dispute/:user_email")
-    .get(productDispute_controller_1.getAllDisputes);
+    .get(productDispute_controller_1.getAllDisputesByUser);
 escrowProductDisputeRouter
     .route("/buyer-resolve-conflict/:transaction_id")
     .put(productDispute_controller_1.buyerResolveDispute);

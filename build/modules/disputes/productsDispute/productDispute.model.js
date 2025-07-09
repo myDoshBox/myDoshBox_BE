@@ -88,11 +88,20 @@ const productDisputeSchema = new mongoose_1.default.Schema({
     },
     dispute_status: {
         type: String,
-        default: "processing", // this is supposed to default to #processing, #resolving when both parties choose the resolve button #resolved when done, and then #cancelled if the user cancels the escrow transaction
+        default: "Not in Dispute",
+        enum: ["Not in Dispute", "resolving", "resolved", "cancelled"],
     },
     dispute_resolution_method: {
         type: String,
-        default: "unresolved", // #unresolved as default, #dipute parties# when resolved by the people involved, #mediator
+        default: "unresolved",
+        enum: ["unresolved", "dispute_parties", "mediator"],
+    },
+    dispute_fault: {
+        type: String,
+        enum: ["buyer", "seller"],
+    },
+    resolution_description: {
+        type: String,
     },
 }, {
     timestamps: true,

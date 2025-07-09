@@ -8,8 +8,12 @@ const mediatorRouter = (0, express_1.Router)();
 mediatorRouter.route("/onboard-mediator").post(mediator_controller_1.onboardAMediator);
 mediatorRouter.route("/mediator-login").post(mediator_controller_1.mediatorLogin);
 mediatorRouter.route("/fetch-all-mediators").get(mediator_controller_1.getAllMediators);
-mediatorRouter.route("/involve-a-mediator/:dispute_id").put(mediator_controller_1.involveAMediator);
-mediatorRouter.route("/resolve-dispute/:dispute_id").post(mediator_controller_1.involveAMediator);
+mediatorRouter
+    .route("/involve-a-mediator/:transaction_id")
+    .post(mediator_controller_1.involveAMediator);
+mediatorRouter
+    .route("/resolve-dispute/:transaction_id")
+    .post(mediator_controller_1.mediatorResolveDispute);
 mediatorRouter
     .route("/fetch-all-mediator-dispute/:mediator_email")
     .get(mediator_controller_1.getAllDisputeForAMediator);
