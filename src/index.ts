@@ -78,6 +78,7 @@ app.use("/dev-api-docs", swaggerUi.serve, swaggerUi.setup(devSpec));
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(prodSpec));
 
 // export app for vercel
+
 export default app;
 
 const PORT = process.env.PORT;
