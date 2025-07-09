@@ -3,25 +3,14 @@
   "builds": [
     {
       "src": "src/index.ts",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": { "includesFiles": ["build/**"] }
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/auth"
-    },
-    {
-      "src": "/users/(.*)",
-      "dest": "/users"
-    },
-    {
-      "src": "/transactions/(.*)",
-      "dest": "/transactions"
-    },
-    {
-      "src": "/mediators/(.*)",
-      "dest": "/mediators"
+      "dest": "src/index.ts"
     }
   ]
 }

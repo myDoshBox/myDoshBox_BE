@@ -77,6 +77,9 @@ const prodSpec = swaggerJSDOC(prodOptions);
 app.use("/dev-api-docs", swaggerUi.serve, swaggerUi.setup(devSpec));
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(prodSpec));
 
+// export app for vercel
+export default app;
+
 const PORT = process.env.PORT;
 
 connectDB()
@@ -84,9 +87,9 @@ connectDB()
     try {
       console.log("connected to mongoose");
 
-      app.listen(PORT, () => {
-        console.log(`server is running on http://localhost:${PORT}`);
-      });
+      // app.listen(PORT, () => {
+      //   console.log(`server is running on http://localhost:${PORT}`);
+      // });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       throw new Error(error);
