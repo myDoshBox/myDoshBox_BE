@@ -4,6 +4,7 @@ import {
   cancelEscrow,
   getAllDisputesByUser,
   buyerResolveDispute,
+  sellerResolveDispute,
   // buyerConProd,
 } from "./productDispute.controller";
 // import protectRoutes from "../../../middlewares/protectRoutes.middleware";
@@ -27,5 +28,9 @@ escrowProductDisputeRouter
 escrowProductDisputeRouter
   .route("/buyer-resolve-conflict/:transaction_id")
   .put(buyerResolveDispute);
+
+escrowProductDisputeRouter
+  .route("/seller-resolve-conflict/:transaction_id")
+  .put(sellerResolveDispute);
 
 export default escrowProductDisputeRouter;
