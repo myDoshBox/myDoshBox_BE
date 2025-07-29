@@ -17,6 +17,8 @@ export interface IProductDispute extends Document {
   dispute_fault: string;
   dispute_resolution_method: string;
   resolution_description: string;
+  dispute_raised_by: string;
+  dispute_raised_by_email: string;
 }
 
 const productDisputeSchema = new mongoose.Schema(
@@ -86,8 +88,8 @@ const productDisputeSchema = new mongoose.Schema(
 
     dispute_status: {
       type: String,
-      default: "Not in Dispute",
-      enum: ["Not in Dispute", "resolving", "resolved", "cancelled"],
+      default: "resolving",
+      enum: ["resolving", "resolved", "cancelled"],
     },
 
     dispute_resolution_method: {
@@ -103,6 +105,17 @@ const productDisputeSchema = new mongoose.Schema(
 
     resolution_description: {
       type: String,
+    },
+
+    dispute_raised_by: {
+      type: String,
+      enum: ["buyer", "seller"],
+      required: true,
+    },
+
+    dispute_raised_by_email: {
+      type: String,
+      required: true,
     },
   },
   {

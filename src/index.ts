@@ -88,9 +88,9 @@ connectDB()
     try {
       console.log("connected to mongoose");
 
-      // app.listen(PORT, () => {
-      //   console.log(`server is running on http://localhost:${PORT}`);
-      // });
+      app.listen(PORT, () => {
+        console.log(`server is running on http://localhost:${PORT}`);
+      });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       throw new Error(error);

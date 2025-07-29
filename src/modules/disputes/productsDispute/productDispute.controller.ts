@@ -51,15 +51,19 @@ export const raiseDispute = async (
   // dispute form
   const {
     transaction_id, // prefill this
+    user_email,
     buyer_email, // prefill this
     vendor_name, // prefill this
     vendor_email, // prefill this
     vendor_phone_number, // prefill this
+    // dispute_raised_by, // prefill this with the email of the authenticated user
     product_name,
     product_image,
     reason_for_dispute,
     dispute_description,
   } = req.body;
+
+  let dispute_raised_by = req?.body?.dispute_raised_by; // allow reassignment
 
   validateFormFields(
     {
@@ -74,7 +78,9 @@ export const raiseDispute = async (
 
   try {
     // find the user who initiated the transaction
-    const user = await IndividualUser.findOne({ email: buyer_email });
+    const user = await IndividualUser.findOne({ email: user_email });
+    console.log("user_email", user_email);
+
     //   find the transaction by id
     const transaction = await ProductTransaction.findOne({
       transaction_id: transaction_id,
@@ -82,6 +88,9 @@ export const raiseDispute = async (
 
     const transactionStatus: string | undefined =
       transaction?.transaction_status as string | undefined;
+
+    // const didBuyerRaiseDispute =
+    // if()
 
     // log("transaction", transaction);
     // log("user", user);
@@ -117,6 +126,12 @@ export const raiseDispute = async (
       );
     }
 
+    if (user_email === vendor_email) {
+      dispute_raised_by = "seller";
+    } else if (user_email === buyer_email) {
+      dispute_raised_by = "buyer";
+    }
+
     // else {
     // we want to update the transaction status to "inDispute" when a dispute is raised
     const updateProductTransactionStatus =
@@ -141,6 +156,8 @@ export const raiseDispute = async (
       vendor_name,
       vendor_email,
       vendor_phone_number,
+      dispute_raised_by,
+      dispute_raised_by_email: user_email,
       reason_for_dispute,
       dispute_description,
     });
@@ -148,16 +165,26 @@ export const raiseDispute = async (
     await newProductDispute.save();
 
     // send mail to the buyer that the seller has raised a dispute
-    await sendDisputeMailToBuyer(
-      buyer_email,
-      product_name,
-      dispute_description
-    );
-    await sendDisputeMailToSeller(
-      vendor_email,
-      product_name,
-      dispute_description
-    );
+    // await sendDisputeMailToBuyer(
+    //   buyer_email,
+    //   product_name,
+    //   dispute_description
+    // );
+    // await sendDisputeMailToSeller(
+    //   vendor_email,
+    //   product_name,
+    //   dispute_description
+    // );
+
+    await Promise.all([
+      sendDisputeMailToBuyer(buyer_email, product_name, dispute_description),
+
+      await sendDisputeMailToSeller(
+        vendor_email,
+        product_name,
+        dispute_description
+      ),
+    ]);
 
     res.json({
       status: "success",
