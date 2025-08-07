@@ -88,8 +88,8 @@ const productDisputeSchema = new mongoose_1.default.Schema({
     },
     dispute_status: {
         type: String,
-        default: "Not in Dispute",
-        enum: ["Not in Dispute", "resolving", "resolved", "cancelled"],
+        default: "resolving",
+        enum: ["resolving", "resolved", "cancelled"],
     },
     dispute_resolution_method: {
         type: String,
@@ -102,6 +102,15 @@ const productDisputeSchema = new mongoose_1.default.Schema({
     },
     resolution_description: {
         type: String,
+    },
+    dispute_raised_by: {
+        type: String,
+        enum: ["buyer", "seller"],
+        required: true,
+    },
+    dispute_raised_by_email: {
+        type: String,
+        required: true,
     },
 }, {
     timestamps: true,

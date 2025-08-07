@@ -26,6 +26,7 @@ import {
 import ShippingDetails from "./shippingDetails.model";
 import { noSQLJoinType } from "./productsTransaction.interfaces";
 import ProductDispute from "../../disputes/productsDispute/productDispute.model";
+import ProductTransaction from "./productsTransaction.model";
 // import mongoose, { SchemaTypes } from "mongoose";
 // import {
 //   sendEscrowInitiationEmail,
@@ -1533,3 +1534,106 @@ export const buyerConfirmsProduct = async (
 //     return next(errorHandler(500, "Server error"));
 //   }
 // };
+
+// cancel escrow function
+export const cancelEscrowProductTransaction = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { transaction_id } = req.body;
+
+  if (!transaction_id)
+    return next(errorHandler(400, "Transaction ID is required"));
+
+  // console.log(transaction_id);
+
+  try {
+    const fetchProductDetails = await ProductTransaction.findOne({
+      transaction_id: transaction_id,
+    });
+
+    const productTransactionStatus: string | undefined =
+      fetchProductDetails?.transaction_status as string | undefined;
+
+    const fetchDisputeDetails = await ProductDispute.findOne({
+      transaction_id: transaction_id,
+    });
+
+    const productDisputeStatus: string | undefined =
+      fetchDisputeDetails?.dispute_status as string | undefined;
+
+    console.log(productDisputeStatus);
+
+    if (productTransactionStatus === "cancelled") {
+      return next(
+        errorHandler(
+          400,
+          "This transaction cannot be cancelled because it has already been cancelled"
+        )
+      );
+    } else if (productTransactionStatus === "completed") {
+      return next(
+        errorHandler(
+          400,
+          "This transaction cannot be cancelled because it has already been completed"
+        )
+      );
+    } else if (productDisputeStatus === "resolved") {
+      return next(
+        errorHandler(
+          400,
+          "This transaction cannot be cancelled because it has already been resolved"
+        )
+      );
+    }
+    // else if (productTransactionStatus === "processing" || productTransactionStatus === "inDispute" || productDisputeStatus === "processing") {
+    //   const updateProductTransactionStatus =
+    // }
+
+    // update the product transaction status to "cancelled"
+    const updateProductTransactionStatus =
+      await ProductTransaction.findByIdAndUpdate(
+        fetchProductDetails?._id,
+        { transaction_status: "cancelled" },
+        { new: true } // to return the updated document
+      );
+
+    // console.log(updateProductTransactionStatus);
+
+    if (!updateProductTransactionStatus) {
+      return next(errorHandler(500, "Failed to update transaction status"));
+    }
+
+    // update the dispute status to "cancelled"
+    const updateProductDisputeStatus = await ProductDispute.findByIdAndUpdate(
+      fetchDisputeDetails?._id,
+      { dispute_status: "cancelled" },
+      { new: true } // to return the updated document
+    );
+    if (!updateProductDisputeStatus) {
+      return next(errorHandler(500, "Failed to update dispute status"));
+    }
+    // send mail to the buyer and seller that the dispute has been cancelled
+
+    // send mail to the buyer that the seller has raised a dispute
+    // await sendTransactionCancellationMailToBuyer(
+    //   buyer_email,
+    //   product_name,
+    //   dispute_description
+    // );
+    // await sendTransactionCancellationMailToSeller(
+    //   vendor_email,
+    //   product_name,
+    //   dispute_description
+    // );
+
+    res.json({
+      status: "success",
+      message: "Dispute has been cancelled successfully",
+    });
+  } catch (error: string | unknown) {
+    console.log("error", error);
+    return next(errorHandler(500, "Internal server error"));
+  }
+};

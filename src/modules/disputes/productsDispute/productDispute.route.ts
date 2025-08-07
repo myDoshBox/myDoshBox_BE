@@ -1,7 +1,6 @@
 import { Router } from "express";
 import {
   raiseDispute,
-  cancelEscrow,
   getAllDisputesByUser,
   buyerResolveDispute,
   sellerResolveDispute,
@@ -16,10 +15,6 @@ const escrowProductDisputeRouter = Router();
 escrowProductDisputeRouter
   .route("/raise-dispute/:transaction_id")
   .post(raiseDispute);
-
-escrowProductDisputeRouter
-  .route("/cancel-dispute/:transaction_id")
-  .post(cancelEscrow);
 
 escrowProductDisputeRouter
   .route("/fetch-all-dispute/:user_email")

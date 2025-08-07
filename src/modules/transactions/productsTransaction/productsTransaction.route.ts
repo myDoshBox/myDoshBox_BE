@@ -9,6 +9,7 @@ import {
   initiateEscrowProductTransaction,
   verifyEscrowProductTransactionPayment,
   getAllShippingDetails,
+  cancelEscrowProductTransaction,
   // getAllShippingDetailsForBuyer,
   // getAllShippingDetailsForVendor,
   // buyerConProd,
@@ -82,5 +83,8 @@ escrowProductTransactionRouter
 // escrowProductTransactionRouter
 //   .route("/pay-for-escrow-product-transaction")
 //   .post(confirmEscrowProductTransaction);
+escrowProductTransactionRouter
+  .route("/cancel-transaction/:transaction_id")
+  .post(cancelEscrowProductTransaction);
 
 export default escrowProductTransactionRouter;

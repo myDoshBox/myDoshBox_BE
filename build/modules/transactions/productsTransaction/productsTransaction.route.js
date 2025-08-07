@@ -53,4 +53,7 @@ escrowProductTransactionRouter
 // escrowProductTransactionRouter
 //   .route("/pay-for-escrow-product-transaction")
 //   .post(confirmEscrowProductTransaction);
+escrowProductTransactionRouter
+    .route("/cancel-transaction/:transaction_id")
+    .post(productsTransaction_controller_1.cancelEscrowProductTransaction);
 exports.default = escrowProductTransactionRouter;

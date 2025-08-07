@@ -20,7 +20,6 @@ import {
   sendDisputeMailToSeller,
   sendSellerResolutionMailToBuyer,
   sendSellerResolutionMailToSeller,
-  sendTransactionCancellationMailToBuyer,
 } from "./productDispute.mail";
 // import productTransaction from "../../transactions/productsTransaction/productsTransaction.model";
 // seller rejects escrow initiated
@@ -240,169 +239,169 @@ export const getAllDisputesByUser = async (
   }
 };
 
-// cancel escrow function
-export const cancelEscrow = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const { transaction_id } = req.body;
+// change to cancel dispute function
+// export const cancelEscrow = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   const { transaction_id } = req.body;
 
-  if (!transaction_id)
-    return next(errorHandler(400, "Transaction ID is required"));
+//   if (!transaction_id)
+//     return next(errorHandler(400, "Transaction ID is required"));
 
-  try {
-    const fetchProductDetails = await ProductTransaction.findOne({
-      transaction_id: transaction_id,
-    });
+//   try {
+//     const fetchProductDetails = await ProductTransaction.findOne({
+//       transaction_id: transaction_id,
+//     });
 
-    const productTransactionStatus: string | undefined =
-      fetchProductDetails?.transaction_status as string | undefined;
+//     const productTransactionStatus: string | undefined =
+//       fetchProductDetails?.transaction_status as string | undefined;
 
-    const fetchDisputeDetails = await ProductDispute.findOne({
-      transaction_id: transaction_id,
-    });
+//     const fetchDisputeDetails = await ProductDispute.findOne({
+//       transaction_id: transaction_id,
+//     });
 
-    const productDisputeStatus: string | undefined =
-      fetchDisputeDetails?.dispute_status as string | undefined;
+//     const productDisputeStatus: string | undefined =
+//       fetchDisputeDetails?.dispute_status as string | undefined;
 
-    if (productTransactionStatus === "cancelled") {
-      return next(
-        errorHandler(
-          400,
-          "This transaction cannot be cancelled because it has already been cancelled"
-        )
-      );
-    } else if (productTransactionStatus === "completed") {
-      return next(
-        errorHandler(
-          400,
-          "This transaction cannot be cancelled because it has already been completed"
-        )
-      );
-    } else if (productDisputeStatus === "resolved") {
-      return next(
-        errorHandler(
-          400,
-          "This transaction cannot be cancelled because it has already been resolved"
-        )
-      );
-    }
-    // else if (productTransactionStatus === "processing" || productTransactionStatus === "inDispute" || productDisputeStatus === "processing") {
-    //   const updateProductTransactionStatus =
-    // }
+//     if (productTransactionStatus === "cancelled") {
+//       return next(
+//         errorHandler(
+//           400,
+//           "This transaction cannot be cancelled because it has already been cancelled"
+//         )
+//       );
+//     } else if (productTransactionStatus === "completed") {
+//       return next(
+//         errorHandler(
+//           400,
+//           "This transaction cannot be cancelled because it has already been completed"
+//         )
+//       );
+//     } else if (productDisputeStatus === "resolved") {
+//       return next(
+//         errorHandler(
+//           400,
+//           "This transaction cannot be cancelled because it has already been resolved"
+//         )
+//       );
+//     }
+//     // else if (productTransactionStatus === "processing" || productTransactionStatus === "inDispute" || productDisputeStatus === "processing") {
+//     //   const updateProductTransactionStatus =
+//     // }
 
-    // update the product transaction status to "cancelled"
-    const updateProductTransactionStatus =
-      await ProductTransaction.findByIdAndUpdate(
-        fetchProductDetails?._id,
-        { transaction_status: "cancelled" },
-        { new: true } // to return the updated document
-      );
+//     // update the product transaction status to "cancelled"
+//     const updateProductTransactionStatus =
+//       await ProductTransaction.findByIdAndUpdate(
+//         fetchProductDetails?._id,
+//         { transaction_status: "cancelled" },
+//         { new: true } // to return the updated document
+//       );
 
-    if (!updateProductTransactionStatus) {
-      return next(errorHandler(500, "Failed to update transaction status"));
-    }
+//     if (!updateProductTransactionStatus) {
+//       return next(errorHandler(500, "Failed to update transaction status"));
+//     }
 
-    // update the dispute status to "cancelled"
-    const updateProductDisputeStatus = await ProductDispute.findByIdAndUpdate(
-      fetchDisputeDetails?._id,
-      { dispute_status: "cancelled" },
-      { new: true } // to return the updated document
-    );
-    if (!updateProductDisputeStatus) {
-      return next(errorHandler(500, "Failed to update dispute status"));
-    }
-    // send mail to the buyer and seller that the dispute has been cancelled
+//     // update the dispute status to "cancelled"
+//     const updateProductDisputeStatus = await ProductDispute.findByIdAndUpdate(
+//       fetchDisputeDetails?._id,
+//       { dispute_status: "cancelled" },
+//       { new: true } // to return the updated document
+//     );
+//     if (!updateProductDisputeStatus) {
+//       return next(errorHandler(500, "Failed to update dispute status"));
+//     }
+//     // send mail to the buyer and seller that the dispute has been cancelled
 
-    // send mail to the buyer that the seller has raised a dispute
-    // await sendTransactionCancellationMailToBuyer(
-    //   buyer_email,
-    //   product_name,
-    //   dispute_description
-    // );
-    // await sendTransactionCancellationMailToSeller(
-    //   vendor_email,
-    //   product_name,
-    //   dispute_description
-    // );
+//     // send mail to the buyer that the seller has raised a dispute
+//     // await sendTransactionCancellationMailToBuyer(
+//     //   buyer_email,
+//     //   product_name,
+//     //   dispute_description
+//     // );
+//     // await sendTransactionCancellationMailToSeller(
+//     //   vendor_email,
+//     //   product_name,
+//     //   dispute_description
+//     // );
 
-    res.json({
-      status: "success",
-      message: "Dispute has been cancelled successfully",
-    });
-  } catch (error: string | unknown) {
-    console.log("error", error);
-    return next(errorHandler(500, "Internal server error"));
-  }
+//     res.json({
+//       status: "success",
+//       message: "Dispute has been cancelled successfully",
+//     });
+//   } catch (error: string | unknown) {
+//     console.log("error", error);
+//     return next(errorHandler(500, "Internal server error"));
+//   }
 
-  // try {
-  //   const fetchProductDetails = await ProductDispute.aggregate([
-  //     {
-  //       $lookup: {
-  //         from: "products",
-  //         localField: "product",
-  //         foreignField: "_id",
-  //         as: "productDetails",
-  //       },
-  //     },
-  //     { $unwind: "$productDetails" },
-  //     {
-  //       $match: {
-  //         "productDetails.transaction_id": transaction_id,
-  //       },
-  //     },
-  //     {
-  //       $project: {
-  //         transaction_status: "$productDetails.transaction_status",
-  //         product_id: "$productDetails._id",
-  //         vendor_email: "$vendor_email",
-  //         buyer_email: "$buyer_email",
-  //         product_name: "$productDetails.product_name",
-  //       },
-  //     },
-  //   ]);
+//   // try {
+//   //   const fetchProductDetails = await ProductDispute.aggregate([
+//   //     {
+//   //       $lookup: {
+//   //         from: "products",
+//   //         localField: "product",
+//   //         foreignField: "_id",
+//   //         as: "productDetails",
+//   //       },
+//   //     },
+//   //     { $unwind: "$productDetails" },
+//   //     {
+//   //       $match: {
+//   //         "productDetails.transaction_id": transaction_id,
+//   //       },
+//   //     },
+//   //     {
+//   //       $project: {
+//   //         transaction_status: "$productDetails.transaction_status",
+//   //         product_id: "$productDetails._id",
+//   //         vendor_email: "$vendor_email",
+//   //         buyer_email: "$buyer_email",
+//   //         product_name: "$productDetails.product_name",
+//   //       },
+//   //     },
+//   //   ]);
 
-  //   if (!fetchProductDetails || fetchProductDetails.length === 0) {
-  //     return next(errorHandler(404, "Dispute details not found"));
-  //   }
+//   //   if (!fetchProductDetails || fetchProductDetails.length === 0) {
+//   //     return next(errorHandler(404, "Dispute details not found"));
+//   //   }
 
-  //   const {
-  //     transaction_status,
-  //     product_id,
-  //     vendor_email,
-  //     buyer_email,
-  //     product_name,
-  //   } = fetchProductDetails[0];
+//   //   const {
+//   //     transaction_status,
+//   //     product_id,
+//   //     vendor_email,
+//   //     buyer_email,
+//   //     product_name,
+//   //   } = fetchProductDetails[0];
 
-  //   const fetchDisputeDetails = ProductDispute.findOne({
-  //     transaction_id: transaction_id,
-  //   });
+//   //   const fetchDisputeDetails = ProductDispute.findOne({
+//   //     transaction_id: transaction_id,
+//   //   });
 
-  //   console.log(fetchDisputeDetails);
+//   //   console.log(fetchDisputeDetails);
 
-  //   if (transaction_status === "cancelled") {
-  //     return next(
-  //       errorHandler(
-  //         400,
-  //         "This transaction cannot be cancelled because it has already been cancelled"
-  //       )
-  //     );
-  //   } else if (transaction_status === "completed") {
-  //     return next(
-  //       errorHandler(
-  //         400,
-  //         "This transaction cannot be cancelled because it has already been completed"
-  //       )
-  //     );
-  //   }
-  //   // else if (fetchDisputeDetails === "") {
-  //   // }
-  // } catch (error: string | unknown) {
-  //   console.log("error", error);
-  //   return next(errorHandler(500, "Internal server error"));
-  // }
-};
+//   //   if (transaction_status === "cancelled") {
+//   //     return next(
+//   //       errorHandler(
+//   //         400,
+//   //         "This transaction cannot be cancelled because it has already been cancelled"
+//   //       )
+//   //     );
+//   //   } else if (transaction_status === "completed") {
+//   //     return next(
+//   //       errorHandler(
+//   //         400,
+//   //         "This transaction cannot be cancelled because it has already been completed"
+//   //       )
+//   //     );
+//   //   }
+//   //   // else if (fetchDisputeDetails === "") {
+//   //   // }
+//   // } catch (error: string | unknown) {
+//   //   console.log("error", error);
+//   //   return next(errorHandler(500, "Internal server error"));
+//   // }
+// };
 
 // byuer resolve dispute
 export const buyerResolveDispute = async (

@@ -9,9 +9,6 @@ escrowProductDisputeRouter
     .route("/raise-dispute/:transaction_id")
     .post(productDispute_controller_1.raiseDispute);
 escrowProductDisputeRouter
-    .route("/cancel-dispute/:transaction_id")
-    .post(productDispute_controller_1.cancelEscrow);
-escrowProductDisputeRouter
     .route("/fetch-all-dispute/:user_email")
     .get(productDispute_controller_1.getAllDisputesByUser);
 escrowProductDisputeRouter

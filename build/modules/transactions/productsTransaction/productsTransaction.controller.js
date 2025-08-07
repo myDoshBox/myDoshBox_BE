@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.buyerConfirmsProduct = exports.getAllShippingDetails = exports.sellerFillOutShippingDetails = exports.getAllEscrowProductTransactionByUser = exports.verifyEscrowProductTransactionPayment = exports.initiateEscrowProductTransaction = void 0;
+exports.cancelEscrowProductTransaction = exports.buyerConfirmsProduct = exports.getAllShippingDetails = exports.sellerFillOutShippingDetails = exports.getAllEscrowProductTransactionByUser = exports.verifyEscrowProductTransactionPayment = exports.initiateEscrowProductTransaction = void 0;
 const uuid_1 = require("uuid");
 // import jwt, { JwtPayload } from "jsonwebtoken";
 // import { createSessionAndSendTokens } from "../../../utilities/createSessionAndSendToken.util";
@@ -28,6 +28,7 @@ const productTransaction_mail_1 = require("./productTransaction.mail");
 // import { sendVerificationEmail } from "../../../utilities/email.utils";
 const shippingDetails_model_1 = __importDefault(require("./shippingDetails.model"));
 const productDispute_model_1 = __importDefault(require("../../disputes/productsDispute/productDispute.model"));
+const productsTransaction_model_2 = __importDefault(require("./productsTransaction.model"));
 // import mongoose, { SchemaTypes } from "mongoose";
 // import {
 //   sendEscrowInitiationEmail,
@@ -1200,3 +1201,67 @@ exports.buyerConfirmsProduct = buyerConfirmsProduct;
 //     return next(errorHandler(500, "Server error"));
 //   }
 // };
+// cancel escrow function
+const cancelEscrowProductTransaction = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { transaction_id } = req.body;
+    if (!transaction_id)
+        return next((0, errorHandling_middleware_1.errorHandler)(400, "Transaction ID is required"));
+    // console.log(transaction_id);
+    try {
+        const fetchProductDetails = yield productsTransaction_model_2.default.findOne({
+            transaction_id: transaction_id,
+        });
+        const productTransactionStatus = fetchProductDetails === null || fetchProductDetails === void 0 ? void 0 : fetchProductDetails.transaction_status;
+        const fetchDisputeDetails = yield productDispute_model_1.default.findOne({
+            transaction_id: transaction_id,
+        });
+        const productDisputeStatus = fetchDisputeDetails === null || fetchDisputeDetails === void 0 ? void 0 : fetchDisputeDetails.dispute_status;
+        console.log(productDisputeStatus);
+        if (productTransactionStatus === "cancelled") {
+            return next((0, errorHandling_middleware_1.errorHandler)(400, "This transaction cannot be cancelled because it has already been cancelled"));
+        }
+        else if (productTransactionStatus === "completed") {
+            return next((0, errorHandling_middleware_1.errorHandler)(400, "This transaction cannot be cancelled because it has already been completed"));
+        }
+        else if (productDisputeStatus === "resolved") {
+            return next((0, errorHandling_middleware_1.errorHandler)(400, "This transaction cannot be cancelled because it has already been resolved"));
+        }
+        // else if (productTransactionStatus === "processing" || productTransactionStatus === "inDispute" || productDisputeStatus === "processing") {
+        //   const updateProductTransactionStatus =
+        // }
+        // update the product transaction status to "cancelled"
+        const updateProductTransactionStatus = yield productsTransaction_model_2.default.findByIdAndUpdate(fetchProductDetails === null || fetchProductDetails === void 0 ? void 0 : fetchProductDetails._id, { transaction_status: "cancelled" }, { new: true } // to return the updated document
+        );
+        // console.log(updateProductTransactionStatus);
+        if (!updateProductTransactionStatus) {
+            return next((0, errorHandling_middleware_1.errorHandler)(500, "Failed to update transaction status"));
+        }
+        // update the dispute status to "cancelled"
+        const updateProductDisputeStatus = yield productDispute_model_1.default.findByIdAndUpdate(fetchDisputeDetails === null || fetchDisputeDetails === void 0 ? void 0 : fetchDisputeDetails._id, { dispute_status: "cancelled" }, { new: true } // to return the updated document
+        );
+        if (!updateProductDisputeStatus) {
+            return next((0, errorHandling_middleware_1.errorHandler)(500, "Failed to update dispute status"));
+        }
+        // send mail to the buyer and seller that the dispute has been cancelled
+        // send mail to the buyer that the seller has raised a dispute
+        // await sendTransactionCancellationMailToBuyer(
+        //   buyer_email,
+        //   product_name,
+        //   dispute_description
+        // );
+        // await sendTransactionCancellationMailToSeller(
+        //   vendor_email,
+        //   product_name,
+        //   dispute_description
+        // );
+        res.json({
+            status: "success",
+            message: "Dispute has been cancelled successfully",
+        });
+    }
+    catch (error) {
+        console.log("error", error);
+        return next((0, errorHandling_middleware_1.errorHandler)(500, "Internal server error"));
+    }
+});
+exports.cancelEscrowProductTransaction = cancelEscrowProductTransaction;
