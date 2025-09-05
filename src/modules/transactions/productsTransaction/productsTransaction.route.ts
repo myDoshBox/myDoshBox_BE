@@ -85,6 +85,6 @@ escrowProductTransactionRouter
 //   .post(confirmEscrowProductTransaction);
 escrowProductTransactionRouter
   .route("/cancel-transaction/:transaction_id")
-  .post(cancelEscrowProductTransaction);
+  .put(cancelEscrowProductTransaction);
 
 export default escrowProductTransactionRouter;

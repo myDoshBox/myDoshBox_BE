@@ -1432,139 +1432,38 @@ export const buyerConfirmsProduct = async (
   }
 };
 
-// export const buyerConfirmsProduct = async (
-//   req: Request,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   // Destructure transaction_id from req.body correctly
-//   const { transaction_id } = req.body;
-
-//   console.log(transaction_id);
-
-//   if (!transaction_id) {
-//     return next(errorHandler(400, "Transaction ID is required"));
-//   }
-
-//   try {
-//     // Find the ShippingDetails by transaction_id in the Product details
-//     const fetchShippingDetails: ShippingDetailsWithProduct[] | null =
-//       await ShippingDetails?.aggregate([
-//         { $match: { "product.transaction_id": transaction_id } }, // Match based on transaction_id
-
-//         {
-//           $lookup: {
-//             from: "products",
-//             localField: "product",
-//             foreignField: "_id",
-//             as: "productDetails",
-//           },
-//         },
-
-//         { $unwind: "$productDetails" },
-
-//         {
-//           $project: {
-//             transaction_status: "$productDetails.transaction_status",
-//             product_id: "$productDetails._id",
-//             transaction_id: "$productDetails.transaction_id",
-//             vendor_name: "$productDetails.vendor_name",
-//             buyer_email: "$productDetails.buyer_email",
-//             product_name: "$productDetails.product_name",
-//             vendor_email: "$productDetails.vendor_email",
-//           },
-//         },
-//       ]);
-
-//     console.log("fetchShippingDetails:", fetchShippingDetails);
-
-//     if (!fetchShippingDetails || !fetchShippingDetails[0]) {
-//       return next(
-//         errorHandler(
-//           404,
-//           "No shipping details found or transaction already completed"
-//         )
-//       );
-//     }
-
-//     const {
-//       transaction_status,
-//       product_id,
-//       vendor_name,
-//       vendor_email,
-//       buyer_email,
-//       product_name,
-//     } = fetchShippingDetails[0];
-
-//     if (transaction_status !== "processing") {
-//       return next(errorHandler(400, "This transaction has been completed"));
-//     }
-
-//     // Update the transaction status of the Product
-//     const updateProductTransactionStatus = await Product.findByIdAndUpdate(
-//       product_id,
-//       { transaction_status: "completed" },
-//       { new: true }
-//     );
-
-//     if (!updateProductTransactionStatus) {
-//       return next(errorHandler(500, "Failed to update product status"));
-//     }
-
-//     // Send emails to buyer and vendor
-//     await sendSuccessfulEscrowEmailToInitiator(
-//       transaction_id,
-//       vendor_name,
-//       buyer_email,
-//       product_name
-//     );
-//     await sendSuccessfulEscrowEmailToVendor(
-//       transaction_id,
-//       vendor_name,
-//       vendor_email,
-//       product_name
-//     );
-
-//     res.json({
-//       status: "success",
-//       message: "Escrow has been completed successfully.",
-//     });
-//   } catch (error) {
-//     console.log("Error:", error);
-//     return next(errorHandler(500, "Server error"));
-//   }
-// };
-
-// cancel escrow function
 export const cancelEscrowProductTransaction = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const { transaction_id } = req.body;
+  const { transaction_id } = req.params;
 
   if (!transaction_id)
     return next(errorHandler(400, "Transaction ID is required"));
-
-  // console.log(transaction_id);
 
   try {
     const fetchProductDetails = await ProductTransaction.findOne({
       transaction_id: transaction_id,
     });
 
-    const productTransactionStatus: string | undefined =
-      fetchProductDetails?.transaction_status as string | undefined;
+    // Check if transaction exists
+    if (!fetchProductDetails) {
+      return next(errorHandler(404, "Transaction not found"));
+    }
 
+    // const productTransactionStatus = fetchProductDetails.transaction_status;
+    const productTransactionStatus: string | undefined =
+      fetchProductDetails?.transaction_status as unknown as string | undefined;
+
+    // Check for existing dispute
     const fetchDisputeDetails = await ProductDispute.findOne({
       transaction_id: transaction_id,
     });
 
-    const productDisputeStatus: string | undefined =
-      fetchDisputeDetails?.dispute_status as string | undefined;
+    const productDisputeStatus = fetchDisputeDetails?.dispute_status;
 
-    console.log(productDisputeStatus);
-
+    // Validation checks
     if (productTransactionStatus === "cancelled") {
       return next(
         errorHandler(
@@ -1587,36 +1486,33 @@ export const cancelEscrowProductTransaction = async (
         )
       );
     }
-    // else if (productTransactionStatus === "processing" || productTransactionStatus === "inDispute" || productDisputeStatus === "processing") {
-    //   const updateProductTransactionStatus =
-    // }
 
-    // update the product transaction status to "cancelled"
+    // Update the product transaction status to "cancelled"
     const updateProductTransactionStatus =
       await ProductTransaction.findByIdAndUpdate(
-        fetchProductDetails?._id,
+        fetchProductDetails._id,
         { transaction_status: "cancelled" },
-        { new: true } // to return the updated document
+        { new: true }
       );
-
-    // console.log(updateProductTransactionStatus);
 
     if (!updateProductTransactionStatus) {
       return next(errorHandler(500, "Failed to update transaction status"));
     }
 
-    // update the dispute status to "cancelled"
-    const updateProductDisputeStatus = await ProductDispute.findByIdAndUpdate(
-      fetchDisputeDetails?._id,
-      { dispute_status: "cancelled" },
-      { new: true } // to return the updated document
-    );
-    if (!updateProductDisputeStatus) {
-      return next(errorHandler(500, "Failed to update dispute status"));
-    }
-    // send mail to the buyer and seller that the dispute has been cancelled
+    // Only update dispute if it exists
+    if (fetchDisputeDetails) {
+      const updateProductDisputeStatus = await ProductDispute.findByIdAndUpdate(
+        fetchDisputeDetails._id,
+        { dispute_status: "cancelled" },
+        { new: true }
+      );
 
-    // send mail to the buyer that the seller has raised a dispute
+      if (!updateProductDisputeStatus) {
+        return next(errorHandler(500, "Failed to update dispute status"));
+      }
+    }
+
+    // TODO: Uncomment and implement email notifications
     // await sendTransactionCancellationMailToBuyer(
     //   buyer_email,
     //   product_name,
@@ -1630,10 +1526,10 @@ export const cancelEscrowProductTransaction = async (
 
     res.json({
       status: "success",
-      message: "Dispute has been cancelled successfully",
+      message: "Transaction has been cancelled successfully",
     });
-  } catch (error: string | unknown) {
-    console.log("error", error);
+  } catch (error) {
+    console.error("Error cancelling transaction:", error);
     return next(errorHandler(500, "Internal server error"));
   }
 };
