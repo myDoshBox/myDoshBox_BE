@@ -3,7 +3,7 @@ import express from "express";
 import cors from "cors";
 import swaggerJSDOC from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
-
+import morgan from "morgan";
 import { Request, Response } from "express";
 import connectDB from "./config/dbconn.config";
 
@@ -23,6 +23,7 @@ import { errorHandlingMiddleware } from "./middlewares/errorHandling.middleware"
 import escrowProductTransactionRouter from "./modules/transactions/productsTransaction/productsTransaction.route";
 import escrowProductDisputeRouter from "./modules/disputes/productsDispute/productDispute.route";
 import mediatorRouter from "./modules/mediator/mediator.route";
+import adminRouter from "./modules/administrator/admin.route";
 
 dotenv.config();
 
@@ -42,7 +43,7 @@ app.use(
     extended: true,
   })
 );
-
+app.use(morgan("dev"));
 app.use(deserializeUser);
 
 // app.use(cors());
@@ -67,7 +68,9 @@ app.use("/transactions", escrowProductTransactionRouter);
 app.use("/disputes", escrowProductDisputeRouter);
 
 // mediator
-app.use("/mediators", mediatorRouter);
+
+// admin route
+app.use("/admin", adminRouter);
 
 app.use(errorHandler);
 

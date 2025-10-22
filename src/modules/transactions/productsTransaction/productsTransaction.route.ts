@@ -1,18 +1,15 @@
 import { Router } from "express";
+import { asyncHandler } from "../../../middlewares/asyncHandler.middleware";
 import {
-  // sellerConfirmsAnEscrowProductTransaction,
-  // sellerConfirmsAnEscrowProductTransaction,
+  sellerConfirmsAnEscrowProductTransaction,
   sellerFillOutShippingDetails,
   buyerConfirmsProduct,
   getAllEscrowProductTransactionByUser,
-  // getSingleEscrowProductTransaction,
   initiateEscrowProductTransaction,
   verifyEscrowProductTransactionPayment,
   getAllShippingDetails,
+  getAllShippingDetailsWithAggregation,
   cancelEscrowProductTransaction,
-  // getAllShippingDetailsForBuyer,
-  // getAllShippingDetailsForVendor,
-  // buyerConProd,
 } from "./productsTransaction.controller";
 // import protectRoutes from "../../../middlewares/protectRoutes.middleware";
 
@@ -22,69 +19,39 @@ const escrowProductTransactionRouter = Router();
 
 escrowProductTransactionRouter
   .route("/initiate-escrow-product-transaction")
-  .post(initiateEscrowProductTransaction);
+  .post(asyncHandler(initiateEscrowProductTransaction));
 
-// escrowProductTransactionRouter
-//   .route("/initiate-escrow-product-transaction")
-//   .post(protectRoutes, initiateEscrowProductTransaction);
+escrowProductTransactionRouter
+  .route("/seller-confirm-escrow-product-transaction")
+  .post(asyncHandler(sellerConfirmsAnEscrowProductTransaction));
 
 escrowProductTransactionRouter
   .route("/verify-escrow-product-transaction-payment")
-  .put(verifyEscrowProductTransactionPayment);
-
-// escrowProductTransactionRouter
-//   .route("/get-single-escrow-product-transaction/:transaction_id")
-//   .get(getSingleEscrowProductTransaction);
-
-escrowProductTransactionRouter
-  .route("/get-all-escrow-product-transaction/:user_email")
-  .get(getAllEscrowProductTransactionByUser);
-
-// escrowProductTransactionRouter
-//   .route("/seller-confirm-escrow-product-transaction")
-//   .post(sellerConfirmsAnEscrowProductTransaction);
-
-// escrowProductTransactionRouter
-//   .route("/get-all-escrow-product-transaction/:user_email")
-//   .get(sellerConfirmsAnEscrowProductTransaction);
+  .put(asyncHandler(verifyEscrowProductTransactionPayment));
 
 escrowProductTransactionRouter
   .route("/seller-fill-out-shipping-details")
-  .post(sellerFillOutShippingDetails);
+  .post(asyncHandler(sellerFillOutShippingDetails));
 
-// escrowProductTransactionRouter
-//   .route("/seller-fill-out-shipping-details")
-//   .post(sellerFillOutShippingDetails);
-
-// escrowProductTransactionRouter
-//   .route("/get-all-shipping-details/buyer/:buyer_email")
-//   .get(getAllShippingDetailsForBuyer);
-
-// escrowProductTransactionRouter
-//   .route("/get-all-shipping-details/vendor/:vendor_email")
-//   .get(getAllShippingDetailsForVendor);
-
-// escrowProductTransactionRouter
-//   .route("/get-all-shipping-details/:buyer_email?/:vendor_email")
-//   .get(getAllShippingDetails);
+escrowProductTransactionRouter
+  .route("/get-all-escrow-product-transaction/:user_email")
+  .get(asyncHandler(getAllEscrowProductTransactionByUser));
 
 escrowProductTransactionRouter
   .route("/get-all-shipping-details/:user_email")
-  .get(getAllShippingDetails);
+  .get(asyncHandler(getAllShippingDetails));
+
+// GET ALL SHIPPING DETAILS WITH AGGREGATION
+escrowProductTransactionRouter
+  .route("/get-all-shipping-details-with-aggregation/:user_email")
+  .get(asyncHandler(getAllShippingDetailsWithAggregation));
 
 escrowProductTransactionRouter
   .route("/buyer-confirms-product")
-  .put(buyerConfirmsProduct);
+  .put(asyncHandler(buyerConfirmsProduct));
 
-// escrowProductTransactionRouter
-//   .route("/buyer-confirms-product/:transaction_id")
-//   .put(buyerConfirmsProduct);
-
-// escrowProductTransactionRouter
-//   .route("/pay-for-escrow-product-transaction")
-//   .post(confirmEscrowProductTransaction);
 escrowProductTransactionRouter
   .route("/cancel-transaction/:transaction_id")
-  .put(cancelEscrowProductTransaction);
+  .put(asyncHandler(cancelEscrowProductTransaction));
 
 export default escrowProductTransactionRouter;

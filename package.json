@@ -24,10 +24,12 @@
     "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",
     "mongoose": "^8.3.3",
-    "nodemailer": "^6.9.13",
+    "morgan": "^1.10.1",
+    "nodemailer": "^7.0.9",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.0",
-    "vercel": "^44.2.13"
+    "vercel": "^48.2.9",
+    "winston": "^3.18.3"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
@@ -37,6 +39,7 @@
     "@types/jsonwebtoken": "^9.0.6",
     "@types/lodash": "^4.17.0",
     "@types/mongoose": "^5.11.97",
+    "@types/morgan": "^1.9.10",
     "@types/node": "^22.15.21",
     "@types/nodemailer": "^6.4.14",
     "@types/swagger-jsdoc": "^6.0.4",
@@ -44,10 +47,10 @@
     "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^8.33.0",
     "@typescript-eslint/parser": "^8.33.0",
+    "@vercel/node": "^5.3.26",
     "eslint": "^9.27.0",
     "rimraf": "^5.0.5",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.8.3",
-    "@vercel/node": "^3.0.0"
+    "typescript": "^5.8.3"
   }
 }

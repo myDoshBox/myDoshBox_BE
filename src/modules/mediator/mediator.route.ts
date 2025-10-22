@@ -1,8 +1,6 @@
 import { Router } from "express";
 import {
-  onboardAMediator,
   mediatorLogin,
-  getAllMediators,
   involveAMediator,
   getAllDisputeForAMediator,
   mediatorResolveDispute,
@@ -14,11 +12,7 @@ const mediatorRouter = Router();
 
 // we need a middleware that checks if you should be in here
 
-mediatorRouter.route("/onboard-mediator").post(onboardAMediator);
-
 mediatorRouter.route("/mediator-login").post(mediatorLogin);
-
-mediatorRouter.route("/fetch-all-mediators").get(getAllMediators);
 
 mediatorRouter
   .route("/involve-a-mediator/:transaction_id")

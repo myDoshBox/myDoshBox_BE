@@ -28,72 +28,93 @@ import {
   sendMediatorInvolvementMailToSeller,
 } from "../disputes/productsDispute/productDispute.mail";
 
+// move unboard and get all mediator to admin module//
+
 // this works but its not returning any response in its body
-export const onboardAMediator = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const {
-    first_name,
-    middle_name,
-    last_name,
-    mediator_email,
-    mediator_phone_number,
-    password,
-  } = req.body;
+// export const onboardAMediator = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   const {
+//     first_name,
+//     middle_name,
+//     last_name,
+//     mediator_email,
+//     mediator_phone_number,
+//     password,
+//   } = req.body;
 
-  validateFormFields(
-    {
-      first_name,
-      // middle_name,
-      last_name,
-      mediator_email,
-      // mediator_phone_number,
-      password,
-    },
-    next
-  );
+//   validateFormFields(
+//     {
+//       first_name,
+//       // middle_name,
+//       last_name,
+//       mediator_email,
+//       // mediator_phone_number,
+//       password,
+//     },
+//     next
+//   );
 
-  try {
-    // check if mediator exist
-    const findMediator = await MediatorModel.findOne({
-      mediator_email: mediator_email,
-    });
-    // console.log(findMediator);
+//   try {
+//     // check if mediator exist
+//     const findMediator = await MediatorModel.findOne({
+//       mediator_email: mediator_email,
+//     });
+//     // console.log(findMediator);
 
-    if (findMediator) {
-      return next(
-        errorHandler(400, "Mediator already exist, please proceed to login")
-      );
-    }
+//     if (findMediator) {
+//       return next(
+//         errorHandler(400, "Mediator already exist, please proceed to login")
+//       );
+//     }
 
-    const hashedPassword = bcrypt.hashSync(password, 10);
-    // console.log(hashedPassword);
+//     const hashedPassword = bcrypt.hashSync(password, 10);
+//     // console.log(hashedPassword);
 
-    const addNewMediatorToSystem = new MediatorModel({
-      first_name,
-      // middle_name,
-      last_name,
-      mediator_email,
-      mediator_phone_number,
-      password: hashedPassword,
-    });
+//     const addNewMediatorToSystem = new MediatorModel({
+//       first_name,
+//       // middle_name,
+//       last_name,
+//       mediator_email,
+//       mediator_phone_number,
+//       password: hashedPassword,
+//     });
 
-    await addNewMediatorToSystem.save();
+//     await addNewMediatorToSystem.save();
 
-    await sendMediatorLoginDetailsMail(first_name, mediator_email, password);
+//     await sendMediatorLoginDetailsMail(first_name, mediator_email, password);
 
-    res.status(200).json({
-      // addNewMediatorToSystem,
-      status: "success",
-      message: "Mediator has been added successfully and a mail sent",
-    });
-  } catch (error: unknown) {
-    console.error("Error adding mediator: ", error);
-    return next(errorHandler(500, "Internal server error"));
-  }
-};
+//     res.status(200).json({
+//       // addNewMediatorToSystem,
+//       status: "success",
+//       message: "Mediator has been added successfully and a mail sent",
+//     });
+//   } catch (error: unknown) {
+//     console.error("Error adding mediator: ", error);
+//     return next(errorHandler(500, "Internal server error"));
+//   }
+// };
+// export const getAllMediators = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   const fetchAllMediators = await MediatorModel.find()
+//     .select("-password")
+//     .sort({ createdAt: -1 });
+
+//   if (fetchAllMediators?.length === 0) {
+//     return next(errorHandler(404, "no mediators present in the system"));
+//   } else {
+//     res.json({
+//       fetchAllMediators,
+//       status: "success",
+//       message: "All mediators fetched successfully",
+//     });
+//   }
+// };
 
 export const mediatorLogin = async (
   req: Request<{}, {}, MediatorLoginBody>,
@@ -151,26 +172,6 @@ export const mediatorLogin = async (
   }
 
   // You can now use mediatorWithoutPassword as needed
-};
-
-export const getAllMediators = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const fetchAllMediators = await MediatorModel.find()
-    .select("-password")
-    .sort({ createdAt: -1 });
-
-  if (fetchAllMediators?.length === 0) {
-    return next(errorHandler(404, "no mediators present in the system"));
-  } else {
-    res.json({
-      fetchAllMediators,
-      status: "success",
-      message: "All mediators fetched successfully",
-    });
-  }
 };
 
 export const involveAMediator = async (
