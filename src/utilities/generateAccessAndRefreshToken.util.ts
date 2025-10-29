@@ -6,6 +6,10 @@ import { Session } from "../modules/sessions/session.model";
 import OrganizationModel from "../modules/authentication/organizationUserAuth/organizationAuth.model";
 import individualUserAuthModel from "../modules/authentication/individualUserAuth/individualUserAuth.model1";
 
+// At the top of the file
+const ACCESS_TOKEN_EXPIRY = "15m";
+const REFRESH_TOKEN_EXPIRY = "7d";
+
 export function generateAccessAndRefreshToken(
   userObject: object,
   sessionId: Types.ObjectId,
@@ -13,12 +17,12 @@ export function generateAccessAndRefreshToken(
 ): { accessToken: string; refreshToken: string } {
   const accessToken = signJwt(
     { userData: userObject, session: sessionId, role },
-    { expiresIn: `${process.env.ACCESS_TOKEN_TTL}` }
+    { expiresIn: process.env.ACCESS_TOKEN_TTL || ACCESS_TOKEN_EXPIRY }
   );
 
   const refreshToken = signJwt(
     { userData: userObject, session: sessionId, role },
-    { expiresIn: `${process.env.REFRESH_TOKEN_TTL}` }
+    { expiresIn: process.env.REFRESH_TOKEN_TTL || REFRESH_TOKEN_EXPIRY }
   );
 
   return { accessToken, refreshToken };
@@ -53,9 +57,11 @@ export async function reIssueAccessToken({
 
   if (!user) return false;
 
+  const accessTokenTTL: string = process.env.ACCESS_TOKEN_TTL || "15m";
+
   const accessToken = signJwt(
     { userData: user, session: session._id, role: session.role },
-    { expiresIn: process.env.ACCESS_TOKEN_TTL as string }
+    { expiresIn: accessTokenTTL }
   );
 
   return accessToken;

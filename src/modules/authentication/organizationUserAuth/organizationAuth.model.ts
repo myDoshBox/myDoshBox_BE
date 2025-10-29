@@ -60,7 +60,7 @@ const organizationalSchema: Schema<organizationalDoc> = new mongoose.Schema(
     picture: { type: String },
     role: {
       type: String,
-      enum: ["org", "g-org"],
+      enum: ["org"],
       required: [true, "Please provide role"],
     },
     password: {
