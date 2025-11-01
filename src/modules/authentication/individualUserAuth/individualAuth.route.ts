@@ -12,6 +12,7 @@ import {
   initiateTwitterAuth,
   handleTwitterCallback,
   handleFacebookLogin,
+  updateTwitterUserEmail,
 } from "../individualUserAuth/socialAuth.controller";
 import { asyncHandler } from "../../../middlewares/asyncHandler.middleware";
 
@@ -284,5 +285,9 @@ individualrouter
   .post(asyncHandler(handleTwitterCallback));
 
 individualrouter.get("/twitter", initiateTwitterAuth);
+
+individualrouter
+  .route("/update-email")
+  .post(asyncHandler(updateTwitterUserEmail));
 
 export default individualrouter;

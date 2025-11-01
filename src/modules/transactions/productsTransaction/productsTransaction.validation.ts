@@ -1,13 +1,19 @@
 import { NextFunction } from "express";
-import { errorHandler } from "../../../middlewares/errorHandling.middleware"; // Adjust the import path as necessary
+import { errorHandler } from "../../../middlewares/errorHandling.middleware";
 
 export const validateProductFields = (
-  fields: { [key: string]: string },
+  fields: { [key: string]: any },
   next: NextFunction
 ) => {
   for (const [key, value] of Object.entries(fields)) {
-    if (!value || value === "") {
-      return next(errorHandler(400, `${key.replace("_", " ")} is required`));
+    // Skip validation for arrays and objects (like products)
+    if (Array.isArray(value) || typeof value === "object") {
+      continue;
+    }
+
+    // Check if string fields are empty
+    if (!value || (typeof value === "string" && value.trim() === "")) {
+      return next(errorHandler(400, `${key.replace(/_/g, " ")} is required`));
     }
   }
 };

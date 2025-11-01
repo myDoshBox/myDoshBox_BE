@@ -7,6 +7,8 @@ import crypto from "crypto";
 export interface IndividualUserDocument extends Document {
   orguser: mongoose.Schema.Types.ObjectId; // Reference to the User model
   email: string;
+  username: string;
+  name: string;
   sub: string;
   picture: string;
   role: string;
@@ -29,6 +31,9 @@ const individualUserSchema = new Schema<IndividualUserDocument>(
       type: Schema.Types.ObjectId,
       ref: "orgUser", // Reference to User model
     },
+
+    name: { type: String }, // Add this line
+    username: { type: String }, // Add this line
 
     email: {
       type: String,
