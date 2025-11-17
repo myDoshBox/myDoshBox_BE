@@ -34,10 +34,6 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ============================================
-// MIDDLEWARE CONFIGURATION
-// ============================================
-
 // CORS configuration
 app.use(
   cors({
