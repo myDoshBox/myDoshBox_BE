@@ -19,14 +19,23 @@ export interface MediatorLoginResponse {
 export interface GetAllDisputeForAMediatorParams {
   mediator_email: string;
 }
+export interface PaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
 
 export interface GetAllDisputeForAMediatorResponse {
   status: string;
   message: string;
   data: {
-    mediator: Omit<IMediator, "password">;
-    disputes: IProductDispute[];
+    mediator: any; // or use your specific mediator type
+    disputes: any[]; // or use your specific dispute type array
   };
+  pagination?: PaginationMeta;
 }
 
 export interface InvolveAMediatorParams {

@@ -1654,3 +1654,424 @@ export const sendTransactionCancellationMailToBuyer = async (
     console.error("Error sending cancellation email:", error);
   }
 };
+/**
+ * Send mediator assignment notification to buyer
+ */
+export const sendMediatorInvolvementMailToBuyer = async (
+  buyer_email: string,
+  product_name: string,
+  mediator_name: string,
+  mediator_email: string
+) => {
+  try {
+    const transport = generateMailTransporter();
+    const supportEmail = "mydoshbox@gmail.com";
+    const dashboardUrl = "https://mydoshbox.vercel.app/dashboard";
+
+    const emailMessage = `
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mediator Assigned - MyDoshBox</title>
+  </head>
+  <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #f3f4f6;">
+    
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f3f4f6; padding: 40px 20px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); overflow: hidden;" cellspacing="0" cellpadding="0" border="0">
+            
+            <tr>
+              <td style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); padding: 32px 24px; text-align: center;">
+                <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;">
+                  👤 Mediator Assigned
+                </h1>
+                <p style="margin: 8px 0 0 0; color: #ede9fe; font-size: 14px;">
+                  Your case is now under review
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding: 32px 24px;">
+                <p style="margin: 0 0 20px 0; color: #111827; font-size: 16px; line-height: 1.6;">
+                  Hello,
+                </p>
+                
+                <p style="margin: 0 0 24px 0; color: #374151; font-size: 15px; line-height: 1.6;">
+                  A qualified mediator has been assigned to your dispute regarding <strong>${product_name}</strong>.
+                </p>
+
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 24px;">
+                  <tr>
+                    <td style="padding: 20px;">
+                      <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 13px; font-weight: 600; text-transform: uppercase;">
+                        Assigned Mediator
+                      </p>
+                      <p style="margin: 0 0 12px 0; color: #111827; font-size: 16px; font-weight: 600;">
+                        ${mediator_name}
+                      </p>
+                      <p style="margin: 0 0 4px 0; color: #6b7280; font-size: 13px; font-weight: 600; text-transform: uppercase;">
+                        Contact Email
+                      </p>
+                      <p style="margin: 0; color: #3b82f6; font-size: 14px;">
+                        <a href="mailto:${mediator_email}" style="color: #3b82f6; text-decoration: none;">${mediator_email}</a>
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); border-radius: 8px; border-left: 4px solid #8b5cf6; margin-bottom: 24px;">
+                  <tr>
+                    <td style="padding: 20px;">
+                      <p style="margin: 0 0 12px 0; color: #5b21b6; font-size: 14px; font-weight: 700;">
+                        📌 What Happens Next
+                      </p>
+                      <p style="margin: 0; color: #4c1d95; font-size: 14px; line-height: 1.6;">
+                        The mediator will review all evidence, proposals, and communications from both parties. They may contact you for additional information. A binding decision will be issued within 3-5 business days.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+
+                <h2 style="margin: 0 0 16px 0; color: #111827; font-size: 18px; font-weight: 700;">
+                  📋 Mediation Timeline
+                </h2>
+
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 24px;">
+                  <tr>
+                    <td style="padding: 0;">
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 12px;">
+                        <tr>
+                          <td style="width: 32px; vertical-align: top; padding-top: 2px;">
+                            <div style="width: 24px; height: 24px; background-color: #dbeafe; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #1e40af; font-weight: 700; font-size: 12px;">✓</div>
+                          </td>
+                          <td style="padding-left: 12px; color: #10b981; font-size: 14px; line-height: 1.6; font-weight: 600;">
+                            <strong>Mediator Assigned</strong> - ${mediator_name} is now reviewing your case
+                          </td>
+                        </tr>
+                      </table>
+
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 12px;">
+                        <tr>
+                          <td style="width: 32px; vertical-align: top; padding-top: 2px;">
+                            <div style="width: 24px; height: 24px; background-color: #dbeafe; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #1e40af; font-weight: 700; font-size: 12px;">→</div>
+                          </td>
+                          <td style="padding-left: 12px; color: #374151; font-size: 14px; line-height: 1.6;">
+                            <strong>Case Review</strong> - All evidence and communications are being examined
+                          </td>
+                        </tr>
+                      </table>
+
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 12px;">
+                        <tr>
+                          <td style="width: 32px; vertical-align: top; padding-top: 2px;">
+                            <div style="width: 24px; height: 24px; background-color: #e5e7eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #6b7280; font-weight: 700; font-size: 12px;">3</div>
+                          </td>
+                          <td style="padding-left: 12px; color: #6b7280; font-size: 14px; line-height: 1.6;">
+                            <strong>Additional Information</strong> - Mediator may request clarification (if needed)
+                          </td>
+                        </tr>
+                      </table>
+
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                        <tr>
+                          <td style="width: 32px; vertical-align: top; padding-top: 2px;">
+                            <div style="width: 24px; height: 24px; background-color: #e5e7eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #6b7280; font-weight: 700; font-size: 12px;">4</div>
+                          </td>
+                          <td style="padding-left: 12px; color: #6b7280; font-size: 14px; line-height: 1.6;">
+                            <strong>Final Decision</strong> - Binding resolution issued (3-5 business days)
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #fef3c7; border-radius: 8px; border-left: 4px solid #f59e0b; margin-bottom: 24px;">
+                  <tr>
+                    <td style="padding: 20px;">
+                      <p style="margin: 0 0 12px 0; color: #92400e; font-size: 14px; font-weight: 700;">
+                        💡 Important Reminders
+                      </p>
+                      <ul style="margin: 0; padding-left: 20px; color: #78350f; font-size: 14px; line-height: 1.8;">
+                        <li>The mediator's decision is final and binding</li>
+                        <li>Respond promptly if contacted for additional information</li>
+                        <li>All communication should be respectful and factual</li>
+                      </ul>
+                    </td>
+                  </tr>
+                </table>
+
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 24px;">
+                  <tr>
+                    <td align="center" style="padding: 0;">
+                      <a href="${dashboardUrl}" style="display: inline-block; padding: 14px 32px; background-color: #8b5cf6; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px; box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);">
+                        View Dispute Details
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+
+                <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 32px 0;" />
+
+                <p style="margin: 0 0 12px 0; color: #6b7280; font-size: 14px; line-height: 1.6;">
+                  Need help? Contact our support team at 
+                  <a href="mailto:${supportEmail}" style="color: #10b981; text-decoration: none; font-weight: 600;">${supportEmail}</a>
+                </p>
+
+                <p style="margin: 0; color: #374151; font-size: 14px; line-height: 1.6;">
+                  Best regards,<br/>
+                  <strong style="color: #10b981;">The MyDoshBox Team</strong>
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="background-color: #f9fafb; padding: 24px; text-align: center; border-top: 1px solid #e5e7eb;">
+                <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 12px;">
+                  © ${new Date().getFullYear()} MyDoshBox. All rights reserved.
+                </p>
+                <p style="margin: 0; color: #9ca3af; font-size: 11px;">
+                  Secure escrow transactions made simple
+                </p>
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+
+  </body>
+  </html>
+  `;
+
+    const info = await transport.sendMail({
+      to: buyer_email,
+      from: process.env.VERIFICATION_EMAIL,
+      subject: `👤 Mediator Assigned - ${product_name}`,
+      html: emailMessage,
+    });
+
+    console.log(
+      "Mediator assignment email sent to buyer - Message ID:",
+      info?.messageId
+    );
+  } catch (error: unknown) {
+    console.error("Error sending mediator assignment email to buyer:", error);
+  }
+};
+
+/**
+ * Send mediator assignment notification to seller
+ */
+export const sendMediatorInvolvementMailToSeller = async (
+  vendor_email: string,
+  product_name: string,
+  mediator_name: string,
+  mediator_email: string
+) => {
+  try {
+    const transport = generateMailTransporter();
+    const supportEmail = "mydoshbox@gmail.com";
+    const dashboardUrl = "https://mydoshbox.vercel.app/dashboard";
+
+    const emailMessage = `
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mediator Assigned - MyDoshBox</title>
+  </head>
+  <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #f3f4f6;">
+    
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f3f4f6; padding: 40px 20px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); overflow: hidden;" cellspacing="0" cellpadding="0" border="0">
+            
+            <tr>
+              <td style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); padding: 32px 24px; text-align: center;">
+                <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;">
+                  👤 Mediator Assigned
+                </h1>
+                <p style="margin: 8px 0 0 0; color: #ede9fe; font-size: 14px;">
+                  Your case is now under review
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding: 32px 24px;">
+                <p style="margin: 0 0 20px 0; color: #111827; font-size: 16px; line-height: 1.6;">
+                  Hello,
+                </p>
+                
+                <p style="margin: 0 0 24px 0; color: #374151; font-size: 15px; line-height: 1.6;">
+                  A qualified mediator has been assigned to your dispute regarding <strong>${product_name}</strong>.
+                </p>
+
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 24px;">
+                  <tr>
+                    <td style="padding: 20px;">
+                      <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 13px; font-weight: 600; text-transform: uppercase;">
+                        Assigned Mediator
+                      </p>
+                      <p style="margin: 0 0 12px 0; color: #111827; font-size: 16px; font-weight: 600;">
+                        ${mediator_name}
+                      </p>
+                      <p style="margin: 0 0 4px 0; color: #6b7280; font-size: 13px; font-weight: 600; text-transform: uppercase;">
+                        Contact Email
+                      </p>
+                      <p style="margin: 0; color: #3b82f6; font-size: 14px;">
+                        <a href="mailto:${mediator_email}" style="color: #3b82f6; text-decoration: none;">${mediator_email}</a>
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); border-radius: 8px; border-left: 4px solid #8b5cf6; margin-bottom: 24px;">
+                  <tr>
+                    <td style="padding: 20px;">
+                      <p style="margin: 0 0 12px 0; color: #5b21b6; font-size: 14px; font-weight: 700;">
+                        📌 What Happens Next
+                      </p>
+                      <p style="margin: 0; color: #4c1d95; font-size: 14px; line-height: 1.6;">
+                        The mediator will review all evidence, proposals, and communications from both parties. They may contact you for additional information. A binding decision will be issued within 3-5 business days.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+
+                <h2 style="margin: 0 0 16px 0; color: #111827; font-size: 18px; font-weight: 700;">
+                  📋 Mediation Timeline
+                </h2>
+
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 24px;">
+                  <tr>
+                    <td style="padding: 0;">
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 12px;">
+                        <tr>
+                          <td style="width: 32px; vertical-align: top; padding-top: 2px;">
+                            <div style="width: 24px; height: 24px; background-color: #dbeafe; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #1e40af; font-weight: 700; font-size: 12px;">✓</div>
+                          </td>
+                          <td style="padding-left: 12px; color: #10b981; font-size: 14px; line-height: 1.6; font-weight: 600;">
+                            <strong>Mediator Assigned</strong> - ${mediator_name} is now reviewing your case
+                          </td>
+                        </tr>
+                      </table>
+
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 12px;">
+                        <tr>
+                          <td style="width: 32px; vertical-align: top; padding-top: 2px;">
+                            <div style="width: 24px; height: 24px; background-color: #dbeafe; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #1e40af; font-weight: 700; font-size: 12px;">→</div>
+                          </td>
+                          <td style="padding-left: 12px; color: #374151; font-size: 14px; line-height: 1.6;">
+                            <strong>Case Review</strong> - All evidence and communications are being examined
+                          </td>
+                        </tr>
+                      </table>
+
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 12px;">
+                        <tr>
+                          <td style="width: 32px; vertical-align: top; padding-top: 2px;">
+                            <div style="width: 24px; height: 24px; background-color: #e5e7eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #6b7280; font-weight: 700; font-size: 12px;">3</div>
+                          </td>
+                          <td style="padding-left: 12px; color: #6b7280; font-size: 14px; line-height: 1.6;">
+                            <strong>Additional Information</strong> - Mediator may request clarification (if needed)
+                          </td>
+                        </tr>
+                      </table>
+
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                        <tr>
+                          <td style="width: 32px; vertical-align: top; padding-top: 2px;">
+                            <div style="width: 24px; height: 24px; background-color: #e5e7eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #6b7280; font-weight: 700; font-size: 12px;">4</div>
+                          </td>
+                          <td style="padding-left: 12px; color: #6b7280; font-size: 14px; line-height: 1.6;">
+                            <strong>Final Decision</strong> - Binding resolution issued (3-5 business days)
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #fef3c7; border-radius: 8px; border-left: 4px solid #f59e0b; margin-bottom: 24px;">
+                  <tr>
+                    <td style="padding: 20px;">
+                      <p style="margin: 0 0 12px 0; color: #92400e; font-size: 14px; font-weight: 700;">
+                        💡 Important Reminders
+                      </p>
+                      <ul style="margin: 0; padding-left: 20px; color: #78350f; font-size: 14px; line-height: 1.8;">
+                        <li>The mediator's decision is final and binding</li>
+                        <li>Respond promptly if contacted for additional information</li>
+                        <li>All communication should be respectful and factual</li>
+                      </ul>
+                    </td>
+                  </tr>
+                </table>
+
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 24px;">
+                  <tr>
+                    <td align="center" style="padding: 0;">
+                      <a href="${dashboardUrl}" style="display: inline-block; padding: 14px 32px; background-color: #8b5cf6; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px; box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);">
+                        View Dispute Details
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+
+                <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 32px 0;" />
+
+                <p style="margin: 0 0 12px 0; color: #6b7280; font-size: 14px; line-height: 1.6;">
+                  Need help? Contact our support team at 
+                  <a href="mailto:${supportEmail}" style="color: #10b981; text-decoration: none; font-weight: 600;">${supportEmail}</a>
+                </p>
+
+                <p style="margin: 0; color: #374151; font-size: 14px; line-height: 1.6;">
+                  Best regards,<br/>
+                  <strong style="color: #10b981;">The MyDoshBox Team</strong>
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="background-color: #f9fafb; padding: 24px; text-align: center; border-top: 1px solid #e5e7eb;">
+                <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 12px;">
+                  © ${new Date().getFullYear()} MyDoshBox. All rights reserved.
+                </p>
+                <p style="margin: 0; color: #9ca3af; font-size: 11px;">
+                  Secure escrow transactions made simple
+                </p>
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+
+  </body>
+  </html>
+  `;
+
+    const info = await transport.sendMail({
+      to: vendor_email,
+      from: process.env.VERIFICATION_EMAIL,
+      subject: `👤 Mediator Assigned - ${product_name}`,
+      html: emailMessage,
+    });
+
+    console.log(
+      "Mediator assignment email sent to seller - Message ID:",
+      info?.messageId
+    );
+  } catch (error: unknown) {
+    console.error("Error sending mediator assignment email to seller:", error);
+  }
+};

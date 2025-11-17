@@ -176,6 +176,7 @@ interface IProductTransaction extends Document {
   transaction_status: string;
   seller_confirm_status: boolean;
   buyer_confirm_status: boolean;
+  dispute_status: string; // NEW FIELD
 }
 
 const productTransactionSchema = new mongoose.Schema<IProductTransaction>(
@@ -211,6 +212,11 @@ const productTransactionSchema = new mongoose.Schema<IProductTransaction>(
     shipping_submitted: { type: Boolean, default: false },
     transaction_status: { type: String, default: "processing" },
     seller_confirm_status: { type: Boolean, default: false },
+    dispute_status: {
+      type: String,
+      enum: ["none", "active", "resolved", "cancelled"],
+      default: "none",
+    },
   },
   { timestamps: true }
 );

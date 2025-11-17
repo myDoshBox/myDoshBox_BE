@@ -12,12 +12,13 @@ import allowedOrigins from "./config/allowedOrigins.config";
 // Routes
 import organizationUserAuthRouter from "./modules/authentication/organizationUserAuth/organizationAuth.route";
 import individualUserAuthRouter from "./modules/authentication/individualUserAuth/individualAuth.route";
-import authRouter from "./modules/authentication/userAuth.route";
+import AdminUserRouter from "./modules/authentication/adminUserAuth/adminAuth.route";
 import individualUsersRoutes from "./modules/users/individualUsers/individualUsers.route";
 import organizationUsersRoutes from "./modules/users/organization/getOrganizationUser.route";
 import escrowProductTransactionRouter from "./modules/transactions/productsTransaction/productsTransaction.route";
 import escrowProductDisputeRouter from "./modules/disputes/productsDispute/productDispute.route";
 import adminRouter from "./modules/administrator/admin.route";
+import mediatorRouter from "./modules/mediator/mediator.route";
 
 // Middleware
 import deserializeUser from "./middlewares/deserializeUser.middleware";
@@ -40,17 +41,7 @@ const PORT = process.env.PORT || 5000;
 // CORS configuration
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // Allow requests with no origin (mobile apps, curl, Postman)
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        console.log(`Blocked by CORS: ${origin}`);
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
+    origin: allowedOrigins,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -60,6 +51,14 @@ app.use(
 // Body parsing middleware (ONLY ONCE!)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// 🔍 DEBUG: Check if body is parsed
+app.use((req, res, next) => {
+  console.log(`\n🌐 [${req.method}] ${req.path}`);
+  console.log("📦 Body immediately after parsing:", req.body);
+  console.log("📋 Content-Type:", req.headers["content-type"]);
+  next();
+});
 
 // Logging middleware
 app.use(morgan("dev"));
@@ -75,15 +74,14 @@ app.use(deserializeUser);
 app.get("/", (req: Request, res: Response) => {
   res.json({
     status: "success",
-    message: "Welcome to DoshBox API",
-    version: "1.0.0",
+    message: "Welcome to MyDoshBox API",
   });
 });
 
 // Authentication routes
 app.use("/auth/organization", organizationUserAuthRouter);
 app.use("/auth/individual", individualUserAuthRouter);
-app.use("/auth", authRouter);
+app.use("/auth/admin", AdminUserRouter);
 
 // User routes
 app.use("/user", organizationUsersRoutes);
@@ -97,6 +95,8 @@ app.use("/disputes", escrowProductDisputeRouter);
 
 // Admin routes
 app.use("/admin", adminRouter);
+// mediator Route
+app.use("/mediators", mediatorRouter);
 
 // ============================================
 // SWAGGER/API DOCUMENTATION
