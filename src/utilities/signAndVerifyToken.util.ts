@@ -24,45 +24,58 @@
 //   }
 // }
 
-import jwt, { SignOptions, JwtPayload } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 
-// Properly type the signJwt function
-export function signJwt(payload: object, options?: SignOptions): string {
-  const privateKey = process.env.JWT_SECRET;
-
-  if (!privateKey) {
-    throw new Error("JWT_SECRET is not defined in environment variables");
-  }
-
-  return jwt.sign(payload, privateKey, {
-    ...(options && options),
-  });
+export interface JWTPayload {
+  userData: {
+    _id: string;
+    role: string;
+  };
+  session: string;
+  role: string;
 }
 
-// Properly type the verifyJwt function
-export function verifyJwt(token: string): {
-  valid: boolean;
-  expired: boolean;
-  decoded: string | JwtPayload | null;
-} {
-  const publicKey = process.env.JWT_SECRET;
+export interface SignOptions {
+  expiresIn: string | number;
+}
 
-  if (!publicKey) {
-    throw new Error("JWT_SECRET is not defined in environment variables");
+export interface VerifyResult {
+  decoded: JWTPayload | null;
+  expired: boolean;
+  valid: boolean;
+}
+
+export const signJwt = (payload: JWTPayload, options?: SignOptions): string => {
+  const secret = process.env.JWT_SECRET as string;
+
+  if (!secret) {
+    throw new Error("JWT_SECRET is not defined");
+  }
+
+  return jwt.sign(payload, secret, {
+    ...(options && options),
+  });
+};
+
+export const verifyJwt = (token: string): VerifyResult => {
+  const secret = process.env.JWT_SECRET as string;
+
+  if (!secret) {
+    throw new Error("JWT_SECRET is not defined");
   }
 
   try {
-    const decoded = jwt.verify(token, publicKey);
+    const decoded = jwt.verify(token, secret) as JWTPayload;
     return {
-      valid: true,
-      expired: false,
       decoded,
+      expired: false,
+      valid: true,
     };
   } catch (error: any) {
     return {
-      valid: false,
-      expired: error.message === "jwt expired",
       decoded: null,
+      expired: error.message?.includes("jwt expired"),
+      valid: false,
     };
   }
-}
+};

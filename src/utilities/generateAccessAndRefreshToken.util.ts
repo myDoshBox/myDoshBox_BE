@@ -11,17 +11,31 @@ const ACCESS_TOKEN_EXPIRY = "15m";
 const REFRESH_TOKEN_EXPIRY = "7d";
 
 export function generateAccessAndRefreshToken(
-  userObject: object,
+  userObject: { _id: string; role: string },
   sessionId: Types.ObjectId,
   role: string
 ): { accessToken: string; refreshToken: string } {
   const accessToken = signJwt(
-    { userData: userObject, session: sessionId, role },
+    {
+      userData: {
+        _id: userObject._id,
+        role: userObject.role,
+      },
+      session: sessionId.toString(),
+      role,
+    },
     { expiresIn: process.env.ACCESS_TOKEN_TTL || ACCESS_TOKEN_EXPIRY }
   );
 
   const refreshToken = signJwt(
-    { userData: userObject, session: sessionId, role },
+    {
+      userData: {
+        _id: userObject._id,
+        role: userObject.role,
+      },
+      session: sessionId.toString(),
+      role,
+    },
     { expiresIn: process.env.REFRESH_TOKEN_TTL || REFRESH_TOKEN_EXPIRY }
   );
 
@@ -41,16 +55,12 @@ export async function reIssueAccessToken({
 
   if (!session || !session.valid) return false;
 
-  let user: Document | undefined;
+  let user: any;
 
   if (session.role === "org" || session.role === "g-org") {
-    user = (await OrganizationModel.findById({
-      _id: session.user,
-    })) as Document;
+    user = await OrganizationModel.findById(session.user);
   } else if (session.role === "ind" || session.role === "g-ind") {
-    user = (await individualUserAuthModel.findById({
-      _id: session.user,
-    })) as Document;
+    user = await individualUserAuthModel.findById(session.user);
   } else {
     user = undefined;
   }
@@ -60,7 +70,14 @@ export async function reIssueAccessToken({
   const accessTokenTTL: string = process.env.ACCESS_TOKEN_TTL || "15m";
 
   const accessToken = signJwt(
-    { userData: user, session: session._id, role: session.role },
+    {
+      userData: {
+        _id: user._id.toString(),
+        role: session.role,
+      },
+      session: session._id.toString(),
+      role: session.role,
+    },
     { expiresIn: accessTokenTTL }
   );
 

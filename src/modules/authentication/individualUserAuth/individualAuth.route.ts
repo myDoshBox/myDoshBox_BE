@@ -15,6 +15,7 @@ import {
   updateTwitterUserEmail,
 } from "../individualUserAuth/socialAuth.controller";
 import { asyncHandler } from "../../../middlewares/asyncHandler.middleware";
+import { refreshAccessToken } from "../../../utilities/refreshController";
 
 const individualrouter = Router();
 
@@ -289,5 +290,8 @@ individualrouter.get("/twitter", initiateTwitterAuth);
 individualrouter
   .route("/update-email")
   .post(asyncHandler(updateTwitterUserEmail));
+individualrouter.route("/refresh-token").post(asyncHandler(refreshAccessToken));
+
+// refreshToken Route is passed here
 
 export default individualrouter;

@@ -5,7 +5,7 @@ import swaggerJSDOC from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 import morgan from "morgan";
 import dotenv from "dotenv";
-
+import cookieParser from "cookie-parser";
 import connectDB from "./config/dbconn.config";
 import allowedOrigins from "./config/allowedOrigins.config";
 
@@ -47,6 +47,7 @@ app.use(
 // Body parsing middleware (ONLY ONCE!)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // 🔍 DEBUG: Check if body is parsed
 app.use((req, res, next) => {
@@ -75,8 +76,8 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 // Authentication routes
-app.use("/auth/organization", organizationUserAuthRouter);
 app.use("/auth/individual", individualUserAuthRouter);
+app.use("/auth/organization", organizationUserAuthRouter);
 app.use("/auth/admin", AdminUserRouter);
 
 // User routes

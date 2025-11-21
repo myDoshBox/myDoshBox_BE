@@ -6,6 +6,7 @@ import { compare } from "bcrypt";
 
 // Extend the OrganizationDoc interface to include virtual properties
 export interface organizationalDoc extends Document {
+  _id: mongoose.Types.ObjectId;
   organization_name: string;
   organization_email: string;
   contact_email: string;
@@ -18,6 +19,7 @@ export interface organizationalDoc extends Document {
   sub: string;
   picture: string;
   role: string;
+  refreshToken?: string;
   comparePassword(candidatePassword: string): Promise<boolean>;
   changedPasswordAfter(JWTTimestamp: number): boolean;
   createPasswordResetToken(): string;
@@ -67,6 +69,7 @@ const organizationalSchema: Schema<organizationalDoc> = new mongoose.Schema(
       type: String,
       select: false,
     },
+    refreshToken: { type: String },
     passwordChangedAt: Date,
     passwordResetToken: String,
     passwordResetExpires: Date,

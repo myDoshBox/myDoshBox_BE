@@ -6,6 +6,7 @@ import crypto from "crypto";
 
 export interface IndividualUserDocument extends Document {
   orguser: mongoose.Schema.Types.ObjectId; // Reference to the User model
+  _id: mongoose.Types.ObjectId;
   email: string;
   username: string;
   name: string;
@@ -15,6 +16,7 @@ export interface IndividualUserDocument extends Document {
   phone_number: string;
   password: string;
   email_verified: boolean;
+  refreshToken?: string;
   passwordChangedAt?: Date;
   passwordResetExpires?: Date;
   passwordResetToken?: string;
@@ -62,6 +64,7 @@ const individualUserSchema = new Schema<IndividualUserDocument>(
       enum: ["ind", "g-ind"],
       required: [true, "Please provide role"],
     },
+    refreshToken: { type: String },
     picture: String,
     password: {
       type: String,

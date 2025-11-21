@@ -4,12 +4,14 @@ import { hash, compare } from "bcrypt";
 import crypto from "crypto";
 
 export interface AdminUserDocument extends Document {
+  _id: mongoose.Types.ObjectId;
   email: string;
   username: string;
   name: string;
   role: string;
   phone_number: string;
   password: string;
+  refreshToken?: string;
   email_verified: boolean;
   passwordChangedAt?: Date;
   passwordResetExpires?: Date;
@@ -63,6 +65,7 @@ const adminUserSchema = new Schema<AdminUserDocument>(
       default: "admin",
       required: [true, "Please provide role"],
     },
+    refreshToken: { type: String },
     isSuperAdmin: {
       type: Boolean,
       default: false,

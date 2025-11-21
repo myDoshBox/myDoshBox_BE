@@ -135,10 +135,21 @@ export const adminUserLogin = async (
 
     const userAgent = req.get("User-Agent") || "unknown";
 
+    // const result = await createSessionAndSendTokens({
+    //   user: admin.toObject(),
+    //   userAgent: userAgent,
+    //   role: admin.role,
+    //   message: "Admin login successful",
+    // });
     const result = await createSessionAndSendTokens({
-      user: admin.toObject(),
+      user: {
+        _id: admin._id,
+        email: admin.email,
+        role: admin.role,
+        phone_number: admin.phone_number,
+      },
       userAgent: userAgent,
-      role: admin.role,
+      role: "admin",
       message: "Admin login successful",
     });
 

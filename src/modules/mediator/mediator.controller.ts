@@ -576,7 +576,11 @@ export const mediatorLogin = async (
 
     // Create session and generate tokens
     const sessionResponse = await createSessionAndSendTokens({
-      user: mediatorWithoutPassword,
+      user: {
+        _id: mediatorToLogin._id,
+        email: mediatorToLogin.mediator_email,
+        role: "mediator", // Add this required property
+      },
       userAgent: req.get("user-agent") || "",
       role: "mediator",
       message: "Mediator successfully logged in",

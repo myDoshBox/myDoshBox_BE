@@ -1,6 +1,7 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IMediator extends Document {
+  _id: mongoose.Types.ObjectId;
   dispute: mongoose.Schema.Types.ObjectId[]; // Reference to the User model
   first_name: string;
   middle_name: string;
@@ -8,6 +9,7 @@ export interface IMediator extends Document {
   mediator_email: string;
   mediator_phone_number: string;
   password: string;
+  refreshToken?: string;
 }
 
 const mediatorSchema = new mongoose.Schema(
@@ -49,6 +51,7 @@ const mediatorSchema = new mongoose.Schema(
       required: true,
       select: false, // Exclude password by default
     },
+    refreshToken: { type: String },
   },
   {
     timestamps: true,

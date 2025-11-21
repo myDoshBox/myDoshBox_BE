@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
+import mongoose from "mongoose";
 import OrganizationModel from "./organizationAuth.model";
 import {
   sendOrganizationVerificationEmail,
@@ -63,7 +64,6 @@ export const organizationUserRegistration = async (
     });
 
     if (organizationEmailAlreadyExist) {
-      // might check for individual later// individualEmailAlreadyExist
       const error: ErrorResponse = {
         statusCode: 400,
         status: "fail",
@@ -155,9 +155,14 @@ export const organizationUserLogin = async (
 
     // Use the session utility to create session and send tokens
     const result = await createSessionAndSendTokens({
-      user: organization.toObject(),
+      user: {
+        _id: organization._id,
+        email: organization.organization_email,
+        phone_number: organization.contact_number,
+        role: organization.role,
+      },
       userAgent: userAgent,
-      role: "org", // Organization role
+      role: "org",
       message: "Organization login successful",
     });
 
@@ -195,6 +200,113 @@ export const organizationUserLogin = async (
       statusCode: 500,
       status: "error",
       message: "Error logging in organization",
+      stack: error instanceof Error ? { stack: error.stack } : undefined,
+    };
+    next(errResponse);
+  }
+};
+
+export const individualUserLogin = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { email, password } = req.body;
+
+    // Validation
+    if (!email || !password) {
+      const error: ErrorResponse = {
+        statusCode: 400,
+        status: "fail",
+        message: "Email and password are required",
+      };
+      return next(error);
+    }
+
+    // Find user and include password field
+    const user = await IndividualUser.findOne({ email }).select("+password");
+
+    if (!user) {
+      const error: ErrorResponse = {
+        statusCode: 404,
+        status: "fail",
+        message: "Invalid email or password",
+      };
+      return next(error);
+    }
+
+    // Check if email is verified
+    if (!user.email_verified) {
+      const error: ErrorResponse = {
+        statusCode: 403,
+        status: "fail",
+        message: "Please verify your email before logging in",
+      };
+      return next(error);
+    }
+
+    // Verify password
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      const error: ErrorResponse = {
+        statusCode: 401,
+        status: "fail",
+        message: "Invalid email or password",
+      };
+      return next(error);
+    }
+
+    // Get user agent from request headers
+    const userAgent = req.get("User-Agent") || "unknown";
+
+    // Create session and generate tokens
+    const result = await createSessionAndSendTokens({
+      user: {
+        _id: user._id as mongoose.Types.ObjectId,
+        email: user.email,
+        phone_number: user.phone_number,
+        role: user.role,
+      },
+      userAgent,
+      role: "ind",
+      message: "Login successful",
+    });
+
+    // Set HTTP-only cookies
+    res.cookie("access_token", result.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 15 * 60 * 1000, // 15 minutes
+    });
+
+    res.cookie("refresh_token", result.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    });
+
+    // Send response
+    res.status(200).json({
+      status: "success",
+      message: result.message,
+      user: {
+        id: user._id,
+        email: user.email,
+        phone_number: user.phone_number,
+        role: user.role,
+      },
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+    });
+  } catch (error) {
+    const errResponse: ErrorResponse = {
+      statusCode: 500,
+      status: "error",
+      message: "Error logging in",
       stack: error instanceof Error ? { stack: error.stack } : undefined,
     };
     next(errResponse);
@@ -247,7 +359,6 @@ export const verifyOrganizationEmail = async (
     organization.email_verified = true;
     await organization.save();
 
-    // Send welcome email after successful verification
     await sendOrganizationWelcomeEmail(
       organization.organization_email,
       organization.organization_name
@@ -369,13 +480,9 @@ export const forgotOrganizationPassword = async (
       return next(error);
     }
 
-    // This returns the UNHASHED token to send via email
     const resetToken = organization.createPasswordResetToken();
-
-    // Save the organization with the hashed token and expiry
     await organization.save({ validateBeforeSave: false });
 
-    // Send reset email with the UNHASHED token
     await sendOrganizationPasswordResetEmail(
       organization_email,
       resetToken,
@@ -407,7 +514,6 @@ export const resetOrganizationPassword = async (
     const { token } = req.query;
     const { password, confirm_password } = req.body;
 
-    // Validation Checks
     if (!token || typeof token !== "string") {
       const error: ErrorResponse = {
         statusCode: 400,
@@ -435,10 +541,8 @@ export const resetOrganizationPassword = async (
       return next(error);
     }
 
-    // Hash the incoming token the same way it was stored
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
-    // Find organization with matching hashed token and unexpired date
     const organization = await OrganizationModel.findOne({
       passwordResetToken: hashedToken,
       passwordResetExpires: { $gt: Date.now() },
@@ -453,7 +557,6 @@ export const resetOrganizationPassword = async (
       return next(error);
     }
 
-    // Update password and clear token fields
     organization.password = password;
     organization.passwordResetToken = undefined;
     organization.passwordResetExpires = undefined;
@@ -461,7 +564,6 @@ export const resetOrganizationPassword = async (
 
     await organization.save();
 
-    // Send success email
     await sendOrganizationPasswordResetSuccessEmail(
       organization.organization_email,
       organization.organization_name

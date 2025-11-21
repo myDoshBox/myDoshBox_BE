@@ -1,5 +1,6 @@
 import { IProductDispute } from "../disputes/productsDispute/productDispute.model";
 import { IMediator } from "./mediator.model";
+import mongoose from "mongoose";
 
 // mediator_login
 export interface MediatorLoginBody {
@@ -10,7 +11,11 @@ export interface MediatorLoginBody {
 export interface MediatorLoginResponse {
   status: string;
   message: string;
-  user: Omit<IMediator, "password">;
+  user: {
+    _id: mongoose.Types.ObjectId | string;
+    email: string;
+    role: string;
+  };
   accessToken: string;
   refreshToken: string;
 }
