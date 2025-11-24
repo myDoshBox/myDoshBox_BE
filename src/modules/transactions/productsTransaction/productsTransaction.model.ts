@@ -146,6 +146,7 @@
 
 // export default ProductTransaction;
 
+// productsTransaction.model.ts - UPDATE
 import mongoose, { Schema, Document } from "mongoose";
 
 interface IProductItem {
@@ -159,6 +160,7 @@ interface IProductItem {
 interface IProductTransaction extends Document {
   user: mongoose.Schema.Types.ObjectId;
   transaction_id: string;
+  payment_reference?: string; // Make optional initially
   buyer_email: string;
   vendor_name: string;
   vendor_phone_number: string;
@@ -176,7 +178,9 @@ interface IProductTransaction extends Document {
   transaction_status: string;
   seller_confirm_status: boolean;
   buyer_confirm_status: boolean;
-  dispute_status: string; // NEW FIELD
+  dispute_status: string;
+  payment_initiated_at?: Date;
+  payment_verified_at?: Date;
 }
 
 const productTransactionSchema = new mongoose.Schema<IProductTransaction>(
@@ -187,6 +191,7 @@ const productTransactionSchema = new mongoose.Schema<IProductTransaction>(
       required: true,
     },
     transaction_id: { type: String, required: true, unique: true },
+    payment_reference: { type: String, unique: true, sparse: true },
     buyer_email: { type: String, required: true },
     vendor_name: { type: String, required: true },
     vendor_phone_number: { type: String, required: true },
@@ -210,13 +215,28 @@ const productTransactionSchema = new mongoose.Schema<IProductTransaction>(
     buyer_confirm_status: { type: Boolean, default: false },
     verified_payment_status: { type: Boolean, default: false },
     shipping_submitted: { type: Boolean, default: false },
-    transaction_status: { type: String, default: "processing" },
+    transaction_status: {
+      type: String,
+      default: "processing",
+      enum: [
+        "processing", // Initial state when buyer initiates
+        "awaiting_payment", // After seller confirms
+        "payment_verified", // After payment is verified
+        "awaiting_shipping", // After payment, before shipping details
+        "in_transit", // After shipping details submitted
+        "completed", // After buyer confirms receipt
+        "cancelled", // If cancelled
+        "inDispute", // If in dispute
+      ],
+    },
     seller_confirm_status: { type: Boolean, default: false },
     dispute_status: {
       type: String,
       enum: ["none", "active", "resolved", "cancelled"],
       default: "none",
     },
+    payment_initiated_at: { type: Date },
+    payment_verified_at: { type: Date },
   },
   { timestamps: true }
 );

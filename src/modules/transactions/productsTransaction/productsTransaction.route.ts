@@ -67,6 +67,7 @@ import {
   getAllShippingDetails,
   getAllShippingDetailsWithAggregation,
   cancelEscrowProductTransaction,
+  getPaymentStatus,
 } from "./productsTransaction.controller";
 import {
   verifyAuth,
@@ -179,6 +180,18 @@ escrowProductTransactionRouter
 escrowProductTransactionRouter
   .route("/get-all-shipping-details-with-aggregation/:user_email")
   .get(asyncHandler(getAllShippingDetailsWithAggregation));
+/**
+ * @swagger
+ *   /get-payment-status/transaction_id:
+ *     get:
+ *       summary: Get payments status and details for a particular transaction
+ *       tags: [Escrow Product Transactions]
+ *       security:
+ *         - bearerAuth: []
+ */
+escrowProductTransactionRouter
+  .route("/get-payment-status/:transaction_id")
+  .get(asyncHandler(getPaymentStatus));
 
 /**
  * @swagger
