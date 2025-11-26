@@ -232,9 +232,18 @@ const productTransactionSchema = new mongoose.Schema<IProductTransaction>(
     seller_confirm_status: { type: Boolean, default: false },
     dispute_status: {
       type: String,
-      enum: ["none", "active", "resolved", "cancelled"],
+      enum: [
+        "none",
+        "processing",
+        "In_Dispute",
+        "resolving",
+        "resolved,",
+        "escalated_to_mediator",
+        "cancelled",
+      ],
       default: "none",
     },
+
     payment_initiated_at: { type: Date },
     payment_verified_at: { type: Date },
   },

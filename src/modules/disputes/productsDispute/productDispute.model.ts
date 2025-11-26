@@ -298,6 +298,7 @@
 // ============================================
 
 // productDispute.model.ts - Simplified Version
+
 import mongoose, { Schema, Document, Types } from "mongoose";
 
 export interface IProductItem {
@@ -362,6 +363,8 @@ export interface IProductDispute extends Document {
 
   // Status
   dispute_status:
+    | "none"
+    | "In_Dispute"
     | "processing"
     | "resolving"
     | "resolved"
@@ -484,13 +487,15 @@ const productDisputeSchema = new Schema<IProductDispute>(
     dispute_status: {
       type: String,
       enum: [
+        "none",
         "processing",
+        "In_Dispute",
         "resolving",
         "resolved",
         "cancelled",
         "escalated_to_mediator",
       ],
-      default: "processing",
+      default: "none",
     },
     dispute_resolution_method: {
       type: String,

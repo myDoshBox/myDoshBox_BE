@@ -196,6 +196,112 @@ export const individualUserRegistration = async (
 //   }
 // };
 
+// export const individualUserLogin = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   try {
+//     const { email, password } = req.body;
+
+//     // Validation
+//     if (!email || !password) {
+//       const error: ErrorResponse = {
+//         statusCode: 400,
+//         status: "fail",
+//         message: "Email and password are required",
+//       };
+//       return next(error);
+//     }
+
+//     // Find user and include password field
+//     const user = await IndividualUser.findOne({ email }).select("+password");
+
+//     if (!user) {
+//       const error: ErrorResponse = {
+//         statusCode: 404,
+//         status: "fail",
+//         message: "Invalid email or password", // Generic message for security
+//       };
+//       return next(error);
+//     }
+
+//     // Check if email is verified
+//     if (!user.email_verified) {
+//       const error: ErrorResponse = {
+//         statusCode: 403,
+//         status: "fail",
+//         message: "Please verify your email before logging in",
+//       };
+//       return next(error);
+//     }
+
+//     // Verify password
+//     const isMatch = await bcrypt.compare(password, user.password);
+
+//     if (!isMatch) {
+//       const error: ErrorResponse = {
+//         statusCode: 401,
+//         status: "fail",
+//         message: "Invalid email or password",
+//       };
+//       return next(error);
+//     }
+
+//     // Get user agent from request headers
+//     const userAgent = req.get("User-Agent") || "unknown";
+
+//     // Create session and generate tokens
+//     const result = await createSessionAndSendTokens({
+//       user: {
+//         _id: user._id,
+//         email: user.email,
+//         phone_number: user.phone_number,
+//         role: user.role,
+//       },
+//       userAgent,
+//       role: "ind",
+//       message: "Login successful",
+//     });
+
+//     // Set HTTP-only cookies
+//     res.cookie("access_token", result.accessToken, {
+//       httpOnly: true,
+//       secure: process.env.NODE_ENV === "production",
+//       sameSite: "strict",
+//       maxAge: 15 * 60 * 1000, // 15 minutes
+//     });
+
+//     res.cookie("refresh_token", result.refreshToken, {
+//       httpOnly: true,
+//       secure: process.env.NODE_ENV === "production",
+//       sameSite: "strict",
+//       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+//     });
+
+//     // Send response
+//     res.status(200).json({
+//       status: "success",
+//       message: result.message,
+//       user: {
+//         id: user._id,
+//         email: user.email,
+//         phone_number: user.phone_number,
+//         role: user.role,
+//       },
+//       accessToken: result.accessToken,
+//       refreshToken: result.refreshToken,
+//     });
+//   } catch (error) {
+//     const errResponse: ErrorResponse = {
+//       statusCode: 500,
+//       status: "error",
+//       message: "Error logging in",
+//       stack: error instanceof Error ? { stack: error.stack } : undefined,
+//     };
+//     next(errResponse);
+//   }
+// };
 export const individualUserLogin = async (
   req: Request,
   res: Response,
@@ -251,16 +357,16 @@ export const individualUserLogin = async (
     // Get user agent from request headers
     const userAgent = req.get("User-Agent") || "unknown";
 
-    // Create session and generate tokens
+    // ✅ FIX: Ensure user object has proper structure with email
     const result = await createSessionAndSendTokens({
       user: {
         _id: user._id,
-        email: user.email,
+        email: user.email, // ✅ This is correct - keep it
         phone_number: user.phone_number,
-        role: user.role,
+        role: user.role || "ind", // ✅ Ensure role is set
       },
       userAgent,
-      role: "ind",
+      role: user.role || "ind", // ✅ Use user's role or default to "ind"
       message: "Login successful",
     });
 
@@ -289,6 +395,7 @@ export const individualUserLogin = async (
         phone_number: user.phone_number,
         role: user.role,
       },
+      token: result.accessToken, // ✅ ADD: For Redux compatibility
       accessToken: result.accessToken,
       refreshToken: result.refreshToken,
     });

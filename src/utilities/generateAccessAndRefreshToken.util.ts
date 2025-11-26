@@ -1,3 +1,89 @@
+// import { get } from "lodash";
+// import { Types } from "mongoose";
+// import { signJwt, verifyJwt } from "./signAndVerifyToken.util";
+
+// import { Session } from "../modules/sessions/session.model";
+// import OrganizationModel from "../modules/authentication/organizationUserAuth/organizationAuth.model";
+// import individualUserAuthModel from "../modules/authentication/individualUserAuth/individualUserAuth.model1";
+
+// // At the top of the file
+// const ACCESS_TOKEN_EXPIRY = "15m";
+// const REFRESH_TOKEN_EXPIRY = "7d";
+
+// export function generateAccessAndRefreshToken(
+//   userObject: { _id: string; role: string },
+//   sessionId: Types.ObjectId,
+//   role: string
+// ): { accessToken: string; refreshToken: string } {
+//   const accessToken = signJwt(
+//     {
+//       userData: {
+//         _id: userObject._id,
+//         role: userObject.role,
+//       },
+//       session: sessionId.toString(),
+//       role,
+//     },
+//     { expiresIn: process.env.ACCESS_TOKEN_TTL || ACCESS_TOKEN_EXPIRY }
+//   );
+
+//   const refreshToken = signJwt(
+//     {
+//       userData: {
+//         _id: userObject._id,
+//         role: userObject.role,
+//       },
+//       session: sessionId.toString(),
+//       role,
+//     },
+//     { expiresIn: process.env.REFRESH_TOKEN_TTL || REFRESH_TOKEN_EXPIRY }
+//   );
+
+//   return { accessToken, refreshToken };
+// }
+
+// export async function reIssueAccessToken({
+//   refreshToken,
+// }: {
+//   refreshToken: string;
+// }) {
+//   const { decoded } = verifyJwt(refreshToken);
+
+//   if (!decoded || !get(decoded, "session")) return false;
+
+//   const session = await Session.findById(get(decoded, "session"));
+
+//   if (!session || !session.valid) return false;
+
+//   let user: any;
+
+//   if (session.role === "org" || session.role === "g-org") {
+//     user = await OrganizationModel.findById(session.user);
+//   } else if (session.role === "ind" || session.role === "g-ind") {
+//     user = await individualUserAuthModel.findById(session.user);
+//   } else {
+//     user = undefined;
+//   }
+
+//   if (!user) return false;
+
+//   const accessTokenTTL: string = process.env.ACCESS_TOKEN_TTL || "15m";
+
+//   const accessToken = signJwt(
+//     {
+//       userData: {
+//         _id: user._id.toString(),
+//         role: session.role,
+//       },
+//       session: session._id.toString(),
+//       role: session.role,
+//     },
+//     { expiresIn: accessTokenTTL }
+//   );
+
+//   return accessToken;
+// }
+
 import { get } from "lodash";
 import { Types } from "mongoose";
 import { signJwt, verifyJwt } from "./signAndVerifyToken.util";
@@ -10,38 +96,47 @@ import individualUserAuthModel from "../modules/authentication/individualUserAut
 const ACCESS_TOKEN_EXPIRY = "15m";
 const REFRESH_TOKEN_EXPIRY = "7d";
 
+// ✅ UPDATED: Add email to userObject type
 export function generateAccessAndRefreshToken(
-  userObject: { _id: string; role: string },
+  userObject: {
+    _id: string;
+    role: string;
+    email?: string;
+    organization_email?: string;
+    contact_email?: string;
+  },
   sessionId: Types.ObjectId,
   role: string
 ): { accessToken: string; refreshToken: string } {
-  const accessToken = signJwt(
-    {
-      userData: {
-        _id: userObject._id,
-        role: userObject.role,
-      },
-      session: sessionId.toString(),
-      role,
-    },
-    { expiresIn: process.env.ACCESS_TOKEN_TTL || ACCESS_TOKEN_EXPIRY }
-  );
+  // ✅ Extract email (handle all user types)
+  const userEmail =
+    userObject.email ||
+    userObject.organization_email ||
+    userObject.contact_email;
 
-  const refreshToken = signJwt(
-    {
-      userData: {
-        _id: userObject._id,
-        role: userObject.role,
-      },
-      session: sessionId.toString(),
-      role,
+  // ✅ UPDATED: Include email in token payload
+  const tokenPayload = {
+    userData: {
+      _id: userObject._id,
+      role: userObject.role,
+      email: userEmail, // ADD THIS
     },
-    { expiresIn: process.env.REFRESH_TOKEN_TTL || REFRESH_TOKEN_EXPIRY }
-  );
+    session: sessionId.toString(),
+    role,
+  };
+
+  const accessToken = signJwt(tokenPayload, {
+    expiresIn: process.env.ACCESS_TOKEN_TTL || ACCESS_TOKEN_EXPIRY,
+  });
+
+  const refreshToken = signJwt(tokenPayload, {
+    expiresIn: process.env.REFRESH_TOKEN_TTL || REFRESH_TOKEN_EXPIRY,
+  });
 
   return { accessToken, refreshToken };
 }
 
+// ✅ UPDATED: Include email when reissuing token
 export async function reIssueAccessToken({
   refreshToken,
 }: {
@@ -58,9 +153,15 @@ export async function reIssueAccessToken({
   let user: any;
 
   if (session.role === "org" || session.role === "g-org") {
-    user = await OrganizationModel.findById(session.user);
+    // ✅ UPDATED: Select email fields for organization
+    user = await OrganizationModel.findById(session.user).select(
+      "_id email organization_email contact_email role"
+    );
   } else if (session.role === "ind" || session.role === "g-ind") {
-    user = await individualUserAuthModel.findById(session.user);
+    // ✅ UPDATED: Select email field for individual
+    user = await individualUserAuthModel
+      .findById(session.user)
+      .select("_id email role");
   } else {
     user = undefined;
   }
@@ -69,11 +170,16 @@ export async function reIssueAccessToken({
 
   const accessTokenTTL: string = process.env.ACCESS_TOKEN_TTL || "15m";
 
+  // ✅ Extract email from user
+  const userEmail = user.email || user.organization_email || user.contact_email;
+
+  // ✅ UPDATED: Include email in new access token
   const accessToken = signJwt(
     {
       userData: {
         _id: user._id.toString(),
         role: session.role,
+        // email: userEmail, // ADD THIS
       },
       session: session._id.toString(),
       role: session.role,

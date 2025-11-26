@@ -609,7 +609,10 @@ export const involveAMediator = async (
   next: NextFunction
 ): Promise<void> => {
   const { transaction_id } = req.params;
-  const userEmail = getUserEmailFromToken(req);
+  const userEmail = await getUserEmailFromToken(req);
+  if (!userEmail) {
+    return next(errorHandler(401, "Authentication required"));
+  }
   if (!userEmail) {
     return next(errorHandler(401, "Authentication required"));
   }
