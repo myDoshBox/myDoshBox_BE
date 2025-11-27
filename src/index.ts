@@ -37,12 +37,11 @@ const PORT = process.env.PORT || 5000;
 // MIDDLEWARE CONFIGURATION
 // ============================================
 
-// ✅ 1. CORS - MUST BE FIRST
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   "https://mydoshbox.vercel.app",
   "http://localhost:3000",
-].filter(Boolean); // Remove undefined values
+].filter(Boolean);
 
 console.log("🌐 CORS allowed origins:", allowedOrigins);
 
@@ -59,20 +58,17 @@ app.use(
         callback(new Error("Not allowed by CORS"));
       }
     },
-    credentials: true, // ✅ CRITICAL: Allow cookies
+    credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Refresh-Token"],
   })
 );
 
-// ✅ 2. Cookie Parser - BEFORE body parsers
 app.use(cookieParser());
 
-// ✅ 3. Body Parsers - BEFORE routes
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-// ✅ 4. Debug Middleware (can be removed in production)
 app.use((req, res, next) => {
   console.log(`🌐 [${req.method}] ${req.path}`);
   console.log("📦 Body immediately after parsing:", req.body);
@@ -82,10 +78,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// ✅ 5. Logging middleware
 app.use(morgan("dev"));
 
-// ✅ 6. Custom authentication middleware
 app.use(deserializeUser);
 
 // ============================================
