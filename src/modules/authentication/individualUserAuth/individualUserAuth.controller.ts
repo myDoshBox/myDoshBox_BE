@@ -15,6 +15,7 @@ import { OAuth2Client } from "google-auth-library";
 import { createSessionAndSendTokens } from "../../../utilities/createSessionAndSendToken.util";
 import { ErrorResponse } from "../../../utilities/errorHandler.util";
 import crypto from "crypto";
+import { getCookieOptions } from "../../../utilities/cookieConfig.util";
 
 export const individualUserRegistration = async (
   req: Request,
@@ -310,7 +311,6 @@ export const individualUserLogin = async (
   try {
     const { email, password } = req.body;
 
-    // Validation
     if (!email || !password) {
       const error: ErrorResponse = {
         statusCode: 400,
@@ -320,19 +320,17 @@ export const individualUserLogin = async (
       return next(error);
     }
 
-    // Find user and include password field
     const user = await IndividualUser.findOne({ email }).select("+password");
 
     if (!user) {
       const error: ErrorResponse = {
         statusCode: 404,
         status: "fail",
-        message: "Invalid email or password", // Generic message for security
+        message: "Invalid email or password",
       };
       return next(error);
     }
 
-    // Check if email is verified
     if (!user.email_verified) {
       const error: ErrorResponse = {
         statusCode: 403,
@@ -342,7 +340,6 @@ export const individualUserLogin = async (
       return next(error);
     }
 
-    // Verify password
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
@@ -354,38 +351,33 @@ export const individualUserLogin = async (
       return next(error);
     }
 
-    // Get user agent from request headers
     const userAgent = req.get("User-Agent") || "unknown";
 
-    // ✅ FIX: Ensure user object has proper structure with email
     const result = await createSessionAndSendTokens({
       user: {
         _id: user._id,
-        email: user.email, // ✅ This is correct - keep it
+        email: user.email,
         phone_number: user.phone_number,
-        role: user.role || "ind", // ✅ Ensure role is set
+        role: user.role || "ind",
       },
       userAgent,
-      role: user.role || "ind", // ✅ Use user's role or default to "ind"
+      role: user.role || "ind",
       message: "Login successful",
     });
 
-    // Set HTTP-only cookies
-    res.cookie("access_token", result.accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 15 * 60 * 1000, // 15 minutes
-    });
+    // ✅ FIX: Use the cookie configuration utility
+    res.cookie(
+      "access_token",
+      result.accessToken,
+      getCookieOptions(15 * 60 * 1000) // 15 minutes
+    );
 
-    res.cookie("refresh_token", result.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-    });
+    res.cookie(
+      "refresh_token",
+      result.refreshToken,
+      getCookieOptions(30 * 24 * 60 * 60 * 1000) // 30 days
+    );
 
-    // Send response
     res.status(200).json({
       status: "success",
       message: result.message,
@@ -395,7 +387,7 @@ export const individualUserLogin = async (
         phone_number: user.phone_number,
         role: user.role,
       },
-      token: result.accessToken, // ✅ ADD: For Redux compatibility
+      token: result.accessToken,
       accessToken: result.accessToken,
       refreshToken: result.refreshToken,
     });

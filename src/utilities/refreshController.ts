@@ -4,14 +4,14 @@ import { Session } from "../modules/sessions/session.model";
 import { ErrorResponse } from "./errorHandler.util";
 import IndividualUser from "../modules/authentication/individualUserAuth/individualUserAuth.model1";
 import OrganizationModel from "../modules/authentication/organizationUserAuth/organizationAuth.model";
-
+import { getCookieOptions } from "./cookieConfig.util";
 export const refreshAccessToken = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const refreshToken = req.cookies["refresh_token"];
+    const refreshToken = req.body.refreshToken || req.cookies["refresh_token"];
 
     if (!refreshToken) {
       const error: ErrorResponse = {
@@ -115,22 +115,18 @@ export const refreshAccessToken = async (
     session.refreshToken = newRefreshToken;
     await session.save();
 
-    // Set new cookies
-    res.cookie("access_token", newAccessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 15 * 60 * 1000,
-    });
+    res.cookie(
+      "access_token",
+      newAccessToken,
+      getCookieOptions(15 * 60 * 1000) // 15 minutes
+    );
 
-    res.cookie("refresh_token", newRefreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie(
+      "refresh_token",
+      newRefreshToken,
+      getCookieOptions(30 * 24 * 60 * 60 * 1000) // 30 days
+    );
 
-    // ✅ UPDATED: Return user data along with tokens
     return res.status(200).json({
       status: "success",
       message: "Access token refreshed successfully",

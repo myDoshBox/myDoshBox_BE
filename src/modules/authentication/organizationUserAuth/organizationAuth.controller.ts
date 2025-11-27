@@ -13,6 +13,7 @@ import bcrypt from "bcrypt";
 import { createSessionAndSendTokens } from "../../../utilities/createSessionAndSendToken.util";
 import { ErrorResponse } from "../../../utilities/errorHandler.util";
 import crypto from "crypto";
+import { getCookieOptions } from "../../../utilities/cookieConfig.util";
 
 export const organizationUserRegistration = async (
   req: Request,
@@ -150,10 +151,8 @@ export const organizationUserLogin = async (
       return next(error);
     }
 
-    // Get user agent from request
     const userAgent = req.get("User-Agent") || "unknown";
 
-    // Use the session utility to create session and send tokens
     const result = await createSessionAndSendTokens({
       user: {
         _id: organization._id,
@@ -166,20 +165,18 @@ export const organizationUserLogin = async (
       message: "Organization login successful",
     });
 
-    // Set cookies for access and refresh tokens
-    res.cookie("access_token", result.accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 15 * 60 * 1000, // 15 minutes
-    });
+    // ✅ FIX: Use the cookie configuration utility
+    res.cookie(
+      "access_token",
+      result.accessToken,
+      getCookieOptions(15 * 60 * 1000) // 15 minutes
+    );
 
-    res.cookie("refresh_token", result.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
+    res.cookie(
+      "refresh_token",
+      result.refreshToken,
+      getCookieOptions(30 * 24 * 60 * 60 * 1000) // 30 days
+    );
 
     res.status(200).json({
       status: "success",
@@ -192,6 +189,7 @@ export const organizationUserLogin = async (
         contact_number: organization.contact_number,
         role: organization.role,
       },
+      token: result.accessToken, // ✅ ADD: For Redux compatibility
       accessToken: result.accessToken,
       refreshToken: result.refreshToken,
     });
