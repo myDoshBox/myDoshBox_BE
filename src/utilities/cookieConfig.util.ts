@@ -4,6 +4,7 @@ interface CookieOptions {
   sameSite: "strict" | "lax" | "none";
   maxAge: number;
   domain?: string;
+  path?: string;
 }
 
 export const getCookieOptions = (maxAge: number): CookieOptions => {
@@ -21,9 +22,11 @@ export const getCookieOptions = (maxAge: number): CookieOptions => {
 
   const options: CookieOptions = {
     httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? "none" : "lax",
+    secure: isProduction, // true in production (HTTPS only)
+    sameSite: isProduction ? "none" : "lax", // "none" for cross-origin in production
     maxAge,
+    path: "/", // ✅ IMPORTANT: Make cookie available on all paths
+    // Only set domain in production if explicitly configured
     ...(isProduction && cleanDomain && { domain: cleanDomain }),
   };
 
@@ -33,6 +36,7 @@ export const getCookieOptions = (maxAge: number): CookieOptions => {
     isProduction,
     rawCookieDomain: cookieDomain,
     cleanDomain,
+    willSetDomain: isProduction && !!cleanDomain,
     options,
     maxAgeMinutes: Math.round(maxAge / 60000),
   });

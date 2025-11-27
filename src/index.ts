@@ -7,7 +7,6 @@ import morgan from "morgan";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import connectDB from "./config/dbconn.config";
-import allowedOrigins from "./config/allowedOrigins.config";
 
 // Routes
 import organizationUserAuthRouter from "./modules/authentication/organizationUserAuth/organizationAuth.route";
@@ -34,33 +33,59 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// CORS configuration
+// ============================================
+// MIDDLEWARE CONFIGURATION
+// ============================================
+
+// ✅ 1. CORS - MUST BE FIRST
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "https://mydoshbox.vercel.app",
+  "http://localhost:3000",
+].filter(Boolean); // Remove undefined values
+
+console.log("🌐 CORS allowed origins:", allowedOrigins);
+
 app.use(
   cors({
-    origin: allowedOrigins,
-    credentials: true,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, Postman, etc.)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.log("⚠️ CORS blocked origin:", origin);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true, // ✅ CRITICAL: Allow cookies
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Refresh-Token"],
   })
 );
 
-// Body parsing middleware (ONLY ONCE!)
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// ✅ 2. Cookie Parser - BEFORE body parsers
 app.use(cookieParser());
 
-// 🔍 DEBUG: Check if body is parsed
+// ✅ 3. Body Parsers - BEFORE routes
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
+// ✅ 4. Debug Middleware (can be removed in production)
 app.use((req, res, next) => {
-  console.log(`\n🌐 [${req.method}] ${req.path}`);
+  console.log(`🌐 [${req.method}] ${req.path}`);
   console.log("📦 Body immediately after parsing:", req.body);
-  console.log("📋 Content-Type:", req.headers["content-type"]);
+  console.log("🍪 Cookies:", req.cookies);
+  console.log("📋 Content-Type:", req.get("Content-Type"));
+  console.log("🔗 Origin:", req.get("Origin"));
   next();
 });
 
-// Logging middleware
+// ✅ 5. Logging middleware
 app.use(morgan("dev"));
 
-// Custom authentication middleware
+// ✅ 6. Custom authentication middleware
 app.use(deserializeUser);
 
 // ============================================
@@ -72,6 +97,38 @@ app.get("/", (req: Request, res: Response) => {
   res.json({
     status: "success",
     message: "Welcome to MyDoshBox API",
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// ✅ Test cookie endpoint - BEFORE other routes for easy access
+app.get("/test-cookie", (req: Request, res: Response) => {
+  console.log("🍪 Test cookie endpoint hit");
+
+  // Set a test cookie
+  res.cookie("test_cookie", "hello_from_backend", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    maxAge: 60000, // 1 minute
+    path: "/",
+  });
+
+  res.json({
+    status: "success",
+    message: "Test cookie set successfully",
+    cookieConfig: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 60000,
+    },
+    receivedCookies: req.cookies,
+    headers: {
+      origin: req.get("Origin"),
+      referer: req.get("Referer"),
+      userAgent: req.get("User-Agent"),
+    },
   });
 });
 
@@ -92,7 +149,8 @@ app.use("/disputes", escrowProductDisputeRouter);
 
 // Admin routes
 app.use("/admin", adminRouter);
-// mediator Route
+
+// Mediator routes
 app.use("/mediators", mediatorRouter);
 
 // ============================================
@@ -119,9 +177,15 @@ const startServer = async () => {
   try {
     await connectDB();
     console.log("✅ Connected to MongoDB");
+    console.log("🔧 Environment:", process.env.NODE_ENV || "development");
+    console.log("🌐 Frontend URL:", process.env.FRONTEND_URL);
+    console.log("🍪 Cookie Domain:", process.env.COOKIE_DOMAIN || "not set");
 
     app.listen(PORT, () => {
       console.log(`🚀 Server is running on http://localhost:${PORT}`);
+      console.log(`📚 Dev API Docs: http://localhost:${PORT}/dev-api-docs`);
+      console.log(`📚 Prod API Docs: http://localhost:${PORT}/api-docs`);
+      console.log(`🧪 Test Cookie: http://localhost:${PORT}/test-cookie`);
     });
   } catch (error: any) {
     console.error("❌ Failed to start server:", error.message);
@@ -129,8 +193,6 @@ const startServer = async () => {
   }
 };
 
-// Start the server
 startServer();
 
-// Export app for testing or serverless deployment (Vercel)
 export default app;
