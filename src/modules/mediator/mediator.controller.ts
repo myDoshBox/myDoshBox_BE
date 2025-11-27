@@ -536,6 +536,7 @@ import {
   sendMediatorRequestedMailToBuyer,
 } from "../disputes/productsDispute/productDispute.mail";
 import { getUserEmailFromToken } from "../disputes/productsDispute/productDispute.controller";
+import { getCookieOptions } from "../../utilities/cookieConfig.util";
 
 /**
  * Mediator login
@@ -579,17 +580,31 @@ export const mediatorLogin = async (
       user: {
         _id: mediatorToLogin._id,
         email: mediatorToLogin.mediator_email,
-        role: "mediator", // Add this required property
+        role: "mediator",
       },
-      userAgent: req.get("user-agent") || "",
+      userAgent: req.get("user-agent") || "unknown",
       role: "mediator",
       message: "Mediator successfully logged in",
     });
+
+    // ✅ FIX: Set cookies with consistent configuration
+    res.cookie(
+      "access_token",
+      sessionResponse.accessToken,
+      getCookieOptions(15 * 60 * 1000) // 15 minutes
+    );
+
+    res.cookie(
+      "refresh_token",
+      sessionResponse.refreshToken,
+      getCookieOptions(30 * 24 * 60 * 60 * 1000) // 30 days
+    );
 
     res.status(200).json({
       status: sessionResponse.status,
       message: sessionResponse.message,
       user: sessionResponse.user,
+      // token: sessionResponse.accessToken,
       accessToken: sessionResponse.accessToken,
       refreshToken: sessionResponse.refreshToken,
     });

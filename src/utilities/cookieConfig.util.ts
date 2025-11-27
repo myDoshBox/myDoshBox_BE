@@ -8,15 +8,34 @@ interface CookieOptions {
 
 export const getCookieOptions = (maxAge: number): CookieOptions => {
   const isProduction = process.env.NODE_ENV === "production";
+  const cookieDomain = process.env.COOKIE_DOMAIN;
 
-  return {
+  // ✅ Clean the domain - remove protocol and trailing slashes
+  let cleanDomain: string | undefined;
+  if (cookieDomain) {
+    cleanDomain = cookieDomain
+      .replace(/^https?:\/\//, "") // Remove http:// or https://
+      .replace(/\/.*$/, "") // Remove any path
+      .trim();
+  }
+
+  const options: CookieOptions = {
     httpOnly: true,
-    secure: isProduction, // Only HTTPS in production
-    sameSite: isProduction ? "none" : "lax", // ✅ Changed from "strict"
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
     maxAge,
-    ...(isProduction &&
-      process.env.COOKIE_DOMAIN && {
-        domain: process.env.COOKIE_DOMAIN,
-      }),
+    ...(isProduction && cleanDomain && { domain: cleanDomain }),
   };
+
+  // 🔍 Detailed logging
+  console.log("🍪 Cookie Configuration:", {
+    NODE_ENV: process.env.NODE_ENV,
+    isProduction,
+    rawCookieDomain: cookieDomain,
+    cleanDomain,
+    options,
+    maxAgeMinutes: Math.round(maxAge / 60000),
+  });
+
+  return options;
 };

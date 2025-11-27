@@ -11,6 +11,7 @@ import bcrypt from "bcrypt";
 import { createSessionAndSendTokens } from "../../../utilities/createSessionAndSendToken.util";
 import { ErrorResponse } from "../../../utilities/errorHandler.util";
 import crypto from "crypto";
+import { getCookieOptions } from "../../../utilities/cookieConfig.util";
 
 export const adminUserRegistration = async (
   req: Request,
@@ -135,12 +136,6 @@ export const adminUserLogin = async (
 
     const userAgent = req.get("User-Agent") || "unknown";
 
-    // const result = await createSessionAndSendTokens({
-    //   user: admin.toObject(),
-    //   userAgent: userAgent,
-    //   role: admin.role,
-    //   message: "Admin login successful",
-    // });
     const result = await createSessionAndSendTokens({
       user: {
         _id: admin._id,
@@ -153,19 +148,18 @@ export const adminUserLogin = async (
       message: "Admin login successful",
     });
 
-    res.cookie("access_token", result.accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 15 * 60 * 1000, // 15 minutes
-    });
+    // ✅ FIX: Use consistent cookie configuration
+    res.cookie(
+      "access_token",
+      result.accessToken,
+      getCookieOptions(15 * 60 * 1000) // 15 minutes
+    );
 
-    res.cookie("refresh_token", result.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
+    res.cookie(
+      "refresh_token",
+      result.refreshToken,
+      getCookieOptions(30 * 24 * 60 * 60 * 1000) // 30 days (changed from 7 for consistency)
+    );
 
     res.status(200).json({
       status: "success",
@@ -175,11 +169,11 @@ export const adminUserLogin = async (
         email: admin.email,
         name: admin.name,
         username: admin.username,
-        // phone_number: admin.phone_number,
         role: admin.role,
         isSuperAdmin: admin.isSuperAdmin,
         permissions: admin.permissions,
       },
+      token: result.accessToken, // ✅ ADD: For Redux compatibility
       accessToken: result.accessToken,
       refreshToken: result.refreshToken,
     });

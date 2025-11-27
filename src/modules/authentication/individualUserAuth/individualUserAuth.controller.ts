@@ -309,6 +309,14 @@ export const individualUserLogin = async (
   next: NextFunction
 ) => {
   try {
+    console.log("🔐 Login attempt started:", {
+      email: req.body.email,
+      hasPassword: !!req.body.password,
+      userAgent: req.get("User-Agent"),
+      origin: req.get("origin"),
+      NODE_ENV: process.env.NODE_ENV,
+    });
+
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -323,6 +331,7 @@ export const individualUserLogin = async (
     const user = await IndividualUser.findOne({ email }).select("+password");
 
     if (!user) {
+      console.log("❌ User not found:", email);
       const error: ErrorResponse = {
         statusCode: 404,
         status: "fail",
@@ -332,6 +341,7 @@ export const individualUserLogin = async (
     }
 
     if (!user.email_verified) {
+      console.log("⚠️ Email not verified:", email);
       const error: ErrorResponse = {
         statusCode: 403,
         status: "fail",
@@ -343,6 +353,7 @@ export const individualUserLogin = async (
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
+      console.log("❌ Password mismatch for:", email);
       const error: ErrorResponse = {
         statusCode: 401,
         status: "fail",
@@ -352,6 +363,8 @@ export const individualUserLogin = async (
     }
 
     const userAgent = req.get("User-Agent") || "unknown";
+
+    console.log("🎫 Creating session for user:", user._id);
 
     const result = await createSessionAndSendTokens({
       user: {
@@ -365,18 +378,25 @@ export const individualUserLogin = async (
       message: "Login successful",
     });
 
-    // ✅ FIX: Use the cookie configuration utility
-    res.cookie(
-      "access_token",
-      result.accessToken,
-      getCookieOptions(15 * 60 * 1000) // 15 minutes
-    );
+    console.log("✅ Session created:", {
+      userId: user._id,
+      hasAccessToken: !!result.accessToken,
+      hasRefreshToken: !!result.refreshToken,
+    });
 
-    res.cookie(
-      "refresh_token",
-      result.refreshToken,
-      getCookieOptions(30 * 24 * 60 * 60 * 1000) // 30 days
-    );
+    // Set cookies with logging
+    const accessCookieOptions = getCookieOptions(15 * 60 * 1000);
+    const refreshCookieOptions = getCookieOptions(30 * 24 * 60 * 60 * 1000);
+
+    console.log("🍪 Setting cookies:", {
+      access: accessCookieOptions,
+      refresh: refreshCookieOptions,
+    });
+
+    res.cookie("access_token", result.accessToken, accessCookieOptions);
+    res.cookie("refresh_token", result.refreshToken, refreshCookieOptions);
+
+    console.log("✅ Login successful for:", email);
 
     res.status(200).json({
       status: "success",
@@ -392,6 +412,12 @@ export const individualUserLogin = async (
       refreshToken: result.refreshToken,
     });
   } catch (error) {
+    console.error("❌ Login error:", {
+      message: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
+      email: req.body.email,
+    });
+
     const errResponse: ErrorResponse = {
       statusCode: 500,
       status: "error",

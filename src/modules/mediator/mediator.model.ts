@@ -10,6 +10,7 @@ export interface IMediator extends Document {
   mediator_phone_number: string;
   password: string;
   refreshToken?: string;
+  token?: string;
 }
 
 const mediatorSchema = new mongoose.Schema(
@@ -43,6 +44,9 @@ const mediatorSchema = new mongoose.Schema(
     },
 
     mediator_phone_number: {
+      type: String,
+    },
+    token: {
       type: String,
     },
 
