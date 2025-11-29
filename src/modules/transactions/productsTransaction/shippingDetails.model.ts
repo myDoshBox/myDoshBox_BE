@@ -3,6 +3,7 @@ import mongoose, { Schema, Document } from "mongoose";
 interface IShipping extends Document {
   user: mongoose.Schema.Types.ObjectId;
   product: mongoose.Schema.Types.ObjectId;
+  transaction_id: string;
   shipping_company: string;
   delivery_person_name: string;
   delivery_person_number: string;
@@ -23,6 +24,10 @@ const shippingDetailSchema = new mongoose.Schema(
     product: {
       type: Schema.Types.ObjectId,
       ref: "ProductTransaction", // ✅ FIXED: Changed from "Product" to "ProductTransaction"
+    },
+    transaction_id: {
+      type: String,
+      required: true,
     },
 
     shipping_company: {

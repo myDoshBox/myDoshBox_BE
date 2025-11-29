@@ -7,6 +7,8 @@ import morgan from "morgan";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import connectDB from "./config/dbconn.config";
+import allowedOrigins from "./config/allowedOrigins.config";
+import fileUpload from "express-fileupload";
 
 // Routes
 import organizationUserAuthRouter from "./modules/authentication/organizationUserAuth/organizationAuth.route";
@@ -18,6 +20,7 @@ import escrowProductTransactionRouter from "./modules/transactions/productsTrans
 import escrowProductDisputeRouter from "./modules/disputes/productsDispute/productDispute.route";
 import adminRouter from "./modules/administrator/admin.route";
 import mediatorRouter from "./modules/mediator/mediator.route";
+import userProfileRouter from "./modules/profiles/userProfile.route";
 
 // Middleware
 import deserializeUser from "./middlewares/deserializeUser.middleware";
@@ -37,18 +40,9 @@ const PORT = process.env.PORT || 5000;
 // MIDDLEWARE CONFIGURATION
 // ============================================
 
-const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  "https://mydoshbox.vercel.app",
-  "http://localhost:3000",
-].filter(Boolean);
-
-console.log("🌐 CORS allowed origins:", allowedOrigins);
-
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, Postman, etc.)
       if (!origin) return callback(null, true);
 
       if (allowedOrigins.includes(origin)) {
@@ -64,17 +58,27 @@ app.use(
   })
 );
 
+// file upload middleware
+app.use(
+  fileUpload({
+    useTempFiles: true,
+    tempFileDir: "/tmp/",
+    limits: { fileSize: 5 * 1024 * 1024 },
+    abortOnLimit: true,
+    createParentPath: true,
+    parseNested: true,
+  })
+);
+
 app.use(cookieParser());
 
 app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+app.use(express.urlencoded({ extended: true }));
 
 app.use((req, res, next) => {
   console.log(`🌐 [${req.method}] ${req.path}`);
   console.log("📦 Body immediately after parsing:", req.body);
-  console.log("🍪 Cookies:", req.cookies);
   console.log("📋 Content-Type:", req.get("Content-Type"));
-  console.log("🔗 Origin:", req.get("Origin"));
   next();
 });
 
@@ -95,45 +99,47 @@ app.get("/", (req: Request, res: Response) => {
   });
 });
 
-// ✅ Test cookie endpoint - BEFORE other routes for easy access
-app.get("/test-cookie", (req: Request, res: Response) => {
-  console.log("🍪 Test cookie endpoint hit");
+// Test cookie endpoint - BEFORE other routes for easy access
+// app.get("/test-cookie", (req: Request, res: Response) => {
+//   console.log("🍪 Test cookie endpoint hit");
 
-  // Set a test cookie
-  res.cookie("test_cookie", "hello_from_backend", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    maxAge: 60000, // 1 minute
-    path: "/",
-  });
+//   // Set a test cookie
+//   res.cookie("test_cookie", "hello_from_backend", {
+//     httpOnly: true,
+//     secure: process.env.NODE_ENV === "production",
+//     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+//     maxAge: 60000, // 1 minute
+//     path: "/",
+//   });
 
-  res.json({
-    status: "success",
-    message: "Test cookie set successfully",
-    cookieConfig: {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      maxAge: 60000,
-    },
-    receivedCookies: req.cookies,
-    headers: {
-      origin: req.get("Origin"),
-      referer: req.get("Referer"),
-      userAgent: req.get("User-Agent"),
-    },
-  });
-});
+//   res.json({
+//     status: "success",
+//     message: "Test cookie set successfully",
+//     cookieConfig: {
+//       httpOnly: true,
+//       secure: process.env.NODE_ENV === "production",
+//       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+//       maxAge: 60000,
+//     },
+//     receivedCookies: req.cookies,
+//     headers: {
+//       origin: req.get("Origin"),
+//       referer: req.get("Referer"),
+//       userAgent: req.get("User-Agent"),
+//     },
+//   });
+// });
 
 // Authentication routes
+
 app.use("/auth/individual", individualUserAuthRouter);
 app.use("/auth/organization", organizationUserAuthRouter);
 app.use("/auth/admin", AdminUserRouter);
 
 // User routes
-app.use("/user", organizationUsersRoutes);
-app.use("/users", individualUsersRoutes);
+app.use("/profile", userProfileRouter);
+// app.use("/user", organizationUsersRoutes);
+// app.use("/users", individualUsersRoutes);
 
 // Transaction routes
 app.use("/transactions", escrowProductTransactionRouter);
@@ -177,9 +183,6 @@ const startServer = async () => {
 
     app.listen(PORT, () => {
       console.log(`🚀 Server is running on http://localhost:${PORT}`);
-      console.log(`📚 Dev API Docs: http://localhost:${PORT}/dev-api-docs`);
-      console.log(`📚 Prod API Docs: http://localhost:${PORT}/api-docs`);
-      console.log(`🧪 Test Cookie: http://localhost:${PORT}/test-cookie`);
     });
   } catch (error: any) {
     console.error("❌ Failed to start server:", error.message);

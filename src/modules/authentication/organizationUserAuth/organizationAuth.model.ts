@@ -4,7 +4,6 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { compare } from "bcrypt";
 
-// Extend the OrganizationDoc interface to include virtual properties
 export interface organizationalDoc extends Document {
   _id: mongoose.Types.ObjectId;
   organization_name: string;
@@ -20,6 +19,21 @@ export interface organizationalDoc extends Document {
   picture: string;
   role: string;
   refreshToken?: string;
+
+  // Profile fields
+  image?: string;
+  deals_completed: number;
+  rating: number;
+  rating_count: number;
+
+  // Bank details
+  bank_details?: {
+    account_number: string;
+    bank_name: string;
+    account_name: string;
+    bank_code?: string;
+  };
+
   comparePassword(candidatePassword: string): Promise<boolean>;
   changedPasswordAfter(JWTTimestamp: number): boolean;
   createPasswordResetToken(): string;
@@ -73,11 +87,24 @@ const organizationalSchema: Schema<organizationalDoc> = new mongoose.Schema(
     passwordChangedAt: Date,
     passwordResetToken: String,
     passwordResetExpires: Date,
+
+    // Profile fields
+    image: { type: String },
+    deals_completed: { type: Number, default: 0 },
+    rating: { type: Number, default: 0 },
+    rating_count: { type: Number, default: 0 },
+
+    // Bank details
+    bank_details: {
+      account_number: { type: String },
+      bank_name: { type: String },
+      account_name: { type: String },
+      bank_code: { type: String },
+    },
   },
   { timestamps: true }
 );
 
-// Hash password before saving to the database
 organizationalSchema.pre<organizationalDoc>("save", async function (next) {
   if (!this.password) {
     return next();
@@ -103,10 +130,9 @@ organizationalSchema.methods.createPasswordResetToken = function (
     .createHash("sha256")
     .update(resetToken)
     .digest("hex");
-  // console.log({ resetToken }, this.passwordResetToken);
 
   const resetExpires = new Date();
-  resetExpires.setMinutes(resetExpires.getMinutes() + 10); // Add 10 minutes to the current time
+  resetExpires.setMinutes(resetExpires.getMinutes() + 10);
   this.passwordResetExpires = resetExpires;
 
   return resetToken;

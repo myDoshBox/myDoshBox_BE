@@ -147,6 +147,7 @@
 // export default ProductTransaction;
 
 // productsTransaction.model.ts - UPDATE
+
 import mongoose, { Schema, Document } from "mongoose";
 
 interface IProductItem {
@@ -159,8 +160,9 @@ interface IProductItem {
 
 interface IProductTransaction extends Document {
   user: mongoose.Schema.Types.ObjectId;
+  shipping: mongoose.Schema.Types.ObjectId; // Fixed: Remove the object structure here
   transaction_id: string;
-  payment_reference?: string; // Make optional initially
+  payment_reference?: string;
   buyer_email: string;
   vendor_name: string;
   vendor_phone_number: string;
@@ -190,6 +192,12 @@ const productTransactionSchema = new mongoose.Schema<IProductTransaction>(
       ref: "IndividualUser",
       required: true,
     },
+
+    shipping: {
+      type: Schema.Types.ObjectId,
+      ref: "ShippingDetails",
+    },
+
     transaction_id: { type: String, required: true, unique: true },
     payment_reference: { type: String, unique: true, sparse: true },
     buyer_email: { type: String, required: true },
@@ -237,7 +245,7 @@ const productTransactionSchema = new mongoose.Schema<IProductTransaction>(
         "processing",
         "In_Dispute",
         "resolving",
-        "resolved,",
+        "resolved",
         "escalated_to_mediator",
         "cancelled",
       ],

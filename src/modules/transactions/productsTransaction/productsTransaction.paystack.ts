@@ -12,7 +12,10 @@ interface IPayment {
 export const paymentForEscrowProductTransaction = async (data: IPayment) => {
   const API_URL = process.env.PAYSTACK_BASE_URL;
   const API_KEY = process.env.PAYSTACK_PAYMENT_KEY;
-  const DEPLOYED_FRONTEND_BASE_URL = "https://mydoshbox.vercel.app";
+  const DEPLOYED_FRONTEND_BASE_URL =
+    process.env.NODE_ENV === "development"
+      ? "http://localhost:3000"
+      : "https://mydoshbox.vercel.app";
 
   // FIXED: Added /userdashboard to the callback URL path
   const callbackURL = `${DEPLOYED_FRONTEND_BASE_URL}/userdashboard/verifyPayment?reference=${data.reference}`;

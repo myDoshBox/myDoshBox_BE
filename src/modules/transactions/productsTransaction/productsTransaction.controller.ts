@@ -17,6 +17,8 @@ import {
   sendShippingDetailsEmailToVendor,
   sendSuccessfulEscrowEmailToInitiator,
   sendSuccessfulEscrowEmailToVendor,
+  sendTransactionEditNotificationToVendor,
+  sendTransactionEditConfirmationToBuyer,
 } from "./productTransaction.mail";
 import ShippingDetails from "./shippingDetails.model";
 import ProductDispute from "../../disputes/productsDispute/productDispute.model";
@@ -106,6 +108,182 @@ export const initiateEscrowProductTransaction = async (
     });
   } catch (error) {
     return next(errorHandler(500, "server error"));
+  }
+};
+
+// Add this to your productsTransaction.controller.ts file
+
+export const editEscrowProductTransaction = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { transaction_id } = req.params;
+  const {
+    buyer_email,
+    vendor_name,
+    vendor_phone_number,
+    vendor_email,
+    transaction_type,
+    products,
+    signed_escrow_doc,
+    delivery_address,
+  } = req.body;
+
+  if (!transaction_id) {
+    return next(errorHandler(400, "Transaction ID is required"));
+  }
+
+  if (!buyer_email) {
+    return next(errorHandler(400, "Buyer email is required"));
+  }
+
+  try {
+    // Find the transaction
+    const transaction = await ProductTransaction.findOne({ transaction_id });
+
+    if (!transaction) {
+      return next(errorHandler(404, "Transaction not found"));
+    }
+
+    // Verify the buyer email matches
+    if (transaction.buyer_email !== buyer_email) {
+      return next(
+        errorHandler(
+          403,
+          "Unauthorized: You can only edit your own transactions"
+        )
+      );
+    }
+
+    // Check if transaction can be edited
+    if (transaction.seller_confirmed) {
+      return next(
+        errorHandler(
+          400,
+          "Cannot edit transaction: Seller has already confirmed this transaction"
+        )
+      );
+    }
+
+    if (transaction.verified_payment_status) {
+      return next(
+        errorHandler(
+          400,
+          "Cannot edit transaction: Payment has already been made"
+        )
+      );
+    }
+
+    if (
+      transaction.transaction_status !== "processing" &&
+      transaction.transaction_status !== "awaiting_payment"
+    ) {
+      return next(
+        errorHandler(
+          400,
+          `Cannot edit transaction: Current status is ${transaction.transaction_status}`
+        )
+      );
+    }
+
+    // Validate updated fields if provided
+    const fieldsToValidate: any = {};
+    if (vendor_name) fieldsToValidate.vendor_name = vendor_name;
+    if (vendor_phone_number)
+      fieldsToValidate.vendor_phone_number = vendor_phone_number;
+    if (vendor_email) fieldsToValidate.vendor_email = vendor_email;
+    if (transaction_type) fieldsToValidate.transaction_type = transaction_type;
+    if (products) fieldsToValidate.products = products;
+    if (delivery_address) fieldsToValidate.delivery_address = delivery_address;
+
+    if (Object.keys(fieldsToValidate).length > 0) {
+      validateProductFields(fieldsToValidate, next);
+    }
+
+    // Calculate new totals if products are updated
+    let sum_total = transaction.sum_total;
+    let commission = transaction.sum_total * 0.01;
+    let transaction_total = transaction.transaction_total;
+
+    if (products && products.length > 0) {
+      sum_total = products.reduce(
+        (sum: number, p: { price: number; quantity: number }) =>
+          sum + p.price * p.quantity,
+        0
+      );
+      commission = sum_total * 0.01;
+      transaction_total = sum_total + commission;
+    }
+
+    // Prepare update object
+    const updateData: any = {
+      ...(vendor_name && { vendor_name }),
+      ...(vendor_phone_number && { vendor_phone_number }),
+      ...(vendor_email && { vendor_email }),
+      ...(transaction_type && { transaction_type }),
+      ...(products && { products }),
+      ...(signed_escrow_doc && { signed_escrow_doc }),
+      ...(delivery_address && { delivery_address }),
+      ...(products && {
+        sum_total,
+        transaction_total,
+      }),
+      updated_at: new Date(),
+    };
+
+    // Update the transaction
+    const updatedTransaction = await ProductTransaction.findByIdAndUpdate(
+      transaction._id,
+      updateData,
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedTransaction) {
+      return next(errorHandler(500, "Failed to update transaction"));
+    }
+
+    // Send notification emails about the edit
+    const emailVendor = vendor_email || transaction.vendor_email;
+    const emailVendorName = vendor_name || transaction.vendor_name;
+    const emailProducts = products || transaction.products;
+    const emailSumTotal = sum_total;
+    const emailTransactionTotal = transaction_total;
+
+    await sendTransactionEditNotificationToVendor(
+      transaction_id,
+      emailVendorName,
+      emailVendor,
+      emailProducts,
+      emailSumTotal,
+      emailTransactionTotal
+    );
+
+    await sendTransactionEditConfirmationToBuyer(
+      buyer_email,
+      transaction_id,
+      emailVendorName,
+      emailProducts,
+      emailSumTotal,
+      emailTransactionTotal
+    );
+
+    res.json({
+      status: "success",
+      message: "Transaction updated successfully. Vendor has been notified.",
+      data: {
+        transaction_id: updatedTransaction.transaction_id,
+        sum_total: updatedTransaction.sum_total,
+        transaction_total: updatedTransaction.transaction_total,
+        vendor_name: updatedTransaction.vendor_name,
+        vendor_email: updatedTransaction.vendor_email,
+        products: updatedTransaction.products,
+        transaction_status: updatedTransaction.transaction_status,
+      },
+    });
+  } catch (error) {
+    console.error("editEscrowProductTransaction error:", error);
+    return next(errorHandler(500, "Server error"));
   }
 };
 
@@ -210,162 +388,6 @@ export const sellerConfirmsAnEscrowProductTransaction = async (
     return next(errorHandler(500, "Server error"));
   }
 };
-
-// export const verifyEscrowProductTransactionPayment = async (
-//   req: Request,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   const { transaction_id, buyer_email, reference } = req.body;
-
-//   if (!transaction_id || !buyer_email) {
-//     return next(
-//       errorHandler(400, "Transaction ID and buyer email are required")
-//     );
-//   }
-
-//   try {
-//     const transaction = await ProductTransaction.findOne({ transaction_id });
-
-//     if (!transaction) return next(errorHandler(404, "Transaction not found"));
-
-//     // Security: Verify user authorization
-//     if (transaction.buyer_email !== buyer_email) {
-//       return next(errorHandler(403, "Unauthorized: Incorrect buyer email"));
-//     }
-
-// if (!reference) {
-//   if (!transaction.buyer_initiated) {
-//     return next(
-//       errorHandler(
-//         400,
-//         "Cannot proceed Payment!!..Buyer has not initiated the transaction"
-//       )
-//     );
-//   }
-
-//   if (!transaction.seller_confirmed) {
-//     return next(
-//       errorHandler(
-//         400,
-//         "Cannot proceed Payment!!..Seller has not confirmed the transaction"
-//       )
-//     );
-//   }
-
-//   if (transaction.verified_payment_status) {
-//     return next(errorHandler(400, "Payment has already been verified"));
-//   }
-
-//       // ⚠️ SECURITY FIX: Generate unique reference instead of reusing transaction_id
-//       const paymentReference = `${transaction.transaction_id}-${Date.now()}`;
-
-//       const paystackResponse = await paymentForEscrowProductTransaction({
-//         reference: paymentReference,
-//         amount: Number(transaction.transaction_total),
-//         email: buyer_email,
-//       });
-
-//       if (paystackResponse.status && paystackResponse.data.authorization_url) {
-//         // ⚠️ SECURITY FIX: Store payment reference in transaction
-//         await ProductTransaction.findByIdAndUpdate(transaction._id, {
-//           payment_reference: paymentReference,
-//           payment_initiated_at: new Date(),
-//         });
-
-//         return res.json({
-//           status: "success",
-//           message:
-//             "Payment initiation successful. Please complete the payment on Paystack.",
-//           authorization_url: paystackResponse.data.authorization_url,
-//           reference: paymentReference, // Return reference for verification
-//         });
-//       }
-
-//       return next(errorHandler(500, "Failed to initiate Paystack payment"));
-//     }
-
-//     // STEP 2: VERIFY PAYMENT
-//     // ⚠️ SECURITY FIX: Verify reference matches stored reference
-//     if (transaction.payment_reference !== reference) {
-//       return next(errorHandler(400, "Invalid payment reference"));
-//     }
-
-//     // ⚠️ SECURITY FIX: Check if already verified
-//     if (transaction.verified_payment_status) {
-//       return next(errorHandler(400, "Payment already verified"));
-//     }
-
-//     const verificationResponse = await verifyPaymentForEscrowProductTransaction(
-//       reference
-//     );
-
-//     if (
-//       verificationResponse.status &&
-//       verificationResponse.data.status === "success"
-//     ) {
-//       // ⚠️ SECURITY FIX: Verify amount in kobo (Paystack returns in kobo)
-//       const paidAmount = verificationResponse.data.amount / 100;
-//       const expectedAmount = Number(transaction.transaction_total);
-
-//       // ⚠️ SECURITY FIX: Use floating point comparison with tolerance
-//       if (Math.abs(paidAmount - expectedAmount) > 0.01) {
-//         return next(
-//           errorHandler(
-//             400,
-//             `Amount mismatch: Expected ${expectedAmount}, got ${paidAmount}`
-//           )
-//         );
-//       }
-
-//       const updatedTransaction = await ProductTransaction.findByIdAndUpdate(
-//         transaction._id,
-//         {
-//           verified_payment_status: true,
-//           transaction_status: "awaiting_shipping",
-//           payment_verified_at: new Date(),
-//         },
-//         { new: true }
-//       );
-
-//       if (!updatedTransaction) {
-//         return next(errorHandler(500, "Failed to update transaction"));
-//       }
-
-//       // Send notification emails
-//       try {
-//         await sendEscrowInitiationEmailToVendor(
-//           transaction.transaction_id,
-//           transaction.vendor_name,
-//           transaction.vendor_email,
-//           transaction.products,
-//           transaction.sum_total,
-//           transaction.transaction_total
-//         );
-//       } catch (err) {
-//         console.error("Failed to send vendor email:", err);
-//         // Don't fail the transaction if email fails
-//       }
-
-//       return res.json({
-//         status: "success",
-//         message: "Payment verified successfully.",
-//         data: {
-//           transaction_id: updatedTransaction.transaction_id,
-//           sum_total: transaction.sum_total,
-//           transaction_total: transaction.transaction_total,
-//         },
-//       });
-//     }
-
-//     return next(errorHandler(400, "Payment verification failed"));
-//   } catch (error) {
-//     console.error("verifyEscrowProductTransactionPayment error:", error);
-//     return next(errorHandler(500, "Server error"));
-//   }
-// };
-
-// productsTransaction.controller.ts - UPDATE verifyEscrowProductTransactionPayment
 
 export const verifyEscrowProductTransactionPayment = async (
   req: Request,
@@ -667,103 +689,6 @@ export const paystackWebhook = async (
   }
 };
 
-// export const sellerFillOutShippingDetails = async (
-//   req: Request,
-//   res: Response,
-//   next: NextFunction
-// ): Promise<void> => {
-//   const {
-//     shipping_company,
-//     delivery_person_name,
-//     delivery_person_number,
-//     delivery_person_email,
-//     delivery_date,
-//     pick_up_address,
-//     transaction_id,
-//   } = req.body;
-
-//   // Validate input fields
-//   validateProductFields(
-//     {
-//       shipping_company,
-//       delivery_person_name,
-//       delivery_person_number,
-//       delivery_person_email,
-//       delivery_date,
-//       pick_up_address,
-//     },
-//     next
-//   );
-
-//   try {
-//     // Ensure transaction exists and is in correct state
-//     const transaction = await ProductTransaction.findOne({
-//       transaction_id,
-//       verified_payment_status: true,
-//       shipping_submitted: false,
-//     });
-
-//     if (!transaction) {
-//       return next(errorHandler(404, "Invalid transaction state for shipping"));
-//     }
-
-//     // Get vendor user info
-//     const user = await IndividualUser.findOne({
-//       email: transaction.vendor_email,
-//     });
-
-//     if (!user) {
-//       return next(errorHandler(404, "Vendor not found"));
-//     }
-
-//     //Create shipping record
-//     const newShippingDetails = new ShippingDetails({
-//       user,
-//       product: transaction,
-//       transaction_id,
-//       shipping_company,
-//       delivery_person_name,
-//       delivery_person_number,
-//       delivery_person_email,
-//       delivery_date,
-//       pick_up_address,
-//       buyer_email: transaction.buyer_email,
-//       vendor_email: transaction.vendor_email,
-//     });
-
-//     await newShippingDetails.save();
-
-//     // Mark transaction as having shipping info submitted
-//     transaction.shipping_submitted = true;
-//     await transaction.save();
-
-//     await sendShippingDetailsEmailToInitiator(
-//       transaction.buyer_email,
-//       shipping_company,
-//       delivery_person_name,
-//       delivery_person_number,
-//       delivery_date,
-//       pick_up_address
-//     );
-
-//     await sendShippingDetailsEmailToVendor(
-//       transaction.transaction_id,
-//       transaction.vendor_name,
-//       transaction.vendor_email,
-//       transaction.products.map((p: { name: string }) => p.name).join(", ")
-//     );
-
-//     res.status(200).json({
-//       status: "success",
-//       message: "Shipping details submitted successfully",
-//       newShippingDetails,
-//     });
-//   } catch (error) {
-//     console.error("Error in sellerFillOutShippingDetails:", error);
-//     return next(errorHandler(500, "Server error"));
-//   }
-// };
-
 export const getAllEscrowProductTransactionByUser = async (
   req: Request,
   res: Response,
@@ -786,10 +711,16 @@ export const getAllEscrowProductTransactionByUser = async (
       $or: [{ vendor_email: user_email }, { buyer_email: user_email }],
     });
 
-    // Fetch paginated transactions
+    // Fetch paginated transactions with shipping details populated
     const transactions = await ProductTransaction.find({
       $or: [{ vendor_email: user_email }, { buyer_email: user_email }],
     })
+      .populate({
+        path: "shipping",
+        model: "ShippingDetails",
+        select:
+          "_id shipping_company delivery_person_name delivery_person_number delivery_person_email delivery_date pick_up_address createdAt",
+      })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
@@ -800,7 +731,6 @@ export const getAllEscrowProductTransactionByUser = async (
       );
     }
 
-    // Calculate total pages
     const totalPages = Math.ceil(total / limit);
 
     res.json({
@@ -817,7 +747,89 @@ export const getAllEscrowProductTransactionByUser = async (
       },
     });
   } catch (error) {
+    console.error("getAllEscrowProductTransactionByUser error:", error);
     return next(errorHandler(500, "server error"));
+  }
+};
+
+export const getSingleEscrowProductTransaction = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { transaction_id } = req.params;
+
+    if (!transaction_id) {
+      return next(errorHandler(400, "Transaction ID is required"));
+    }
+
+    // Find the transaction by transaction_id
+    const transaction = await ProductTransaction.findOne({ transaction_id });
+
+    if (!transaction) {
+      return next(errorHandler(404, "Transaction not found"));
+    }
+
+    // Fetch related dispute details if any
+    const disputeDetails = await ProductDispute.findOne({ transaction_id });
+
+    // Fetch shipping details if any
+    const shippingDetails = await ShippingDetails.findOne({ transaction_id });
+
+    // Prepare response data
+    const transactionData = {
+      transaction_id: transaction.transaction_id,
+      vendor_name: transaction.vendor_name,
+      vendor_phone_number: transaction.vendor_phone_number,
+      buyer_email: transaction.buyer_email,
+      vendor_email: transaction.vendor_email,
+      transaction_type: transaction.transaction_type,
+      products: transaction.products,
+      sum_total: transaction.sum_total,
+      transaction_total: transaction.transaction_total,
+      commission: transaction.sum_total * 0.01, // Calculate commission
+      signed_escrow_doc: transaction.signed_escrow_doc,
+      delivery_address: transaction.delivery_address,
+      buyer_initiated: transaction.buyer_initiated,
+      seller_confirmed: transaction.seller_confirmed,
+      verified_payment_status: transaction.verified_payment_status,
+      transaction_status: transaction.transaction_status,
+      payment_reference: transaction.payment_reference,
+      shipping_submitted: transaction.shipping_submitted,
+      buyer_confirm_status: transaction.buyer_confirm_status,
+      // createdAt: transaction.createdAt,
+      // updatedAt: transaction.updatedAt,
+      dispute_details: disputeDetails
+        ? {
+            reason_for_dispute: disputeDetails.reason_for_dispute,
+            dispute_description: disputeDetails.dispute_description,
+            dispute_status: disputeDetails.dispute_status,
+            created_at: disputeDetails.createdAt,
+            updated_at: disputeDetails.updatedAt,
+          }
+        : null,
+      shipping_details: shippingDetails
+        ? {
+            shipping_company: shippingDetails.shipping_company,
+            delivery_person_name: shippingDetails.delivery_person_name,
+            delivery_person_number: shippingDetails.delivery_person_number,
+            delivery_person_email: shippingDetails.delivery_person_email,
+            delivery_date: shippingDetails.delivery_date,
+            pick_up_address: shippingDetails.pick_up_address,
+            // submitted_at: shippingDetails.createdAt,
+          }
+        : null,
+    };
+
+    res.json({
+      status: "success",
+      message: "Transaction details fetched successfully",
+      data: transactionData,
+    });
+  } catch (error) {
+    console.error("getSingleEscrowProductTransaction error:", error);
+    return next(errorHandler(500, "Server error"));
   }
 };
 
