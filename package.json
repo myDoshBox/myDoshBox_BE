@@ -1,5 +1,5 @@
 {
-  "name": "mydoshbox_api",
+  "name": "mydoshbox_apis",
   "version": "1.0.0",
   "description": "escrow, fintech, ecommerce",
   "main": "index.js",

@@ -20,7 +20,7 @@ import { getCookieOptions } from "../../../utilities/cookieConfig.util";
 export const individualUserRegistration = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { email, phone_number, password, confirm_password } = req.body;
@@ -70,7 +70,7 @@ export const individualUserRegistration = async (
     const verificationToken = jwt.sign(
       { email: newUser.email },
       process.env.JWT_SECRET as string,
-      { expiresIn: "2h" }
+      { expiresIn: "2h" },
     );
 
     // Create verification URL and send email
@@ -79,12 +79,6 @@ export const individualUserRegistration = async (
     // Fix: Check your email utility function signature
     // Option 1: If it expects email and token separately
     await sendVerificationEmail(email, verificationToken);
-
-    // Option 2: If it expects email and URL
-    // await sendVerificationEmail(email, verificationUrl);
-
-    // Option 3: If it expects an object
-    // await sendVerificationEmail({ email, token: verificationToken });
 
     res.status(201).json({
       status: "success",
@@ -306,7 +300,7 @@ export const individualUserRegistration = async (
 export const individualUserLogin = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     console.log("🔐 Login attempt started:", {
@@ -431,7 +425,7 @@ export const individualUserLogin = async (
 export const verifyEmail = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { token } = req.query;
@@ -495,7 +489,7 @@ export const verifyEmail = async (
 export const resendVerificationEmail = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { email } = req.body;
@@ -532,7 +526,7 @@ export const resendVerificationEmail = async (
     const verificationToken = jwt.sign(
       { email: user.email },
       process.env.JWT_SECRET as string,
-      { expiresIn: "2h" }
+      { expiresIn: "2h" },
     );
 
     await sendVerificationEmail(email, verificationToken);
@@ -557,7 +551,7 @@ export const resendVerificationEmail = async (
 export const forgotPassword = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { email } = req.body;
@@ -611,7 +605,7 @@ export const forgotPassword = async (
 export const resetIndividualPassword = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { token } = req.query;

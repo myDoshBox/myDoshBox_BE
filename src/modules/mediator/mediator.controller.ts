@@ -545,7 +545,7 @@ import { getCookieOptions } from "../../utilities/cookieConfig.util";
 export const mediatorLogin = async (
   req: Request<{}, {}, MediatorLoginBody>,
   res: Response<MediatorLoginResponse>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   const { mediator_email, password } = req.body;
 
@@ -564,7 +564,7 @@ export const mediatorLogin = async (
     // Verify password
     const isPasswordValid = await bcrypt.compare(
       password,
-      mediatorToLogin.password
+      mediatorToLogin.password,
     );
 
     if (!isPasswordValid) {
@@ -591,13 +591,13 @@ export const mediatorLogin = async (
     res.cookie(
       "access_token",
       sessionResponse.accessToken,
-      getCookieOptions(15 * 60 * 1000) // 15 minutes
+      getCookieOptions(15 * 60 * 1000), // 15 minutes
     );
 
     res.cookie(
       "refresh_token",
       sessionResponse.refreshToken,
-      getCookieOptions(30 * 24 * 60 * 60 * 1000) // 30 days
+      getCookieOptions(30 * 24 * 60 * 60 * 1000), // 30 days
     );
 
     res.status(200).json({
@@ -621,7 +621,7 @@ export const mediatorLogin = async (
 export const involveAMediator = async (
   req: Request<InvolveAMediatorParams>,
   res: Response<InvolveAMediatorResponse>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   const { transaction_id } = req.params;
   const userEmail = await getUserEmailFromToken(req);
@@ -639,7 +639,7 @@ export const involveAMediator = async (
   try {
     // Find the dispute
     const dispute = await ProductDispute.findOne({ transaction_id }).populate(
-      "transaction user mediator"
+      "transaction user mediator",
     );
 
     if (!dispute) {
@@ -654,15 +654,15 @@ export const involveAMediator = async (
       return next(
         errorHandler(
           400,
-          `Cannot involve a mediator: Dispute is ${dispute.dispute_status}`
-        )
+          `Cannot involve a mediator: Dispute is ${dispute.dispute_status}`,
+        ),
       );
     }
 
     // Check if mediator already assigned
     if (dispute.mediator) {
       return next(
-        errorHandler(400, "A mediator is already assigned to this dispute")
+        errorHandler(400, "A mediator is already assigned to this dispute"),
       );
     }
 
@@ -679,15 +679,15 @@ export const involveAMediator = async (
       (mediator: IMediator) =>
         (mediator.dispute?.length || 0) < 5 &&
         mediator.mediator_email !== dispute.buyer_email &&
-        mediator.mediator_email !== dispute.vendor_email
+        mediator.mediator_email !== dispute.vendor_email,
     );
 
     if (!availableMediator) {
       return next(
         errorHandler(
           503,
-          "No available mediators at this time. Please try again later."
-        )
+          "No available mediators at this time. Please try again later.",
+        ),
       );
     }
     const requested_by = userEmail === dispute.buyer_email ? "buyer" : "seller";
@@ -702,7 +702,7 @@ export const involveAMediator = async (
           dispute_status: "resolving",
         },
       },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     ).populate("transaction user mediator");
 
     if (!updatedDispute) {
@@ -713,7 +713,7 @@ export const involveAMediator = async (
     const updatedMediator = await MediatorModel.findByIdAndUpdate(
       availableMediator._id,
       { $addToSet: { disputes: dispute._id } },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     ).select("-password");
 
     if (!updatedMediator) {
@@ -726,16 +726,16 @@ export const involveAMediator = async (
         sendMediatorRequestedMailToBuyer(
           dispute.buyer_email,
           dispute.product_name,
-          requested_by
+          requested_by,
         ),
         sendMediatorRequestedMailToSeller(
           dispute.vendor_email,
           dispute.product_name,
-          requested_by
+          requested_by,
         ),
       ]);
       console.log(
-        `Mediator involvement emails sent for transaction ${transaction_id}`
+        `Mediator involvement emails sent for transaction ${transaction_id}`,
       );
     } catch (emailError) {
       console.error("Error sending mediator involvement emails:", emailError);
@@ -763,7 +763,7 @@ export const involveAMediator = async (
 export const getAllDisputeForAMediator = async (
   req: Request<GetAllDisputeForAMediatorParams>,
   res: Response<GetAllDisputeForAMediatorResponse>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   const { mediator_email } = req.params;
 
@@ -774,7 +774,7 @@ export const getAllDisputeForAMediator = async (
   try {
     // Find mediator
     const mediator = await MediatorModel.findOne({ mediator_email }).select(
-      "-password"
+      "-password",
     );
 
     if (!mediator) {
@@ -852,7 +852,7 @@ export const getAllDisputeForAMediator = async (
 export const mediatorResolveDispute = async (
   req: Request<ResolveDisputeParams, {}, ResolveDisputeBody>,
   res: Response<ResolveDisputeResponse>,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   const { transaction_id } = req.params;
   const { dispute_fault, resolution_description } = req.body;
@@ -864,7 +864,7 @@ export const mediatorResolveDispute = async (
 
   if (!dispute_fault || !["buyer", "seller"].includes(dispute_fault)) {
     return next(
-      errorHandler(400, "Dispute fault must be either 'buyer' or 'seller'")
+      errorHandler(400, "Dispute fault must be either 'buyer' or 'seller'"),
     );
   }
 
@@ -872,15 +872,15 @@ export const mediatorResolveDispute = async (
     return next(
       errorHandler(
         400,
-        "Resolution description is required and cannot be empty"
-      )
+        "Resolution description is required and cannot be empty",
+      ),
     );
   }
 
   try {
     // Find dispute
     const dispute = await ProductDispute.findOne({ transaction_id }).populate(
-      "transaction user mediator"
+      "transaction user mediator",
     );
 
     if (!dispute) {
@@ -890,7 +890,7 @@ export const mediatorResolveDispute = async (
     // Verify mediator is assigned
     if (!dispute.mediator) {
       return next(
-        errorHandler(400, "No mediator has been assigned to this dispute")
+        errorHandler(400, "No mediator has been assigned to this dispute"),
       );
     }
 
@@ -899,8 +899,8 @@ export const mediatorResolveDispute = async (
       return next(
         errorHandler(
           400,
-          `Cannot resolve dispute with status: ${dispute.dispute_status}`
-        )
+          `Cannot resolve dispute with status: ${dispute.dispute_status}`,
+        ),
       );
     }
 
@@ -916,7 +916,7 @@ export const mediatorResolveDispute = async (
           resolution_summary: `Resolved by mediator. Fault: ${dispute_fault}`,
         },
       },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     ).populate("transaction user mediator");
 
     if (!updatedDispute) {
@@ -927,7 +927,7 @@ export const mediatorResolveDispute = async (
     await ProductTransaction.findOneAndUpdate(
       { transaction_id },
       { $set: { dispute_status: "resolved" } },
-      { new: true }
+      { new: true },
     );
 
     // Send resolution emails to both parties
@@ -938,13 +938,13 @@ export const mediatorResolveDispute = async (
           updatedDispute.buyer_email,
           updatedDispute.product_name,
           resolution_description.trim(),
-          dispute_fault
+          dispute_fault,
         ),
         sendResolutionMailToSeller(
           updatedDispute.vendor_email,
           updatedDispute.product_name,
           resolution_description.trim(),
-          dispute_fault
+          dispute_fault,
         ),
       ]);
       console.log(`Resolution emails sent for transaction ${transaction_id}`);

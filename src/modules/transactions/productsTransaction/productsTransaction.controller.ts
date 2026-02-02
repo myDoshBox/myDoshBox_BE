@@ -26,7 +26,7 @@ import ProductDispute from "../../disputes/productsDispute/productDispute.model"
 export const initiateEscrowProductTransaction = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const {
     vendor_name,
@@ -48,7 +48,7 @@ export const initiateEscrowProductTransaction = async (
       products,
       delivery_address,
     },
-    next
+    next,
   );
 
   try {
@@ -59,7 +59,7 @@ export const initiateEscrowProductTransaction = async (
     }
     if (buyer_email === vendor_email) {
       return next(
-        errorHandler(404, "You cannot initiate an escrow with yourself")
+        errorHandler(404, "You cannot initiate an escrow with yourself"),
       );
     }
 
@@ -67,7 +67,7 @@ export const initiateEscrowProductTransaction = async (
     const sum_total = products.reduce(
       (sum: number, p: { price: number; quantity: number }) =>
         sum + p.price * p.quantity,
-      0
+      0,
     );
     const commission = sum_total * 0.01; // 1% commission
     const transaction_total = sum_total + commission; // Sum total plus 1% commission
@@ -95,7 +95,7 @@ export const initiateEscrowProductTransaction = async (
       vendor_email,
       products,
       sum_total,
-      transaction_total
+      transaction_total,
     );
 
     res.json({
@@ -116,7 +116,7 @@ export const initiateEscrowProductTransaction = async (
 export const editEscrowProductTransaction = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { transaction_id } = req.params;
   const {
@@ -151,8 +151,8 @@ export const editEscrowProductTransaction = async (
       return next(
         errorHandler(
           403,
-          "Unauthorized: You can only edit your own transactions"
-        )
+          "Unauthorized: You can only edit your own transactions",
+        ),
       );
     }
 
@@ -161,8 +161,8 @@ export const editEscrowProductTransaction = async (
       return next(
         errorHandler(
           400,
-          "Cannot edit transaction: Seller has already confirmed this transaction"
-        )
+          "Cannot edit transaction: Seller has already confirmed this transaction",
+        ),
       );
     }
 
@@ -170,8 +170,8 @@ export const editEscrowProductTransaction = async (
       return next(
         errorHandler(
           400,
-          "Cannot edit transaction: Payment has already been made"
-        )
+          "Cannot edit transaction: Payment has already been made",
+        ),
       );
     }
 
@@ -182,8 +182,8 @@ export const editEscrowProductTransaction = async (
       return next(
         errorHandler(
           400,
-          `Cannot edit transaction: Current status is ${transaction.transaction_status}`
-        )
+          `Cannot edit transaction: Current status is ${transaction.transaction_status}`,
+        ),
       );
     }
 
@@ -210,7 +210,7 @@ export const editEscrowProductTransaction = async (
       sum_total = products.reduce(
         (sum: number, p: { price: number; quantity: number }) =>
           sum + p.price * p.quantity,
-        0
+        0,
       );
       commission = sum_total * 0.01;
       transaction_total = sum_total + commission;
@@ -236,7 +236,7 @@ export const editEscrowProductTransaction = async (
     const updatedTransaction = await ProductTransaction.findByIdAndUpdate(
       transaction._id,
       updateData,
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     if (!updatedTransaction) {
@@ -256,7 +256,7 @@ export const editEscrowProductTransaction = async (
       emailVendor,
       emailProducts,
       emailSumTotal,
-      emailTransactionTotal
+      emailTransactionTotal,
     );
 
     await sendTransactionEditConfirmationToBuyer(
@@ -265,7 +265,7 @@ export const editEscrowProductTransaction = async (
       emailVendorName,
       emailProducts,
       emailSumTotal,
-      emailTransactionTotal
+      emailTransactionTotal,
     );
 
     res.json({
@@ -290,7 +290,7 @@ export const editEscrowProductTransaction = async (
 export const sellerConfirmsAnEscrowProductTransaction = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { transaction_id, confirmation, vendor_email } = req.body;
 
@@ -299,8 +299,8 @@ export const sellerConfirmsAnEscrowProductTransaction = async (
     return next(
       errorHandler(
         400,
-        "Transaction ID, confirmation, and vendor email are required"
-      )
+        "Transaction ID, confirmation, and vendor email are required",
+      ),
     );
   }
 
@@ -314,7 +314,7 @@ export const sellerConfirmsAnEscrowProductTransaction = async (
     // Check if the transaction is in a valid state for confirmation
     if (!transaction.buyer_initiated || transaction.seller_confirmed) {
       return next(
-        errorHandler(400, "Invalid transaction state for confirmation")
+        errorHandler(400, "Invalid transaction state for confirmation"),
       );
     }
 
@@ -330,7 +330,7 @@ export const sellerConfirmsAnEscrowProductTransaction = async (
           seller_confirmed: true,
           transaction_status: "awaiting_payment",
         },
-        { new: true }
+        { new: true },
       );
 
       if (!updatedTransaction) {
@@ -345,7 +345,7 @@ export const sellerConfirmsAnEscrowProductTransaction = async (
         transaction.vendor_name,
         transaction.products,
         transaction.sum_total,
-        "accepted"
+        "accepted",
       );
 
       res.json({
@@ -360,7 +360,7 @@ export const sellerConfirmsAnEscrowProductTransaction = async (
           seller_confirmed: false,
           transaction_status: "declined",
         },
-        { new: true }
+        { new: true },
       );
 
       if (!updatedTransaction) {
@@ -375,7 +375,7 @@ export const sellerConfirmsAnEscrowProductTransaction = async (
         transaction.vendor_name,
         transaction.products,
         transaction.sum_total,
-        "rejected"
+        "rejected",
       );
 
       res.json({
@@ -392,13 +392,13 @@ export const sellerConfirmsAnEscrowProductTransaction = async (
 export const verifyEscrowProductTransactionPayment = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { transaction_id, buyer_email, reference } = req.body;
 
   if (!transaction_id || !buyer_email) {
     return next(
-      errorHandler(400, "Transaction ID and buyer email are required")
+      errorHandler(400, "Transaction ID and buyer email are required"),
     );
   }
 
@@ -417,8 +417,8 @@ export const verifyEscrowProductTransactionPayment = async (
         return next(
           errorHandler(
             400,
-            "Cannot proceed Payment!!..Buyer has not initiated the transaction"
-          )
+            "Cannot proceed Payment!!..Buyer has not initiated the transaction",
+          ),
         );
       }
 
@@ -426,8 +426,8 @@ export const verifyEscrowProductTransactionPayment = async (
         return next(
           errorHandler(
             400,
-            "Cannot proceed Payment!!..Seller has not confirmed the transaction"
-          )
+            "Cannot proceed Payment!!..Seller has not confirmed the transaction",
+          ),
         );
       }
 
@@ -472,9 +472,8 @@ export const verifyEscrowProductTransactionPayment = async (
       return next(errorHandler(400, "Payment already verified"));
     }
 
-    const verificationResponse = await verifyPaymentForEscrowProductTransaction(
-      reference
-    );
+    const verificationResponse =
+      await verifyPaymentForEscrowProductTransaction(reference);
 
     if (
       verificationResponse.status &&
@@ -487,8 +486,8 @@ export const verifyEscrowProductTransactionPayment = async (
         return next(
           errorHandler(
             400,
-            `Amount mismatch: Expected ${expectedAmount}, got ${paidAmount}`
-          )
+            `Amount mismatch: Expected ${expectedAmount}, got ${paidAmount}`,
+          ),
         );
       }
 
@@ -499,7 +498,7 @@ export const verifyEscrowProductTransactionPayment = async (
           transaction_status: "payment_verified", // NEW STATUS
           payment_verified_at: new Date(),
         },
-        { new: true }
+        { new: true },
       );
 
       if (!updatedTransaction) {
@@ -513,7 +512,7 @@ export const verifyEscrowProductTransactionPayment = async (
           transaction.vendor_email,
           transaction.products,
           transaction.sum_total,
-          transaction.transaction_total
+          transaction.transaction_total,
         );
       } catch (err) {
         console.error("Failed to send vendor email:", err);
@@ -542,7 +541,7 @@ export const verifyEscrowProductTransactionPayment = async (
 export const sellerFillOutShippingDetails = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   const {
     shipping_company,
@@ -563,7 +562,7 @@ export const sellerFillOutShippingDetails = async (
       delivery_date,
       pick_up_address,
     },
-    next
+    next,
   );
 
   try {
@@ -612,14 +611,14 @@ export const sellerFillOutShippingDetails = async (
       delivery_person_name,
       delivery_person_number,
       delivery_date,
-      pick_up_address
+      pick_up_address,
     );
 
     await sendShippingDetailsEmailToVendor(
       transaction.transaction_id,
       transaction.vendor_name,
       transaction.vendor_email,
-      transaction.products.map((p: { name: string }) => p.name).join(", ")
+      transaction.products.map((p: { name: string }) => p.name).join(", "),
     );
 
     res.status(200).json({
@@ -636,7 +635,7 @@ export const sellerFillOutShippingDetails = async (
 export const paystackWebhook = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     // ⚠️ CRITICAL: Verify webhook signature
@@ -676,7 +675,7 @@ export const paystackWebhook = async (
             transaction.vendor_email,
             transaction.products,
             transaction.sum_total,
-            transaction.transaction_total
+            transaction.transaction_total,
           );
         }
       }
@@ -692,7 +691,7 @@ export const paystackWebhook = async (
 export const getAllEscrowProductTransactionByUser = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { user_email } = req.params;
@@ -727,7 +726,7 @@ export const getAllEscrowProductTransactionByUser = async (
 
     if (!transactions || transactions.length === 0) {
       return next(
-        errorHandler(404, "you don't have any transactions at this time")
+        errorHandler(404, "you don't have any transactions at this time"),
       );
     }
 
@@ -755,7 +754,7 @@ export const getAllEscrowProductTransactionByUser = async (
 export const getSingleEscrowProductTransaction = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { transaction_id } = req.params;
@@ -836,7 +835,7 @@ export const getSingleEscrowProductTransaction = async (
 export const getAllShippingDetails = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { user_email } = req.params;
@@ -925,7 +924,7 @@ export const getAllShippingDetails = async (
 export const getAllShippingDetailsWithAggregation = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { user_email } = req.params;
@@ -974,7 +973,7 @@ export const getAllShippingDetailsWithAggregation = async (
 export const buyerConfirmsProduct = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { transaction_id } = req.body;
@@ -984,7 +983,7 @@ export const buyerConfirmsProduct = async (
     }
 
     console.log(
-      `Processing confirmation for transaction_id: ${transaction_id}`
+      `Processing confirmation for transaction_id: ${transaction_id}`,
     );
 
     // Check for existing dispute
@@ -1002,7 +1001,7 @@ export const buyerConfirmsProduct = async (
 
     console.log(
       "Product transaction found:",
-      JSON.stringify(fetchProductDetails, null, 2)
+      JSON.stringify(fetchProductDetails, null, 2),
     );
 
     const {
@@ -1034,8 +1033,8 @@ export const buyerConfirmsProduct = async (
       return next(
         errorHandler(
           400,
-          `Transaction status is currently '${transaction_status}'. You can only confirm delivery when the item is in transit.`
-        )
+          `Transaction status is currently '${transaction_status}'. You can only confirm delivery when the item is in transit.`,
+        ),
       );
     }
 
@@ -1047,7 +1046,7 @@ export const buyerConfirmsProduct = async (
           transaction_status: "completed",
           buyer_confirm_status: true,
         },
-        { new: true }
+        { new: true },
       );
 
     if (!updateProductTransactionStatus) {
@@ -1055,7 +1054,7 @@ export const buyerConfirmsProduct = async (
     }
 
     console.log(
-      `Updated ProductTransaction ${product_id} to completed with buyer confirmation`
+      `Updated ProductTransaction ${product_id} to completed with buyer confirmation`,
     );
 
     // Resolve dispute if exists and not already resolved
@@ -1063,7 +1062,7 @@ export const buyerConfirmsProduct = async (
       await ProductDispute.findByIdAndUpdate(
         disputeDetails._id,
         { dispute_status: "resolved" },
-        { new: true }
+        { new: true },
       );
       console.log(`Resolved dispute for transaction ${transaction_id}`);
     }
@@ -1073,13 +1072,13 @@ export const buyerConfirmsProduct = async (
       transaction_id,
       vendor_name,
       buyer_email,
-      product_name
+      product_name,
     );
     await sendSuccessfulEscrowEmailToVendor(
       transaction_id,
       vendor_name,
       vendor_email,
-      product_name
+      product_name,
     );
     console.log(`Emails sent for transaction ${transaction_id}`);
 
@@ -1101,7 +1100,7 @@ export const buyerConfirmsProduct = async (
 export const cancelEscrowProductTransaction = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { transaction_id } = req.params;
 
@@ -1128,17 +1127,17 @@ export const cancelEscrowProductTransaction = async (
 
     if (productTransactionStatus === "cancelled") {
       return next(
-        errorHandler(400, "This transaction has already been cancelled")
+        errorHandler(400, "This transaction has already been cancelled"),
       );
     }
     if (productTransactionStatus === "completed") {
       return next(
-        errorHandler(400, "This transaction has already been completed")
+        errorHandler(400, "This transaction has already been completed"),
       );
     }
     if (productDisputeStatus === "resolved") {
       return next(
-        errorHandler(400, "This transaction has already been resolved")
+        errorHandler(400, "This transaction has already been resolved"),
       );
     }
 
@@ -1146,7 +1145,7 @@ export const cancelEscrowProductTransaction = async (
       await ProductTransaction.findByIdAndUpdate(
         fetchProductDetails._id,
         { transaction_status: "cancelled" },
-        { new: true }
+        { new: true },
       );
 
     if (!updateProductTransactionStatus) {
@@ -1157,7 +1156,7 @@ export const cancelEscrowProductTransaction = async (
       await ProductDispute.findByIdAndUpdate(
         fetchDisputeDetails._id,
         { dispute_status: "cancelled" },
-        { new: true }
+        { new: true },
       );
     }
 
@@ -1173,7 +1172,7 @@ export const cancelEscrowProductTransaction = async (
 export const getPaymentStatus = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { transaction_id } = req.params;

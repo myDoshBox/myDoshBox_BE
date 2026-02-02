@@ -1424,7 +1424,7 @@ import { IResolutionProposal } from "./productDispute.model";
 
 // Helper to get user email from token
 export const getUserEmailFromToken = async (
-  req: any
+  req: any,
 ): Promise<string | null> => {
   const tokenUser = req.user;
 
@@ -1444,16 +1444,15 @@ export const getUserEmailFromToken = async (
   }
 
   try {
-    const individualUser = await IndividualUser.findById(userId).select(
-      "email"
-    );
+    const individualUser =
+      await IndividualUser.findById(userId).select("email");
     if (individualUser?.email) {
       console.log("✅ Email found in IndividualUser DB:", individualUser.email);
       return individualUser.email;
     }
 
     const orgUser = await OrganizationUser.findById(userId).select(
-      "organization_email contact_email email"
+      "organization_email contact_email email",
     );
     if (orgUser) {
       const email =
@@ -1474,7 +1473,7 @@ export const getUserEmailFromToken = async (
 
 // Helper to determine dispute stage
 const determineDisputeStage = (
-  transaction: any
+  transaction: any,
 ): "pre_payment" | "post_payment" | "post_delivery" => {
   if (!transaction.verified_payment_status) {
     return "pre_payment";
@@ -1491,7 +1490,7 @@ const determineDisputeStage = (
 export const raiseDispute = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { transaction_id } = req.params;
   const {
@@ -1516,12 +1515,12 @@ export const raiseDispute = async (
       buyer_email,
       vendor_email,
     },
-    next
+    next,
   );
 
   if (!dispute_description?.trim() || !reason_for_dispute?.trim()) {
     return next(
-      errorHandler(400, "Fields cannot be empty or contain only whitespace")
+      errorHandler(400, "Fields cannot be empty or contain only whitespace"),
     );
   }
 
@@ -1529,8 +1528,8 @@ export const raiseDispute = async (
     return next(
       errorHandler(
         400,
-        "Either product_name/product_image or disputed_products array is required"
-      )
+        "Either product_name/product_image or disputed_products array is required",
+      ),
     );
   }
 
@@ -1550,32 +1549,32 @@ export const raiseDispute = async (
 
     if (buyer_email === vendor_email) {
       return next(
-        errorHandler(400, "You cannot raise a dispute against yourself")
+        errorHandler(400, "You cannot raise a dispute against yourself"),
       );
     }
 
     if (user_email !== buyer_email && user_email !== vendor_email) {
       return next(
-        errorHandler(403, "You are not authorized to raise a dispute")
+        errorHandler(403, "You are not authorized to raise a dispute"),
       );
     }
 
     const transactionStatus = transaction.transaction_status;
     if (transactionStatus === "completed") {
       return next(
-        errorHandler(400, "Cannot raise dispute: Transaction completed")
+        errorHandler(400, "Cannot raise dispute: Transaction completed"),
       );
     }
 
     if (transactionStatus === "cancelled") {
       return next(
-        errorHandler(400, "Cannot raise dispute: Transaction cancelled")
+        errorHandler(400, "Cannot raise dispute: Transaction cancelled"),
       );
     }
 
     if (transaction.dispute_status === "processing") {
       return next(
-        errorHandler(400, "Transaction already has an active dispute")
+        errorHandler(400, "Transaction already has an active dispute"),
       );
     }
 
@@ -1599,13 +1598,13 @@ export const raiseDispute = async (
     } else {
       if (!Array.isArray(disputed_products) || disputed_products.length === 0) {
         return next(
-          errorHandler(400, "disputed_products must be a non-empty array")
+          errorHandler(400, "disputed_products must be a non-empty array"),
         );
       }
       for (const dp of disputed_products) {
         if (!dp.name || !dp.image) {
           return next(
-            errorHandler(400, "Each product must have 'name' and 'image'")
+            errorHandler(400, "Each product must have 'name' and 'image'"),
           );
         }
       }
@@ -1613,19 +1612,22 @@ export const raiseDispute = async (
     }
 
     const matchingProducts = transaction.products.filter((p) =>
-      productsToDispute.some((dp) => dp.name === p.name)
+      productsToDispute.some((dp) => dp.name === p.name),
     );
 
     if (matchingProducts.length === 0) {
       return next(
-        errorHandler(400, "None of the provided products match the transaction")
+        errorHandler(
+          400,
+          "None of the provided products match the transaction",
+        ),
       );
     }
 
     const existingDispute = await ProductDispute.findOne({ transaction_id });
     if (existingDispute) {
       return next(
-        errorHandler(400, "A dispute already exists for this transaction")
+        errorHandler(400, "A dispute already exists for this transaction"),
       );
     }
 
@@ -1635,12 +1637,12 @@ export const raiseDispute = async (
     const updatedTransaction = await ProductTransaction.findByIdAndUpdate(
       transaction._id,
       { $set: { dispute_status: "In_Dispute" } },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     if (!updatedTransaction) {
       return next(
-        errorHandler(500, "Failed to update transaction dispute status")
+        errorHandler(500, "Failed to update transaction dispute status"),
       );
     }
 
@@ -1693,12 +1695,12 @@ export const raiseDispute = async (
         sendDisputeMailToBuyer(
           buyer_email,
           productSummary,
-          dispute_description.trim()
+          dispute_description.trim(),
         ),
         sendDisputeMailToSeller(
           vendor_email,
           productSummary,
-          dispute_description.trim()
+          dispute_description.trim(),
         ),
       ]);
     } catch (emailError) {
@@ -1753,7 +1755,7 @@ export const raiseDispute = async (
 export const requestMediator = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   const { transaction_id } = req.params;
 
@@ -1784,8 +1786,8 @@ export const requestMediator = async (
       return next(
         errorHandler(
           400,
-          `Cannot request mediator: Dispute is ${dispute.dispute_status}`
-        )
+          `Cannot request mediator: Dispute is ${dispute.dispute_status}`,
+        ),
       );
     }
 
@@ -1804,12 +1806,12 @@ export const requestMediator = async (
         sendMediatorRequestedMailToBuyer(
           dispute.buyer_email,
           dispute.product_name,
-          requested_by
+          requested_by,
         ),
         sendMediatorRequestedMailToSeller(
           dispute.vendor_email,
           dispute.product_name,
-          requested_by
+          requested_by,
         ),
       ]);
     } catch (emailError) {
@@ -1837,7 +1839,7 @@ export const requestMediator = async (
 export const cancelDispute = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   const { transaction_id } = req.params;
 
@@ -1876,7 +1878,7 @@ export const cancelDispute = async (
     await ProductTransaction.findOneAndUpdate(
       { transaction_id },
       { $set: { dispute_status: "none" } },
-      { new: true }
+      { new: true },
     );
 
     // ✅ ONLY update dispute status to cancelled (NOT transaction status)
@@ -1887,11 +1889,11 @@ export const cancelDispute = async (
       await Promise.all([
         sendDisputeCancelledMailToBuyer(
           dispute.buyer_email,
-          dispute.product_name
+          dispute.product_name,
         ),
         sendDisputeCancelledMailToSeller(
           dispute.vendor_email,
-          dispute.product_name
+          dispute.product_name,
         ),
       ]);
     } catch (emailError) {
@@ -1916,7 +1918,7 @@ export const cancelDispute = async (
 export const getAllDisputesByUser = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { user_email } = req.params;
@@ -2149,7 +2151,7 @@ export const getAllDisputesByUser = async (
 export const proposeResolution = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   const { transaction_id } = req.params;
   const { proposal_description } = req.body;
@@ -2189,14 +2191,14 @@ export const proposeResolution = async (
       return next(
         errorHandler(
           400,
-          `Cannot propose resolution: Dispute status is ${dispute.dispute_status}`
-        )
+          `Cannot propose resolution: Dispute status is ${dispute.dispute_status}`,
+        ),
       );
     }
 
     if (dispute.dispute_resolution_method === "mediator") {
       return next(
-        errorHandler(400, "Cannot propose: Mediator is handling this dispute")
+        errorHandler(400, "Cannot propose: Mediator is handling this dispute"),
       );
     }
 
@@ -2205,15 +2207,15 @@ export const proposeResolution = async (
       (p) => {
         const proposalEmailLower = p.proposed_by_email.toLowerCase();
         return p.status === "pending" && proposalEmailLower === userEmailLower;
-      }
+      },
     );
 
     if (currentUserPendingProposal) {
       return next(
         errorHandler(
           400,
-          "You already have a pending proposal. Wait for response before proposing another."
-        )
+          "You already have a pending proposal. Wait for response before proposing another.",
+        ),
       );
     }
 
@@ -2226,8 +2228,8 @@ export const proposeResolution = async (
       return next(
         errorHandler(
           400,
-          "Please respond to the pending proposal before creating a new one"
-        )
+          "Please respond to the pending proposal before creating a new one",
+        ),
       );
     }
 
@@ -2260,7 +2262,7 @@ export const proposeResolution = async (
       console.log("  - Dispute Status:", savedDispute.dispute_status);
       console.log(
         "  - Total Proposals:",
-        savedDispute.resolution_proposals?.length || 0
+        savedDispute.resolution_proposals?.length || 0,
       );
 
       if (
@@ -2274,7 +2276,7 @@ export const proposeResolution = async (
         console.log("  - Latest Proposal Status:", latestProposal.status);
         console.log(
           "  - Latest Proposal By:",
-          latestProposal.proposed_by_email
+          latestProposal.proposed_by_email,
         );
       }
     } else {
@@ -2294,7 +2296,7 @@ export const proposeResolution = async (
           dispute.vendor_email,
           productSummary,
           "buyer",
-          proposalNumber
+          proposalNumber,
         );
         console.log("✅ Email sent to SELLER:", dispute.vendor_email);
       } else {
@@ -2303,7 +2305,7 @@ export const proposeResolution = async (
           dispute.buyer_email,
           productSummary,
           "seller",
-          proposalNumber
+          proposalNumber,
         );
         console.log("✅ Email sent to BUYER:", dispute.buyer_email);
       }
@@ -2337,7 +2339,7 @@ export const proposeResolution = async (
 export const respondToResolution = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   const { transaction_id } = req.params;
   const { action, response_description } = req.body;
@@ -2352,8 +2354,8 @@ export const respondToResolution = async (
     return next(
       errorHandler(
         400,
-        "Response description is required (explain why you're accepting/rejecting)"
-      )
+        "Response description is required (explain why you're accepting/rejecting)",
+      ),
     );
   }
 
@@ -2393,8 +2395,8 @@ export const respondToResolution = async (
       return next(
         errorHandler(
           404,
-          "No pending resolution proposal found from the other party"
-        )
+          "No pending resolution proposal found from the other party",
+        ),
       );
     }
 
@@ -2416,7 +2418,7 @@ export const respondToResolution = async (
       await ProductTransaction.findOneAndUpdate(
         { transaction_id },
         { $set: { dispute_status: "resolved" } },
-        { new: true }
+        { new: true },
       );
 
       await dispute.save();
@@ -2425,11 +2427,11 @@ export const respondToResolution = async (
         await Promise.all([
           sendResolutionAcceptedMailToBuyer(
             dispute.buyer_email,
-            dispute.product_name
+            dispute.product_name,
           ),
           sendResolutionAcceptedMailToSeller(
             dispute.vendor_email,
-            dispute.product_name
+            dispute.product_name,
           ),
         ]);
       } catch (emailError) {
@@ -2466,12 +2468,12 @@ export const respondToResolution = async (
             sendAutoEscalationMailToBuyer(
               dispute.buyer_email,
               dispute.product_name,
-              dispute.rejection_count
+              dispute.rejection_count,
             ),
             sendAutoEscalationMailToSeller(
               dispute.vendor_email,
               dispute.product_name,
-              dispute.rejection_count
+              dispute.rejection_count,
             ),
           ]);
         } catch (emailError) {
@@ -2498,14 +2500,14 @@ export const respondToResolution = async (
               dispute.product_name,
               responderRole,
               dispute.rejection_count,
-              dispute.max_rejections
+              dispute.max_rejections,
             ),
             sendResolutionRejectedToSeller(
               dispute.vendor_email,
               dispute.product_name,
               responderRole,
               dispute.rejection_count,
-              dispute.max_rejections
+              dispute.max_rejections,
             ),
           ]);
         } catch (emailError) {
@@ -2538,13 +2540,13 @@ export const respondToResolution = async (
 export const getDisputeDetails = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { transaction_id } = req.params;
 
     const dispute = await ProductDispute.findOne({ transaction_id }).populate(
-      "transaction user mediator"
+      "transaction user mediator",
     );
 
     if (!dispute) {
@@ -2592,7 +2594,7 @@ export const getDisputeDetails = async (
         const isPending = proposal.status === "pending";
 
         return isFromOtherParty && isPending;
-      }
+      },
     );
 
     // ✅ FIX: Check if current user has a pending proposal (waiting for response)
@@ -2603,7 +2605,7 @@ export const getDisputeDetails = async (
         const isPending = proposal.status === "pending";
 
         return isFromCurrentUser && isPending;
-      }
+      },
     );
 
     console.log("🔍 BACKEND DEBUG - Proposal Results:", {
@@ -2635,7 +2637,7 @@ export const getDisputeDetails = async (
 
     const canRequestMediator =
       !["resolved", "cancelled", "escalated_to_mediator"].includes(
-        dispute.dispute_status
+        dispute.dispute_status,
       ) && dispute.dispute_resolution_method !== "mediator";
 
     const canCancelDispute =
