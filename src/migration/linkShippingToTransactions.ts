@@ -11,7 +11,7 @@ const linkShippingToTransactions = async () => {
     console.log("Connected to MongoDB");
 
     console.log(
-      "Starting migration: Linking shipping details to transactions...",
+      "Starting migration: Linking shipping details to transactions..."
     );
 
     // Find all shipping details
@@ -32,12 +32,12 @@ const linkShippingToTransactions = async () => {
           await ProductTransaction.findByIdAndUpdate(
             transaction._id,
             { shipping: shipping._id },
-            { runValidators: false }, // Skip validation for this update
+            { runValidators: false } // Skip validation for this update
           );
 
           updatedCount++;
           console.log(
-            `✅ Linked transaction ${transaction.transaction_id} to shipping ${shipping._id}`,
+            `✅ Linked transaction ${transaction.transaction_id} to shipping ${shipping._id}`
           );
         }
       } catch (error) {

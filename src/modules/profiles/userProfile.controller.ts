@@ -81,7 +81,7 @@ export interface UserIdentification {
 }
 
 export const identifyUserType = async (
-  req: any
+  req: any,
 ): Promise<UserIdentification | null> => {
   const tokenUser = req.user;
   const userId = tokenUser?.userData?._id || tokenUser?._id || tokenUser?.id;
@@ -106,7 +106,7 @@ export const identifyUserType = async (
     if (orgUser) {
       console.log(
         "✅ User identified as Organization:",
-        orgUser.organization_email || orgUser.contact_email
+        orgUser.organization_email || orgUser.contact_email,
       );
       return {
         userId: orgUser._id.toString(),
@@ -116,7 +116,7 @@ export const identifyUserType = async (
     }
 
     console.error(
-      "❌ User not found in either Individual or Organization collections"
+      "❌ User not found in either Individual or Organization collections",
     );
     return null;
   } catch (error) {
@@ -128,7 +128,7 @@ export const identifyUserType = async (
 // Helper function to format profile data
 const formatProfileData = (
   user: IndividualUserDocument | organizationalDoc,
-  userType: "individual" | "organization"
+  userType: "individual" | "organization",
 ) => {
   if (userType === "individual") {
     const indUser = user as IndividualUserDocument;
@@ -165,7 +165,7 @@ const formatProfileData = (
 export const getUserProfile = async (
   req: AuthenticatedRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const userInfo = await identifyUserType(req);
@@ -221,7 +221,7 @@ export const getUserProfile = async (
 export const updateUserProfile = async (
   req: AuthenticatedRequest<UpdateProfileBody>,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const userInfo = await identifyUserType(req);
@@ -251,7 +251,7 @@ export const updateUserProfile = async (
     }
 
     console.log(
-      `🔍 Updating profile for user: ${userInfo.userId}, Type: ${userInfo.userType}`
+      `🔍 Updating profile for user: ${userInfo.userId}, Type: ${userInfo.userType}`,
     );
 
     // Find and update the user
@@ -334,7 +334,7 @@ export const updateUserProfile = async (
 export const uploadProfileImage = async (
   req: AuthenticatedRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const userInfo = await identifyUserType(req);
@@ -414,7 +414,7 @@ export const uploadProfileImage = async (
 export const deleteProfileImage = async (
   req: AuthenticatedRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const userInfo = await identifyUserType(req);
@@ -474,7 +474,7 @@ export const deleteProfileImage = async (
 export const updateBankDetails = async (
   req: AuthenticatedRequest<UpdateBankDetailsBody>,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const userInfo = await identifyUserType(req);
@@ -549,7 +549,7 @@ export const updateBankDetails = async (
 export const getBankDetails = async (
   req: AuthenticatedRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const userInfo = await identifyUserType(req);
@@ -601,7 +601,7 @@ export const getBankDetails = async (
 
 // Helper function to get user type
 export const getUserType = async (
-  userId: string
+  userId: string,
 ): Promise<"individual" | "organization" | null> => {
   try {
     const individualUser = await IndividualUser.findById(userId);

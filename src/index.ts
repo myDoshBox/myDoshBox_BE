@@ -21,6 +21,8 @@ import escrowProductDisputeRouter from "./modules/disputes/productsDispute/produ
 import adminRouter from "./modules/administrator/admin.route";
 import mediatorRouter from "./modules/mediator/mediator.route";
 import userProfileRouter from "./modules/profiles/userProfile.route";
+// In your main app.ts or server.ts
+import adminStatsRouter from "./modules/administrator/AdminServices/adminStats.route";
 
 // Middleware
 import deserializeUser from "./middlewares/deserializeUser.middleware";
@@ -55,7 +57,7 @@ app.use(
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Refresh-Token"],
-  })
+  }),
 );
 
 // file upload middleware
@@ -67,7 +69,7 @@ app.use(
     abortOnLimit: true,
     createParentPath: true,
     parseNested: true,
-  })
+  }),
 );
 
 app.use(cookieParser());
@@ -135,6 +137,7 @@ app.get("/", (req: Request, res: Response) => {
 app.use("/auth/individual", individualUserAuthRouter);
 app.use("/auth/organization", organizationUserAuthRouter);
 app.use("/auth/admin", AdminUserRouter);
+app.use("/admin/stats", adminStatsRouter);
 
 // User routes
 app.use("/profile", userProfileRouter);

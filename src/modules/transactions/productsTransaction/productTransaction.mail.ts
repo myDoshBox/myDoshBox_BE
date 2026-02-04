@@ -8,13 +8,14 @@ export const sendEscrowInitiationEmailToInitiator = async (
   vendor_name: string,
   products: any[],
   sum_total: number,
-  status: "accepted" | "rejected"
+  status: "accepted" | "rejected",
 ) => {
   try {
     const transport = generateMailTransporter();
     const supportEmail = "mydoshbox@gmail.com";
     const loginUrl = "https://mydoshbox.vercel.app/login";
-    const dashboardUrl = "https://mydoshbox.vercel.app/dashboard";
+    const dashboardUrl =
+      "https://mydoshbox.vercel.app/userdashboard/transaction-history/confirm-escrow-product-transaction/transactions-in-progress-history";
 
     // Generate product rows for the table
     const productRows = products
@@ -31,7 +32,7 @@ export const sendEscrowInitiationEmailToInitiator = async (
           p.quantity
         }</td>
         <td style="padding: 16px 12px; text-align: right; color: #111827; font-size: 14px; font-weight: 500;">₦${Number(
-          p.price
+          p.price,
         ).toLocaleString()}</td>
         <td style="padding: 16px 12px; text-align: right; color: #059669; font-size: 14px; font-weight: 600;">₦${(
           p.price * p.quantity
@@ -49,7 +50,7 @@ export const sendEscrowInitiationEmailToInitiator = async (
       `
           : ""
       }
-    `
+    `,
       )
       .join("");
 
@@ -286,13 +287,15 @@ export const sendEscrowInitiationEmailToVendor = async (
   vendor_email: string,
   products: any[],
   sum_total: number,
-  transaction_total: number
+  transaction_total: number,
 ) => {
   try {
     const transport = generateMailTransporter();
     const supportEmail = "mydoshbox@gmail.com";
     const signupUrl = "https://mydoshbox.vercel.app/signup";
     const loginUrl = "https://mydoshbox.vercel.app/login";
+    const dashboardUrl =
+      "https://mydoshbox.vercel.app/userdashboard/transaction-history/confirm-escrow-product-transaction/transactions-in-progress-history";
 
     // Generate product rows for the table
     const productRows = products
@@ -309,7 +312,7 @@ export const sendEscrowInitiationEmailToVendor = async (
           p.quantity
         }</td>
         <td style="padding: 16px 12px; text-align: right; color: #111827; font-size: 14px; font-weight: 500;">₦${Number(
-          p.price
+          p.price,
         ).toLocaleString()}</td>
         <td style="padding: 16px 12px; text-align: right; color: #059669; font-size: 14px; font-weight: 600;">₦${(
           p.price * p.quantity
@@ -327,7 +330,7 @@ export const sendEscrowInitiationEmailToVendor = async (
       `
           : ""
       }
-    `
+    `,
       )
       .join("");
 
@@ -446,7 +449,7 @@ export const sendEscrowInitiationEmailToVendor = async (
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 24px;">
                   <tr>
                     <td align="center" style="padding: 0 0 12px 0;">
-                      <a href="${loginUrl}" style="display: inline-block; padding: 14px 32px; background-color: #10b981; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);">
+                      <a href="${dashboardUrl}" style="display: inline-block; padding: 14px 32px; background-color: #10b981; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);">
                         View Transaction in Dashboard
                       </a>
                     </td>
@@ -516,6 +519,247 @@ export const sendEscrowInitiationEmailToVendor = async (
   }
 };
 
+export const sendPaymentVerifiedEmailToVendor = async (
+  transaction_id: string,
+  vendor_name: string,
+  vendor_email: string,
+  products: any[],
+  sum_total: number,
+) => {
+  try {
+    const transport = generateMailTransporter();
+    const supportEmail = "mydoshbox@gmail.com";
+    const dashboardUrl =
+      "https://mydoshbox.vercel.app/userdashboard/transaction-history/confirm-escrow-product-transaction/transactions-in-progress-history";
+
+    const productRows = products
+      .map(
+        (p, index) => `
+      <tr style="border-bottom: 1px solid #e5e7eb;">
+        <td style="padding: 12px 8px; text-align: center; color: #6b7280; font-size: 13px;">${
+          index + 1
+        }</td>
+        <td style="padding: 12px 8px; color: #111827; font-size: 13px; font-weight: 500;">${
+          p.name
+        }</td>
+        <td style="padding: 12px 8px; text-align: center; color: #374151; font-size: 13px;">${
+          p.quantity
+        }</td>
+        <td style="padding: 12px 8px; text-align: right; color: #111827; font-size: 13px;">₦${Number(
+          p.price,
+        ).toLocaleString()}</td>
+        <td style="padding: 12px 8px; text-align: right; color: #059669; font-size: 13px; font-weight: 600;">₦${(
+          p.price * p.quantity
+        ).toLocaleString()}</td>
+      </tr>
+    `,
+      )
+      .join("");
+
+    const emailMessage = `
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Received - MyDoshBox</title>
+  </head>
+  <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; background-color: #f3f4f6;">
+    
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f3f4f6; padding: 40px 20px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); overflow: hidden;" cellspacing="0" cellpadding="0" border="0">
+            
+            <tr>
+              <td style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 32px 24px; text-align: center;">
+                <div style="width: 48px; height: 48px; background-color: rgba(255, 255, 255, 0.2); border-radius: 50%; margin: 0 auto 12px auto; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                  💰
+                </div>
+                <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">
+                  Payment Received!
+                </h1>
+                <p style="margin: 8px 0 0 0; color: #d1fae5; font-size: 14px;">
+                  The buyer has completed payment
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding: 32px 24px;">
+                
+                <p style="margin: 0 0 16px 0; color: #111827; font-size: 16px;">
+                  Hello <strong>${vendor_name}</strong>,
+                </p>
+                
+                <p style="margin: 0 0 20px 0; color: #374151; font-size: 15px; line-height: 1.6;">
+                  Great news! The buyer has successfully completed payment for transaction <strong>${transaction_id}</strong>. You can now proceed with shipping.
+                </p>
+
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-radius: 8px; border-left: 4px solid #10b981; margin-bottom: 20px;">
+                  <tr>
+                    <td style="padding: 16px;">
+                      <p style="margin: 0 0 8px 0; color: #065f46; font-size: 13px; font-weight: 700; text-transform: uppercase;">
+                        Secured Amount
+                      </p>
+                      <p style="margin: 0; color: #065f46; font-size: 28px; font-weight: 700;">
+                        ₦${Number(sum_total).toLocaleString()}
+                      </p>
+                      <p style="margin: 8px 0 0 0; color: #047857; font-size: 12px;">
+                        Held securely in escrow
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 20px;">
+                  <tr>
+                    <td style="padding: 16px;">
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                        <tr>
+                          <td style="padding: 6px 0; color: #6b7280; font-size: 12px; font-weight: 600; text-transform: uppercase;">
+                            Transaction ID
+                          </td>
+                          <td style="padding: 6px 0; color: #111827; font-size: 13px; font-weight: 600; text-align: right; font-family: 'Courier New', monospace;">
+                            ${transaction_id}
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+
+                <h2 style="margin: 0 0 12px 0; color: #111827; font-size: 16px; font-weight: 700;">
+                  📦 Order Summary
+                </h2>
+                
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-radius: 8px; border: 1px solid #e5e7eb; overflow: hidden; margin-bottom: 20px;">
+                  <tr style="background-color: #f9fafb;">
+                    <th style="padding: 10px 8px; text-align: center; color: #6b7280; font-size: 11px; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #e5e7eb;">#</th>
+                    <th style="padding: 10px 8px; text-align: left; color: #6b7280; font-size: 11px; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #e5e7eb;">Product</th>
+                    <th style="padding: 10px 8px; text-align: center; color: #6b7280; font-size: 11px; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #e5e7eb;">Qty</th>
+                    <th style="padding: 10px 8px; text-align: right; color: #6b7280; font-size: 11px; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #e5e7eb;">Unit</th>
+                    <th style="padding: 10px 8px; text-align: right; color: #6b7280; font-size: 11px; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #e5e7eb;">Total</th>
+                  </tr>
+                  ${productRows}
+                </table>
+
+                <h2 style="margin: 0 0 12px 0; color: #111827; font-size: 16px; font-weight: 700;">
+                  📋 Next Steps
+                </h2>
+
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 20px;">
+                  <tr>
+                    <td style="padding: 0;">
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 10px;">
+                        <tr>
+                          <td style="width: 28px; vertical-align: top; padding-top: 2px;">
+                            <div style="width: 22px; height: 22px; background-color: #dbeafe; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #1e40af; font-weight: 700; font-size: 11px;">1</div>
+                          </td>
+                          <td style="padding-left: 10px; color: #374151; font-size: 14px; line-height: 1.6;">
+                            <strong>Submit shipping details</strong> in your dashboard
+                          </td>
+                        </tr>
+                      </table>
+
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 10px;">
+                        <tr>
+                          <td style="width: 28px; vertical-align: top; padding-top: 2px;">
+                            <div style="width: 22px; height: 22px; background-color: #dbeafe; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #1e40af; font-weight: 700; font-size: 11px;">2</div>
+                          </td>
+                          <td style="padding-left: 10px; color: #374151; font-size: 14px; line-height: 1.6;">
+                            <strong>Ship the products</strong> to the buyer's address
+                          </td>
+                        </tr>
+                      </table>
+
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                        <tr>
+                          <td style="width: 28px; vertical-align: top; padding-top: 2px;">
+                            <div style="width: 22px; height: 22px; background-color: #d1fae5; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #065f46; font-weight: 700; font-size: 11px;">3</div>
+                          </td>
+                          <td style="padding-left: 10px; color: #374151; font-size: 14px; line-height: 1.6;">
+                            <strong style="color: #059669;">Receive payment</strong> once buyer confirms delivery
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 8px; border-left: 4px solid #f59e0b; margin-bottom: 20px;">
+                  <tr>
+                    <td style="padding: 16px;">
+                      <p style="margin: 0 0 8px 0; color: #92400e; font-size: 13px; font-weight: 700;">
+                        ⚠️ Important
+                      </p>
+                      <p style="margin: 0; color: #78350f; font-size: 13px; line-height: 1.6;">
+                        Your payment is secured in escrow. It will be released to you within 24 hours after the buyer confirms delivery.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 20px;">
+                  <tr>
+                    <td align="center">
+                      <a href="${dashboardUrl}" style="display: inline-block; padding: 12px 28px; background-color: #10b981; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);">
+                        Submit Shipping Details
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+
+                <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
+
+                <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 13px;">
+                  Need help? <a href="mailto:${supportEmail}" style="color: #10b981; text-decoration: none; font-weight: 600;">${supportEmail}</a>
+                </p>
+
+                <p style="margin: 0; color: #374151; font-size: 13px;">
+                  Best regards,<br/>
+                  <strong style="color: #10b981;">The MyDoshBox Team</strong>
+                </p>
+
+              </td>
+            </tr>
+
+            <tr>
+              <td style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+                <p style="margin: 0 0 4px 0; color: #6b7280; font-size: 11px;">
+                  © ${new Date().getFullYear()} MyDoshBox. All rights reserved.
+                </p>
+                <p style="margin: 0; color: #9ca3af; font-size: 10px;">
+                  Secure escrow transactions made simple
+                </p>
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+
+  </body>
+  </html>
+  `;
+
+    const info = await transport.sendMail({
+      to: vendor_email,
+      from: process.env.VERIFICATION_EMAIL,
+      subject: "💰 Payment Received - Ready to Ship",
+      html: emailMessage,
+    });
+
+    console.log(
+      "Payment verified email sent to vendor - Message ID:",
+      info?.messageId,
+    );
+  } catch (err) {
+    console.error("Error sending payment verified email to vendor:", err);
+  }
+};
+
 // SHIPPING DETAILS MAIL TO INITIATOR (BUYER)
 export const sendShippingDetailsEmailToInitiator = async (
   buyer_email: string | undefined,
@@ -523,12 +767,12 @@ export const sendShippingDetailsEmailToInitiator = async (
   delivery_person_name: string | undefined,
   delivery_person_number: string | undefined,
   delivery_date: string | undefined,
-  pick_up_address: string | undefined
+  pick_up_address: string | undefined,
 ) => {
   try {
     const transport = generateMailTransporter();
     const supportEmail = "mydoshbox@gmail.com";
-    const dashboardUrl = "https://mydoshbox.vercel.app/dashboard";
+    const dashboardUrl = "https://mydoshbox.vercel.app/userdashboard";
 
     const emailMessage = `
   <!DOCTYPE html>
@@ -722,12 +966,12 @@ export const sendShippingDetailsEmailToVendor = async (
   transaction_id: string = "",
   vendor_name: string = "",
   vendor_email: string = "",
-  product_name: string = ""
+  product_name: string = "",
 ) => {
   try {
     const transport = generateMailTransporter();
     const supportEmail = "mydoshbox@gmail.com";
-    const dashboardUrl = "https://mydoshbox.vercel.app/dashboard";
+    const dashboardUrl = "https://mydoshbox.vercel.app/userdashboard";
 
     const emailMessage = `
   <!DOCTYPE html>
@@ -929,12 +1173,12 @@ export const sendSuccessfulEscrowEmailToInitiator = async (
   transaction_id: string = "",
   vendor_name: string = "",
   buyer_email: string = "",
-  product_name: string = ""
+  product_name: string = "",
 ) => {
   try {
     const transport = generateMailTransporter();
     const supportEmail = "mydoshbox@gmail.com";
-    const dashboardUrl = "https://mydoshbox.vercel.app/dashboard";
+    const dashboardUrl = "https://mydoshbox.vercel.app/userdashboard";
 
     const emailMessage = `
   <!DOCTYPE html>
@@ -1164,12 +1408,13 @@ export const sendSuccessfulEscrowEmailToVendor = async (
   transaction_id: string = "",
   vendor_name: string = "",
   vendor_email: string = "",
-  product_name: string = ""
+  product_name: string = "",
+  vendorPayout: string = "",
 ) => {
   try {
     const transport = generateMailTransporter();
     const supportEmail = "mydoshbox@gmail.com";
-    const dashboardUrl = "https://mydoshbox.vercel.app/dashboard";
+    const dashboardUrl = "https://mydoshbox.vercel.app/userdashboard";
 
     const emailMessage = `
   <!DOCTYPE html>
@@ -1400,12 +1645,12 @@ export const sendTransactionCancellationMailToBuyer = async (
   vendor_name: string,
   product_name: string,
   transaction_id: string,
-  cancellation_reason?: string
+  cancellation_reason?: string,
 ) => {
   try {
     const transport = generateMailTransporter();
     const supportEmail = "mydoshbox@gmail.com";
-    const dashboardUrl = "https://mydoshbox.vercel.app/dashboard";
+    const dashboardUrl = "https://mydoshbox.vercel.app/userdashboard";
 
     const emailMessage = `
   <!DOCTYPE html>
@@ -1661,12 +1906,12 @@ export const sendMediatorInvolvementMailToBuyer = async (
   buyer_email: string,
   product_name: string,
   mediator_name: string,
-  mediator_email: string
+  mediator_email: string,
 ) => {
   try {
     const transport = generateMailTransporter();
     const supportEmail = "mydoshbox@gmail.com";
-    const dashboardUrl = "https://mydoshbox.vercel.app/dashboard";
+    const dashboardUrl = "https://mydoshbox.vercel.app/userdashboard";
 
     const emailMessage = `
   <!DOCTYPE html>
@@ -1858,7 +2103,7 @@ export const sendMediatorInvolvementMailToBuyer = async (
 
     console.log(
       "Mediator assignment email sent to buyer - Message ID:",
-      info?.messageId
+      info?.messageId,
     );
   } catch (error: unknown) {
     console.error("Error sending mediator assignment email to buyer:", error);
@@ -1872,12 +2117,12 @@ export const sendMediatorInvolvementMailToSeller = async (
   vendor_email: string,
   product_name: string,
   mediator_name: string,
-  mediator_email: string
+  mediator_email: string,
 ) => {
   try {
     const transport = generateMailTransporter();
     const supportEmail = "mydoshbox@gmail.com";
-    const dashboardUrl = "https://mydoshbox.vercel.app/dashboard";
+    const dashboardUrl = "https://mydoshbox.vercel.app/userdashboard";
 
     const emailMessage = `
   <!DOCTYPE html>
@@ -2069,7 +2314,7 @@ export const sendMediatorInvolvementMailToSeller = async (
 
     console.log(
       "Mediator assignment email sent to seller - Message ID:",
-      info?.messageId
+      info?.messageId,
     );
   } catch (error: unknown) {
     console.error("Error sending mediator assignment email to seller:", error);
@@ -2087,7 +2332,7 @@ export const sendTransactionEditNotificationToVendor = async (
   vendor_email: string,
   products: any[],
   sum_total: number,
-  transaction_total: number
+  transaction_total: number,
 ) => {
   try {
     const transport = generateMailTransporter();
@@ -2108,13 +2353,13 @@ export const sendTransactionEditNotificationToVendor = async (
           p.quantity
         }</td>
         <td style="padding: 12px 8px; text-align: right; color: #111827; font-size: 13px;">₦${Number(
-          p.price
+          p.price,
         ).toLocaleString()}</td>
         <td style="padding: 12px 8px; text-align: right; color: #059669; font-size: 13px; font-weight: 600;">₦${(
           p.price * p.quantity
         ).toLocaleString()}</td>
       </tr>
-    `
+    `,
       )
       .join("");
 
@@ -2261,7 +2506,7 @@ export const sendTransactionEditNotificationToVendor = async (
   } catch (err) {
     console.error(
       "Error sending transaction edit notification to vendor:",
-      err
+      err,
     );
   }
 };
@@ -2275,12 +2520,12 @@ export const sendTransactionEditConfirmationToBuyer = async (
   vendor_name: string,
   products: any[],
   sum_total: number,
-  transaction_total: number
+  transaction_total: number,
 ) => {
   try {
     const transport = generateMailTransporter();
     const supportEmail = "mydoshbox@gmail.com";
-    const dashboardUrl = "https://mydoshbox.vercel.app/dashboard";
+    const dashboardUrl = "https://mydoshbox.vercel.app/userdashboard";
 
     const productRows = products
       .map(
@@ -2296,13 +2541,13 @@ export const sendTransactionEditConfirmationToBuyer = async (
           p.quantity
         }</td>
         <td style="padding: 12px 8px; text-align: right; color: #111827; font-size: 13px;">₦${Number(
-          p.price
+          p.price,
         ).toLocaleString()}</td>
         <td style="padding: 12px 8px; text-align: right; color: #059669; font-size: 13px; font-weight: 600;">₦${(
           p.price * p.quantity
         ).toLocaleString()}</td>
       </tr>
-    `
+    `,
       )
       .join("");
 
@@ -2462,5 +2707,533 @@ export const sendTransactionEditConfirmationToBuyer = async (
     });
   } catch (err) {
     console.error("Error sending transaction edit confirmation to buyer:", err);
+  }
+};
+
+/**
+ * Send transfer success email to vendor
+ */
+export const sendTransferSuccessEmailToVendor = async (
+  vendorEmail: string,
+  vendorName: string,
+  amount: number,
+  transactionId: string,
+) => {
+  try {
+    const transport = generateMailTransporter();
+    const supportEmail = "mydoshbox@gmail.com";
+    const dashboardUrl = "https://mydoshbox.vercel.app/userdashboard";
+
+    const emailMessage = `
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Received - MyDoshBox</title>
+  </head>
+  <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #f3f4f6;">
+    
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f3f4f6; padding: 40px 20px;">
+      <tr>
+        <td align="center">
+          <!-- Main Container -->
+          <table role="presentation" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); overflow: hidden;" cellspacing="0" cellpadding="0" border="0">
+            
+            <!-- Header with Success Gradient -->
+            <tr>
+              <td style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px 24px; text-align: center;">
+                <div style="width: 64px; height: 64px; background-color: rgba(255, 255, 255, 0.2); border-radius: 50%; margin: 0 auto 16px auto; display: flex; align-items: center; justify-content: center; font-size: 32px;">
+                  💰
+                </div>
+                <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">
+                  Payment Received!
+                </h1>
+                <p style="margin: 12px 0 0 0; color: #d1fae5; font-size: 15px;">
+                  Your funds have been successfully transferred
+                </p>
+              </td>
+            </tr>
+
+            <!-- Content -->
+            <tr>
+              <td style="padding: 32px 24px;">
+                
+                <!-- Greeting -->
+                <p style="margin: 0 0 20px 0; color: #111827; font-size: 16px; line-height: 1.6;">
+                  Hello <strong>${vendorName}</strong>,
+                </p>
+                
+                <p style="margin: 0 0 24px 0; color: #374151; font-size: 15px; line-height: 1.6;">
+                  Great news! The buyer has confirmed delivery and your payment has been successfully processed and transferred to your registered bank account.
+                </p>
+
+                <!-- Amount Display -->
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-radius: 12px; border: 2px solid #10b981; margin-bottom: 24px;">
+                  <tr>
+                    <td style="padding: 32px 24px; text-align: center;">
+                      <p style="margin: 0 0 8px 0; color: #065f46; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                        Amount Transferred
+                      </p>
+                      <p style="margin: 0; color: #065f46; font-size: 40px; font-weight: 700; line-height: 1;">
+                        ₦${Number(amount).toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Transaction Info Box -->
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 24px;">
+                  <tr>
+                    <td style="padding: 20px;">
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                        <tr>
+                          <td style="padding: 8px 0; color: #6b7280; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                            Transaction ID
+                          </td>
+                          <td style="padding: 8px 0; color: #111827; font-size: 14px; font-weight: 600; text-align: right; font-family: 'Courier New', monospace;">
+                            ${transactionId}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td colspan="2" style="padding: 12px 0 0 0; border-top: 1px solid #e5e7eb;"></td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 12px 0 8px 0; color: #6b7280; font-size: 13px;">
+                            Amount
+                          </td>
+                          <td style="padding: 12px 0 8px 0; color: #059669; font-size: 18px; font-weight: 700; text-align: right;">
+                            ₦${Number(amount).toLocaleString("en-NG")}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td colspan="2" style="padding: 8px 0 0 0; border-top: 1px solid #e5e7eb;"></td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 12px 0 0 0; color: #6b7280; font-size: 13px;">
+                            Status
+                          </td>
+                          <td style="padding: 12px 0 0 0; color: #059669; font-size: 14px; font-weight: 700; text-align: right;">
+                            ✅ COMPLETED
+                          </td>
+                        </tr>
+                        <tr>
+                          <td colspan="2" style="padding: 12px 0 0 0; border-top: 1px solid #e5e7eb;"></td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 12px 0 0 0; color: #6b7280; font-size: 13px;">
+                            Payment Method
+                          </td>
+                          <td style="padding: 12px 0 0 0; color: #111827; font-size: 14px; font-weight: 600; text-align: right;">
+                            Bank Transfer
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- What Happens Next -->
+                <h2 style="margin: 0 0 16px 0; color: #111827; font-size: 18px; font-weight: 700;">
+                  💳 Payment Timeline
+                </h2>
+
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 24px;">
+                  <tr>
+                    <td style="padding: 0;">
+                      <!-- Step 1 -->
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 12px;">
+                        <tr>
+                          <td style="width: 32px; vertical-align: top; padding-top: 2px;">
+                            <div style="width: 24px; height: 24px; background-color: #d1fae5; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #065f46; font-weight: 700; font-size: 16px;">✓</div>
+                          </td>
+                          <td style="padding-left: 12px; color: #374151; font-size: 14px; line-height: 1.6;">
+                            <strong>Funds transferred</strong> - Payment sent to your registered bank account
+                          </td>
+                        </tr>
+                      </table>
+
+                      <!-- Step 2 -->
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 12px;">
+                        <tr>
+                          <td style="width: 32px; vertical-align: top; padding-top: 2px;">
+                            <div style="width: 24px; height: 24px; background-color: #d1fae5; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #065f46; font-weight: 700; font-size: 16px;">✓</div>
+                          </td>
+                          <td style="padding-left: 12px; color: #374151; font-size: 14px; line-height: 1.6;">
+                            <strong>Processing time</strong> - Funds should reflect within 24 hours
+                          </td>
+                        </tr>
+                      </table>
+
+                      <!-- Step 3 -->
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                        <tr>
+                          <td style="width: 32px; vertical-align: top; padding-top: 2px;">
+                            <div style="width: 24px; height: 24px; background-color: #fef3c7; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #92400e; font-weight: 700; font-size: 14px;">→</div>
+                          </td>
+                          <td style="padding-left: 12px; color: #374151; font-size: 14px; line-height: 1.6;">
+                            <strong>Check your account</strong> - Review your bank statement for confirmation
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Important Note Box -->
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-radius: 8px; border-left: 4px solid #3b82f6; margin-bottom: 24px;">
+                  <tr>
+                    <td style="padding: 20px;">
+                      <p style="margin: 0 0 12px 0; color: #1e40af; font-size: 14px; font-weight: 700;">
+                        📌 Important Note
+                      </p>
+                      <p style="margin: 0; color: #1e3a8a; font-size: 14px; line-height: 1.6;">
+                        If you don't receive the payment within 24 hours, please check your bank account details in your profile settings or contact our support team for assistance.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- CTA Button -->
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 24px;">
+                  <tr>
+                    <td align="center" style="padding: 0;">
+                      <a href="${dashboardUrl}" style="display: inline-block; padding: 14px 32px; background-color: #10b981; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);">
+                        View Transaction Details
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Divider -->
+                <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 32px 0;" />
+
+                <!-- Thank You Message -->
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f9fafb; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+                  <tr>
+                    <td style="text-align: center;">
+                      <p style="margin: 0 0 8px 0; color: #111827; font-size: 16px; font-weight: 600;">
+                        Thank You for Using MyDoshBox! 🎉
+                      </p>
+                      <p style="margin: 0; color: #6b7280; font-size: 14px; line-height: 1.6;">
+                        We appreciate your trust in our secure escrow service
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Support Section -->
+                <p style="margin: 0 0 12px 0; color: #6b7280; font-size: 14px; line-height: 1.6;">
+                  Need help? Contact our support team at 
+                  <a href="mailto:${supportEmail}" style="color: #10b981; text-decoration: none; font-weight: 600;">${supportEmail}</a>
+                </p>
+
+                <p style="margin: 0; color: #374151; font-size: 14px; line-height: 1.6;">
+                  Best regards,<br/>
+                  <strong style="color: #10b981;">The MyDoshBox Team</strong>
+                </p>
+
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td style="background-color: #f9fafb; padding: 24px; text-align: center; border-top: 1px solid #e5e7eb;">
+                <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 12px;">
+                  © ${new Date().getFullYear()} MyDoshBox. All rights reserved.
+                </p>
+                <p style="margin: 0; color: #9ca3af; font-size: 11px;">
+                  Secure escrow transactions made simple
+                </p>
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+
+  </body>
+  </html>
+  `;
+
+    const info = await transport.sendMail({
+      to: vendorEmail,
+      from: process.env.VERIFICATION_EMAIL,
+      subject: `💰 Payment Received - Transaction ${transactionId}`,
+      html: emailMessage,
+    });
+
+    console.log("Transfer success email sent - Message ID:", info?.messageId);
+  } catch (error: unknown) {
+    console.error("Error sending transfer success email:", error);
+  }
+};
+
+/**
+ * Send transfer failed email to vendor
+ */
+export const sendTransferFailedEmailToVendor = async (
+  vendorEmail: string,
+  vendorName: string,
+  transactionId: string,
+  reason: string,
+) => {
+  try {
+    const transport = generateMailTransporter();
+    const supportEmail = "mydoshbox@gmail.com";
+    const dashboardUrl = "https://mydoshbox.vercel.app/userdashboard";
+    const supportUrl = "https://mydoshbox.vercel.app/support";
+
+    const emailMessage = `
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Transfer Issue - MyDoshBox</title>
+  </head>
+  <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #f3f4f6;">
+    
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f3f4f6; padding: 40px 20px;">
+      <tr>
+        <td align="center">
+          <!-- Main Container -->
+          <table role="presentation" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); overflow: hidden;" cellspacing="0" cellpadding="0" border="0">
+            
+            <!-- Header with Warning Gradient -->
+            <tr>
+              <td style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 32px 24px; text-align: center;">
+                <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;">
+                  ⚠️ Payment Transfer Issue
+                </h1>
+                <p style="margin: 8px 0 0 0; color: #fef3c7; font-size: 14px;">
+                  Action required to complete your payment
+                </p>
+              </td>
+            </tr>
+
+            <!-- Content -->
+            <tr>
+              <td style="padding: 32px 24px;">
+                
+                <!-- Greeting -->
+                <p style="margin: 0 0 20px 0; color: #111827; font-size: 16px; line-height: 1.6;">
+                  Hello <strong>${vendorName}</strong>,
+                </p>
+                
+                <p style="margin: 0 0 24px 0; color: #374151; font-size: 15px; line-height: 1.6;">
+                  We encountered an issue while processing your payment transfer for transaction <strong>${transactionId}</strong>. Please don't worry – your payment is safe and secure.
+                </p>
+
+                <!-- Issue Details Box -->
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-radius: 8px; border-left: 4px solid #ef4444; margin-bottom: 24px;">
+                  <tr>
+                    <td style="padding: 20px;">
+                      <p style="margin: 0 0 12px 0; color: #991b1b; font-size: 14px; font-weight: 700;">
+                        Issue Details
+                      </p>
+                      <p style="margin: 0; color: #7f1d1d; font-size: 14px; line-height: 1.6;">
+                        <strong>Reason:</strong> ${reason}
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Transaction Info -->
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 24px;">
+                  <tr>
+                    <td style="padding: 20px;">
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                        <tr>
+                          <td style="padding: 8px 0; color: #6b7280; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                            Transaction ID
+                          </td>
+                          <td style="padding: 8px 0; color: #111827; font-size: 14px; font-weight: 600; text-align: right; font-family: 'Courier New', monospace;">
+                            ${transactionId}
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- What's Happening -->
+                <h2 style="margin: 0 0 16px 0; color: #111827; font-size: 18px; font-weight: 700;">
+                  🔄 What's Happening
+                </h2>
+
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 24px;">
+                  <tr>
+                    <td style="padding: 0;">
+                      <!-- Point 1 -->
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 12px;">
+                        <tr>
+                          <td style="width: 32px; vertical-align: top; padding-top: 2px;">
+                            <div style="width: 24px; height: 24px; background-color: #dbeafe; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #1e40af; font-weight: 700; font-size: 16px;">✓</div>
+                          </td>
+                          <td style="padding-left: 12px; color: #374151; font-size: 14px; line-height: 1.6;">
+                            Our team has been automatically notified of this issue
+                          </td>
+                        </tr>
+                      </table>
+
+                      <!-- Point 2 -->
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 12px;">
+                        <tr>
+                          <td style="width: 32px; vertical-align: top; padding-top: 2px;">
+                            <div style="width: 24px; height: 24px; background-color: #dbeafe; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #1e40af; font-weight: 700; font-size: 16px;">✓</div>
+                          </td>
+                          <td style="padding-left: 12px; color: #374151; font-size: 14px; line-height: 1.6;">
+                            We're actively working to resolve the transfer problem
+                          </td>
+                        </tr>
+                      </table>
+
+                      <!-- Point 3 -->
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                        <tr>
+                          <td style="width: 32px; vertical-align: top; padding-top: 2px;">
+                            <div style="width: 24px; height: 24px; background-color: #d1fae5; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #065f46; font-weight: 700; font-size: 16px;">✓</div>
+                          </td>
+                          <td style="padding-left: 12px; color: #374151; font-size: 14px; line-height: 1.6;">
+                            <strong style="color: #059669;">Your payment is safe and will be processed</strong>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- What You Should Do -->
+                <h2 style="margin: 0 0 16px 0; color: #111827; font-size: 18px; font-weight: 700;">
+                  📋 What You Should Do
+                </h2>
+
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 24px;">
+                  <tr>
+                    <td style="padding: 0;">
+                      <!-- Step 1 -->
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 12px;">
+                        <tr>
+                          <td style="width: 32px; vertical-align: top; padding-top: 2px;">
+                            <div style="width: 24px; height: 24px; background-color: #fef3c7; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #92400e; font-weight: 700; font-size: 12px;">1</div>
+                          </td>
+                          <td style="padding-left: 12px; color: #374151; font-size: 14px; line-height: 1.6;">
+                            <strong>Verify bank account details</strong> - Check that your account information in your profile is correct
+                          </td>
+                        </tr>
+                      </table>
+
+                      <!-- Step 2 -->
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 12px;">
+                        <tr>
+                          <td style="width: 32px; vertical-align: top; padding-top: 2px;">
+                            <div style="width: 24px; height: 24px; background-color: #fef3c7; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #92400e; font-weight: 700; font-size: 12px;">2</div>
+                          </td>
+                          <td style="padding-left: 12px; color: #374151; font-size: 14px; line-height: 1.6;">
+                            <strong>Check account status</strong> - Ensure your bank account is active and can receive transfers
+                          </td>
+                        </tr>
+                      </table>
+
+                      <!-- Step 3 -->
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                        <tr>
+                          <td style="width: 32px; vertical-align: top; padding-top: 2px;">
+                            <div style="width: 24px; height: 24px; background-color: #fef3c7; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #92400e; font-weight: 700; font-size: 12px;">3</div>
+                          </td>
+                          <td style="padding-left: 12px; color: #374151; font-size: 14px; line-height: 1.6;">
+                            <strong>Contact support if needed</strong> - Our team is ready to assist you immediately
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Support Box -->
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-radius: 8px; border-left: 4px solid #3b82f6; margin-bottom: 24px;">
+                  <tr>
+                    <td style="padding: 20px;">
+                      <p style="margin: 0 0 12px 0; color: #1e40af; font-size: 14px; font-weight: 700;">
+                        💬 Need Immediate Help?
+                      </p>
+                      <p style="margin: 0; color: #1e3a8a; font-size: 14px; line-height: 1.6;">
+                        Our support team is available to assist you. We'll help verify your account details and ensure your payment is processed quickly.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- CTA Buttons -->
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 24px;">
+                  <tr>
+                    <td align="center" style="padding: 0 0 12px 0;">
+                      <a href="${supportUrl}" style="display: inline-block; padding: 14px 32px; background-color: #f59e0b; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px; box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);">
+                        Contact Support Now
+                      </a>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td align="center" style="padding: 0;">
+                      <a href="${dashboardUrl}" style="display: inline-block; padding: 14px 32px; background-color: #ffffff; color: #f59e0b; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px; border: 2px solid #f59e0b;">
+                        View Transaction
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Divider -->
+                <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 32px 0;" />
+
+                <!-- Support Section -->
+                <p style="margin: 0 0 12px 0; color: #6b7280; font-size: 14px; line-height: 1.6;">
+                  Questions or concerns? Contact our support team at 
+                  <a href="mailto:${supportEmail}" style="color: #10b981; text-decoration: none; font-weight: 600;">${supportEmail}</a>
+                </p>
+
+                <p style="margin: 0; color: #374151; font-size: 14px; line-height: 1.6;">
+                  We apologize for the inconvenience,<br/>
+                  <strong style="color: #10b981;">The MyDoshBox Team</strong>
+                </p>
+
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td style="background-color: #f9fafb; padding: 24px; text-align: center; border-top: 1px solid #e5e7eb;">
+                <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 12px;">
+                  © ${new Date().getFullYear()} MyDoshBox. All rights reserved.
+                </p>
+                <p style="margin: 0; color: #9ca3af; font-size: 11px;">
+                  Secure escrow transactions made simple
+                </p>
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+
+  </body>
+  </html>
+  `;
+
+    const info = await transport.sendMail({
+      to: vendorEmail,
+      from: process.env.VERIFICATION_EMAIL,
+      subject: `⚠️ Payment Transfer Issue - Transaction ${transactionId}`,
+      html: emailMessage,
+    });
+
+    console.log(
+      "Transfer failed email sent to vendor - Message ID:",
+      info?.messageId,
+    );
+  } catch (error: unknown) {
+    console.error("Error sending transfer failed email to vendor:", error);
   }
 };

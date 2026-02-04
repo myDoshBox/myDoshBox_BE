@@ -80,6 +80,12 @@ export const individualUserRegistration = async (
     // Option 1: If it expects email and token separately
     await sendVerificationEmail(email, verificationToken);
 
+    // Option 2: If it expects email and URL
+    // await sendVerificationEmail(email, verificationUrl);
+
+    // Option 3: If it expects an object
+    // await sendVerificationEmail({ email, token: verificationToken });
+
     res.status(201).json({
       status: "success",
       message:

@@ -6,10 +6,10 @@ dotenv.config();
 export const generateMailTransporter = () => {
   const transport = nodemailer.createTransport({
     host: "smtp.gmail.com",
-    // port: 465,
-    // secure: true,
-    port: 587,
-    secure: false,
+    port: 465,
+    secure: true,
+    // port: 587,
+    // secure: false,
     auth: {
       user: process.env.EMAIL_USERNAME,
       pass: process.env.EMAIL_PASSWORD,
@@ -158,7 +158,7 @@ export const sendWelcomeEmail = async (email: string) => {
 
 export const sendPasswordResetEmail = async (
   email: string,
-  resetToken: string
+  resetToken: string,
 ) => {
   try {
     const transport = generateMailTransporter();
@@ -296,7 +296,7 @@ export const sendPasswordResetSuccessEmail = async (email: string) => {
 
     console.log(
       "Password reset success email sent - Message ID:",
-      info?.messageId
+      info?.messageId,
     );
     return info;
   } catch (err) {

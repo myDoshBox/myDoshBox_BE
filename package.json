@@ -1,5 +1,5 @@
 {
-  "name": "mydoshbox_apis",
+  "name": "mydoshbox_api",
   "version": "1.0.0",
   "description": "escrow, fintech, ecommerce",
   "main": "index.js",
@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@types/cookie-parser": "^1.4.10",
-    "axios": "^1.13.1",
+    "axios": "^1.13.2",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^2.8.0",

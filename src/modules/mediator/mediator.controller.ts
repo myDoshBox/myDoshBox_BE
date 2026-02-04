@@ -618,6 +618,149 @@ export const mediatorLogin = async (
  * Involve a mediator in a dispute
  * Automatically assigns an available mediator with < 5 open disputes
  */
+// export const involveAMediator = async (
+//   req: Request<InvolveAMediatorParams>,
+//   res: Response<InvolveAMediatorResponse>,
+//   next: NextFunction,
+// ): Promise<void> => {
+//   const { transaction_id } = req.params;
+//   const userEmail = await getUserEmailFromToken(req);
+//   if (!userEmail) {
+//     return next(errorHandler(401, "Authentication required"));
+//   }
+//   if (!userEmail) {
+//     return next(errorHandler(401, "Authentication required"));
+//   }
+
+//   if (!transaction_id) {
+//     return next(errorHandler(400, "Transaction ID is required"));
+//   }
+
+//   try {
+//     // Find the dispute
+//     const dispute = await ProductDispute.findOne({ transaction_id }).populate(
+//       "transaction user mediator",
+//     );
+
+//     if (!dispute) {
+//       return next(errorHandler(404, "Dispute not found"));
+//     }
+
+//     // Check if dispute can have a mediator involved
+//     if (
+//       dispute.dispute_status === "resolved" ||
+//       dispute.dispute_status === "cancelled"
+//     ) {
+//       return next(
+//         errorHandler(
+//           400,
+//           `Cannot involve a mediator: Dispute is ${dispute.dispute_status}`,
+//         ),
+//       );
+//     }
+
+//     // Check if mediator already assigned
+//     if (dispute.mediator) {
+//       return next(
+//         errorHandler(400, "A mediator is already assigned to this dispute"),
+//       );
+//     }
+
+//     // Find available mediators with < 5 open disputes
+//     const mediators = await MediatorModel.find()
+//       .select("-password")
+//       .populate({
+//         path: "disputes",
+//         match: { dispute_status: { $in: ["processing", "resolving"] } },
+//       });
+
+//     // Find first available mediator (not buyer or seller)
+//     const availableMediator = mediators.find(
+//       (mediator: IMediator) =>
+//         (mediator.dispute?.length || 0) < 5 &&
+//         mediator.mediator_email !== dispute.buyer_email &&
+//         mediator.mediator_email !== dispute.vendor_email,
+//     );
+
+//     if (!availableMediator) {
+//       return next(
+//         errorHandler(
+//           503,
+//           "No available mediators at this time. Please try again later.",
+//         ),
+//       );
+//     }
+//     const requested_by = userEmail === dispute.buyer_email ? "buyer" : "seller";
+
+//     // Update dispute with mediator
+//     const updatedDispute = await ProductDispute.findByIdAndUpdate(
+//       dispute._id,
+//       {
+//         $set: {
+//           mediator: availableMediator._id,
+//           dispute_resolution_method: "mediator",
+//           dispute_status: "resolving",
+//         },
+//       },
+//       { new: true, runValidators: true },
+//     ).populate("transaction user mediator");
+
+//     if (!updatedDispute) {
+//       return next(errorHandler(500, "Failed to update dispute with mediator"));
+//     }
+
+//     // Update mediator's dispute list
+//     const updatedMediator = await MediatorModel.findByIdAndUpdate(
+//       availableMediator._id,
+//       { $addToSet: { disputes: dispute._id } },
+//       { new: true, runValidators: true },
+//     ).select("-password");
+
+//     if (!updatedMediator) {
+//       return next(errorHandler(500, "Failed to update mediator with dispute"));
+//     }
+
+//     // Send notification emails
+//     try {
+//       await Promise.all([
+//         sendMediatorRequestedMailToBuyer(
+//           dispute.buyer_email,
+//           dispute.product_name,
+//           requested_by,
+//         ),
+//         sendMediatorRequestedMailToSeller(
+//           dispute.vendor_email,
+//           dispute.product_name,
+//           requested_by,
+//         ),
+//       ]);
+//       console.log(
+//         `Mediator involvement emails sent for transaction ${transaction_id}`,
+//       );
+//     } catch (emailError) {
+//       console.error("Error sending mediator involvement emails:", emailError);
+//       // Continue despite email failure
+//     }
+
+//     res.status(200).json({
+//       status: "success",
+//       message: "Mediator assigned to dispute successfully",
+//       data: {
+//         dispute: updatedDispute,
+//         mediator: updatedMediator.toObject(),
+//       },
+//     });
+//   } catch (error: unknown) {
+//     console.error("Error involving mediator:", error);
+//     return next(errorHandler(500, "Internal server error"));
+//   }
+// };
+// PARTIAL FIX - Only the involveAMediator function with corrections
+
+/**
+ * ✅ FIXED: Involve a mediator in a dispute
+ * Automatically assigns an available mediator with < 5 open disputes
+ */
 export const involveAMediator = async (
   req: Request<InvolveAMediatorParams>,
   res: Response<InvolveAMediatorResponse>,
@@ -625,9 +768,7 @@ export const involveAMediator = async (
 ): Promise<void> => {
   const { transaction_id } = req.params;
   const userEmail = await getUserEmailFromToken(req);
-  if (!userEmail) {
-    return next(errorHandler(401, "Authentication required"));
-  }
+
   if (!userEmail) {
     return next(errorHandler(401, "Authentication required"));
   }
@@ -670,19 +811,26 @@ export const involveAMediator = async (
     const mediators = await MediatorModel.find()
       .select("-password")
       .populate({
-        path: "disputes",
+        path: "disputes", // ✅ FIXED: Was working correctly already
         match: { dispute_status: { $in: ["processing", "resolving"] } },
       });
 
-    // Find first available mediator (not buyer or seller)
+    // ✅ FIXED: Changed 'dispute' to 'disputes' in the property check
     const availableMediator = mediators.find(
       (mediator: IMediator) =>
-        (mediator.dispute?.length || 0) < 5 &&
+        (mediator.disputes?.length || 0) < 5 && // ✅ CRITICAL FIX: Changed from 'dispute' to 'disputes'
         mediator.mediator_email !== dispute.buyer_email &&
         mediator.mediator_email !== dispute.vendor_email,
     );
 
     if (!availableMediator) {
+      console.log("❌ No available mediator found. Debug info:");
+      mediators.forEach((m) => {
+        console.log(
+          `  - ${m.mediator_email}: ${m.disputes?.length || 0} disputes`,
+        );
+      });
+
       return next(
         errorHandler(
           503,
@@ -690,6 +838,11 @@ export const involveAMediator = async (
         ),
       );
     }
+
+    console.log(
+      `✅ Found available mediator: ${availableMediator.mediator_email} with ${availableMediator.disputes?.length || 0} disputes`,
+    );
+
     const requested_by = userEmail === dispute.buyer_email ? "buyer" : "seller";
 
     // Update dispute with mediator
@@ -712,7 +865,7 @@ export const involveAMediator = async (
     // Update mediator's dispute list
     const updatedMediator = await MediatorModel.findByIdAndUpdate(
       availableMediator._id,
-      { $addToSet: { disputes: dispute._id } },
+      { $addToSet: { disputes: dispute._id } }, // ✅ Correct property name
       { new: true, runValidators: true },
     ).select("-password");
 
@@ -755,7 +908,6 @@ export const involveAMediator = async (
     return next(errorHandler(500, "Internal server error"));
   }
 };
-
 /**
  * Get all disputes assigned to a mediator
  */

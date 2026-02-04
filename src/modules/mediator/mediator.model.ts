@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from "mongoose";
 
 export interface IMediator extends Document {
   _id: mongoose.Types.ObjectId;
-  dispute: mongoose.Schema.Types.ObjectId[]; // Reference to the User model
+  disputes: mongoose.Schema.Types.ObjectId[];
   first_name: string;
   middle_name: string;
   last_name: string;
@@ -18,8 +18,7 @@ const mediatorSchema = new mongoose.Schema(
     disputes: [
       {
         type: Schema.Types.ObjectId,
-        ref: "ProductDispute", // Reference to User model
-        // required: true,
+        ref: "ProductDispute",
       },
     ],
 
@@ -46,6 +45,7 @@ const mediatorSchema = new mongoose.Schema(
     mediator_phone_number: {
       type: String,
     },
+
     token: {
       type: String,
     },
@@ -55,11 +55,14 @@ const mediatorSchema = new mongoose.Schema(
       required: true,
       select: false, // Exclude password by default
     },
-    refreshToken: { type: String },
+
+    refreshToken: {
+      type: String,
+    },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const MediatorModel = mongoose.model<IMediator>("Mediator", mediatorSchema);

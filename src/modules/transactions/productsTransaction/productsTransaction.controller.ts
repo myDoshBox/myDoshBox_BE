@@ -3,6 +3,7 @@ import crypto from "crypto";
 import { v4 as uuidv4 } from "uuid";
 import { validateProductFields } from "./productsTransaction.validation";
 import IndividualUser from "../../authentication/individualUserAuth/individualUserAuth.model1";
+import OrganizationUser from "../../authentication/organizationUserAuth/organizationAuth.model";
 import { errorHandler } from "../../../middlewares/errorHandling.middleware";
 
 import ProductTransaction from "./productsTransaction.model";
@@ -13,6 +14,7 @@ import {
 import {
   sendEscrowInitiationEmailToInitiator,
   sendEscrowInitiationEmailToVendor,
+  sendPaymentVerifiedEmailToVendor,
   sendShippingDetailsEmailToInitiator,
   sendShippingDetailsEmailToVendor,
   sendSuccessfulEscrowEmailToInitiator,
@@ -22,6 +24,40 @@ import {
 } from "./productTransaction.mail";
 import ShippingDetails from "./shippingDetails.model";
 import ProductDispute from "../../disputes/productsDispute/productDispute.model";
+
+import {
+  createTransferRecipient,
+  initiateTransfer,
+  verifyTransfer,
+} from "./productsTransaction.paystack";
+
+const getVendorBankDetails = async (vendor_email: string) => {
+  try {
+    // Try Individual User first
+    let vendor = await IndividualUser.findOne({ email: vendor_email });
+
+    if (vendor && vendor.bank_details) {
+      return vendor.bank_details;
+    }
+
+    // Try Organization User
+    vendor = await OrganizationUser.findOne({
+      $or: [
+        { organization_email: vendor_email },
+        { contact_email: vendor_email },
+      ],
+    });
+
+    if (vendor && vendor.bank_details) {
+      return vendor.bank_details;
+    }
+
+    return null;
+  } catch (error) {
+    console.error("Error fetching vendor bank details:", error);
+    return null;
+  }
+};
 
 export const initiateEscrowProductTransaction = async (
   req: Request,
@@ -57,11 +93,32 @@ export const initiateEscrowProductTransaction = async (
     if (!user) {
       return next(errorHandler(404, "User not found"));
     }
+
     if (buyer_email === vendor_email) {
       return next(
-        errorHandler(404, "You cannot initiate an escrow with yourself"),
+        errorHandler(400, "You cannot initiate an escrow with yourself"),
       );
     }
+
+    const vendorBankDetails = await getVendorBankDetails(vendor_email);
+
+    if (
+      !vendorBankDetails ||
+      !vendorBankDetails.account_number ||
+      !vendorBankDetails.bank_code
+    ) {
+      return next(
+        errorHandler(
+          400,
+          "Cannot initiate transaction: Vendor has not set up bank details. Please ask the vendor to add their bank information in their profile settings.",
+        ),
+      );
+    }
+
+    console.log("✅ Vendor bank details validated:", {
+      account_name: vendorBankDetails.account_name,
+      bank_name: vendorBankDetails.bank_name,
+    });
 
     const transaction_id = uuidv4();
     const sum_total = products.reduce(
@@ -70,7 +127,7 @@ export const initiateEscrowProductTransaction = async (
       0,
     );
     const commission = sum_total * 0.01; // 1% commission
-    const transaction_total = sum_total + commission; // Sum total plus 1% commission
+    const transaction_total = sum_total + commission;
 
     const newTransaction = new ProductTransaction({
       user,
@@ -86,9 +143,11 @@ export const initiateEscrowProductTransaction = async (
       signed_escrow_doc,
       delivery_address,
       buyer_initiated: true,
+      vendor_bank_details: vendorBankDetails,
     });
 
     await newTransaction.save();
+
     await sendEscrowInitiationEmailToVendor(
       transaction_id,
       vendor_name,
@@ -100,18 +159,19 @@ export const initiateEscrowProductTransaction = async (
 
     res.json({
       status: "success",
-      message: "Transaction initiated, awaiting seller confirmation.",
+      message:
+        "Transaction initiated successfully. Vendor bank details verified.",
       transaction_id,
       sum_total,
       transaction_total,
-      commission, // Optionally include commission for transparency
+      commission,
+      vendor_bank_verified: true,
     });
   } catch (error) {
-    return next(errorHandler(500, "server error"));
+    console.error("Error initiating transaction:", error);
+    return next(errorHandler(500, "Server error"));
   }
 };
-
-// Add this to your productsTransaction.controller.ts file
 
 export const editEscrowProductTransaction = async (
   req: Request,
@@ -294,7 +354,6 @@ export const sellerConfirmsAnEscrowProductTransaction = async (
 ) => {
   const { transaction_id, confirmation, vendor_email } = req.body;
 
-  // Validate required fields
   if (!transaction_id || typeof confirmation !== "boolean" || !vendor_email) {
     return next(
       errorHandler(
@@ -311,33 +370,46 @@ export const sellerConfirmsAnEscrowProductTransaction = async (
       return next(errorHandler(404, "Transaction not found"));
     }
 
-    // Check if the transaction is in a valid state for confirmation
     if (!transaction.buyer_initiated || transaction.seller_confirmed) {
       return next(
         errorHandler(400, "Invalid transaction state for confirmation"),
       );
     }
 
-    // Verify the vendor email matches the transaction's vendor_email
     if (transaction.vendor_email !== vendor_email) {
       return next(errorHandler(403, "Unauthorized: Incorrect vendor email"));
     }
 
     if (confirmation) {
-      const updatedTransaction = await ProductTransaction.findByIdAndUpdate(
-        transaction._id,
-        {
-          seller_confirmed: true,
-          transaction_status: "awaiting_payment",
-        },
-        { new: true },
-      );
+      if (
+        !transaction.vendor_bank_details ||
+        !transaction.vendor_bank_details.account_number ||
+        !transaction.vendor_bank_details.bank_code
+      ) {
+        // Try to fetch fresh bank details
+        const freshBankDetails = await getVendorBankDetails(vendor_email);
 
-      if (!updatedTransaction) {
-        return next(errorHandler(500, "Failed to update transaction"));
+        if (
+          !freshBankDetails ||
+          !freshBankDetails.account_number ||
+          !freshBankDetails.bank_code
+        ) {
+          return next(
+            errorHandler(
+              400,
+              "Cannot confirm transaction: Your bank details are incomplete. Please update your bank information in your profile before accepting this transaction.",
+            ),
+          );
+        }
+
+        transaction.set("vendor_bank_details", freshBankDetails);
       }
 
-      // Updated call with all required parameters and 'accepted' status
+      transaction.seller_confirmed = true;
+      transaction.transaction_status = "awaiting_payment";
+
+      const updatedTransaction = await transaction.save();
+
       await sendEscrowInitiationEmailToInitiator(
         transaction.buyer_email,
         transaction.transaction_id,
@@ -350,24 +422,17 @@ export const sellerConfirmsAnEscrowProductTransaction = async (
 
       res.json({
         status: "success",
-        message: "Seller confirmed, buyer notified to proceed with payment.",
+        message:
+          "Transaction confirmed. Buyer notified to proceed with payment.",
         transaction_id: updatedTransaction.transaction_id,
+        bank_details_verified: true,
       });
     } else {
-      const updatedTransaction = await ProductTransaction.findByIdAndUpdate(
-        transaction._id,
-        {
-          seller_confirmed: false,
-          transaction_status: "declined",
-        },
-        { new: true },
-      );
+      transaction.seller_confirmed = false;
+      transaction.transaction_status = "declined";
 
-      if (!updatedTransaction) {
-        return next(errorHandler(500, "Failed to update transaction"));
-      }
+      const updatedTransaction = await transaction.save();
 
-      // Updated call with all required parameters and 'rejected' status
       await sendEscrowInitiationEmailToInitiator(
         transaction.buyer_email,
         transaction.transaction_id,
@@ -380,11 +445,12 @@ export const sellerConfirmsAnEscrowProductTransaction = async (
 
       res.json({
         status: "success",
-        message: "Seller declined the transaction.",
+        message: "Transaction declined.",
         transaction_id: updatedTransaction.transaction_id,
       });
     }
   } catch (error) {
+    console.error("Error in seller confirmation:", error);
     return next(errorHandler(500, "Server error"));
   }
 };
@@ -506,13 +572,12 @@ export const verifyEscrowProductTransactionPayment = async (
       }
 
       try {
-        await sendEscrowInitiationEmailToVendor(
+        await sendPaymentVerifiedEmailToVendor(
           transaction.transaction_id,
           transaction.vendor_name,
           transaction.vendor_email,
           transaction.products,
           transaction.sum_total,
-          transaction.transaction_total,
         );
       } catch (err) {
         console.error("Failed to send vendor email:", err);
@@ -586,7 +651,7 @@ export const sellerFillOutShippingDetails = async (
 
     const newShippingDetails = new ShippingDetails({
       user,
-      product: transaction,
+      product: transaction._id, // Links to the transaction
       transaction_id,
       shipping_company,
       delivery_person_name,
@@ -600,10 +665,19 @@ export const sellerFillOutShippingDetails = async (
 
     await newShippingDetails.save();
 
-    // UPDATE: Change status to in_transit
+    console.log(`✅ Shipping details created: ${newShippingDetails._id}`);
+
+    // ✅ CRITICAL: Update the transaction with the shipping reference
+    // Use mongoose.Types.ObjectId to ensure proper typing
+    transaction.set("shipping", newShippingDetails._id);
     transaction.shipping_submitted = true;
-    transaction.transaction_status = "in_transit"; // NEW STATUS
-    await transaction.save();
+    transaction.transaction_status = "in_transit";
+
+    const updatedTransaction = await transaction.save();
+
+    console.log(
+      `✅ Transaction updated with shipping ID: ${updatedTransaction.shipping}`,
+    );
 
     await sendShippingDetailsEmailToInitiator(
       transaction.buyer_email,
@@ -624,7 +698,11 @@ export const sellerFillOutShippingDetails = async (
     res.status(200).json({
       status: "success",
       message: "Shipping details submitted successfully",
-      newShippingDetails,
+      data: {
+        shipping_details: newShippingDetails,
+        transaction_id: updatedTransaction.transaction_id,
+        transaction_status: updatedTransaction.transaction_status,
+      },
     });
   } catch (error) {
     console.error("Error in sellerFillOutShippingDetails:", error);
@@ -763,8 +841,15 @@ export const getSingleEscrowProductTransaction = async (
       return next(errorHandler(400, "Transaction ID is required"));
     }
 
-    // Find the transaction by transaction_id
-    const transaction = await ProductTransaction.findOne({ transaction_id });
+    // ✅ Populate the shipping reference field
+    const transaction = await ProductTransaction.findOne({
+      transaction_id,
+    }).populate({
+      path: "shipping",
+      model: "ShippingDetails",
+      select:
+        "shipping_company delivery_person_name delivery_person_number delivery_person_email delivery_date pick_up_address createdAt",
+    });
 
     if (!transaction) {
       return next(errorHandler(404, "Transaction not found"));
@@ -773,8 +858,24 @@ export const getSingleEscrowProductTransaction = async (
     // Fetch related dispute details if any
     const disputeDetails = await ProductDispute.findOne({ transaction_id });
 
-    // Fetch shipping details if any
-    const shippingDetails = await ShippingDetails.findOne({ transaction_id });
+    // ✅ Type guard to check if shipping is populated
+    const isShippingPopulated = (
+      shipping: any,
+    ): shipping is {
+      shipping_company: string;
+      delivery_person_name: string;
+      delivery_person_number: string;
+      delivery_person_email: string;
+      delivery_date: string;
+      pick_up_address: string;
+      createdAt: Date;
+    } => {
+      return (
+        shipping &&
+        typeof shipping === "object" &&
+        "shipping_company" in shipping
+      );
+    };
 
     // Prepare response data
     const transactionData = {
@@ -787,7 +888,7 @@ export const getSingleEscrowProductTransaction = async (
       products: transaction.products,
       sum_total: transaction.sum_total,
       transaction_total: transaction.transaction_total,
-      commission: transaction.sum_total * 0.01, // Calculate commission
+      commission: transaction.sum_total * 0.01,
       signed_escrow_doc: transaction.signed_escrow_doc,
       delivery_address: transaction.delivery_address,
       buyer_initiated: transaction.buyer_initiated,
@@ -797,8 +898,6 @@ export const getSingleEscrowProductTransaction = async (
       payment_reference: transaction.payment_reference,
       shipping_submitted: transaction.shipping_submitted,
       buyer_confirm_status: transaction.buyer_confirm_status,
-      // createdAt: transaction.createdAt,
-      // updatedAt: transaction.updatedAt,
       dispute_details: disputeDetails
         ? {
             reason_for_dispute: disputeDetails.reason_for_dispute,
@@ -808,15 +907,16 @@ export const getSingleEscrowProductTransaction = async (
             updated_at: disputeDetails.updatedAt,
           }
         : null,
-      shipping_details: shippingDetails
+
+      shipping_details: isShippingPopulated(transaction.shipping)
         ? {
-            shipping_company: shippingDetails.shipping_company,
-            delivery_person_name: shippingDetails.delivery_person_name,
-            delivery_person_number: shippingDetails.delivery_person_number,
-            delivery_person_email: shippingDetails.delivery_person_email,
-            delivery_date: shippingDetails.delivery_date,
-            pick_up_address: shippingDetails.pick_up_address,
-            // submitted_at: shippingDetails.createdAt,
+            shipping_company: transaction.shipping.shipping_company,
+            delivery_person_name: transaction.shipping.delivery_person_name,
+            delivery_person_number: transaction.shipping.delivery_person_number,
+            delivery_person_email: transaction.shipping.delivery_person_email,
+            delivery_date: transaction.shipping.delivery_date,
+            pick_up_address: transaction.shipping.pick_up_address,
+            submitted_at: transaction.shipping.createdAt,
           }
         : null,
     };
@@ -970,132 +1070,132 @@ export const getAllShippingDetailsWithAggregation = async (
   }
 };
 
-export const buyerConfirmsProduct = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    const { transaction_id } = req.body;
+// export const buyerConfirmsProduct = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction,
+// ) => {
+//   try {
+//     const { transaction_id } = req.body;
 
-    if (!transaction_id) {
-      return next(errorHandler(400, "Transaction ID is required"));
-    }
+//     if (!transaction_id) {
+//       return next(errorHandler(400, "Transaction ID is required"));
+//     }
 
-    console.log(
-      `Processing confirmation for transaction_id: ${transaction_id}`,
-    );
+//     console.log(
+//       `Processing confirmation for transaction_id: ${transaction_id}`,
+//     );
 
-    // Check for existing dispute
-    const disputeDetails = await ProductDispute.findOne({ transaction_id });
-    console.log(`Dispute details found: ${disputeDetails ? "Yes" : "No"}`);
+//     // Check for existing dispute
+//     const disputeDetails = await ProductDispute.findOne({ transaction_id });
+//     console.log(`Dispute details found: ${disputeDetails ? "Yes" : "No"}`);
 
-    // Fetch product transaction details directly
-    const fetchProductDetails = await ProductTransaction.findOne({
-      transaction_id,
-    });
+//     // Fetch product transaction details directly
+//     const fetchProductDetails = await ProductTransaction.findOne({
+//       transaction_id,
+//     });
 
-    if (!fetchProductDetails) {
-      return next(errorHandler(404, "Transaction not found"));
-    }
+//     if (!fetchProductDetails) {
+//       return next(errorHandler(404, "Transaction not found"));
+//     }
 
-    console.log(
-      "Product transaction found:",
-      JSON.stringify(fetchProductDetails, null, 2),
-    );
+//     console.log(
+//       "Product transaction found:",
+//       JSON.stringify(fetchProductDetails, null, 2),
+//     );
 
-    const {
-      transaction_status,
-      _id: product_id,
-      vendor_name,
-      vendor_email,
-      buyer_email,
-      products,
-    } = fetchProductDetails;
+//     const {
+//       transaction_status,
+//       _id: product_id,
+//       vendor_name,
+//       vendor_email,
+//       buyer_email,
+//       products,
+//     } = fetchProductDetails;
 
-    // Get product name from the first product
-    const product_name =
-      products && products.length > 0 ? products[0].name : "Product";
+//     // Get product name from the first product
+//     const product_name =
+//       products && products.length > 0 ? products[0].name : "Product";
 
-    // Check if transaction is already completed
-    if (transaction_status === "completed") {
-      return next(errorHandler(400, "This transaction is already completed"));
-    }
+//     // Check if transaction is already completed
+//     if (transaction_status === "completed") {
+//       return next(errorHandler(400, "This transaction is already completed"));
+//     }
 
-    // Check if transaction is in processing status (with or without trailing space)
-    // Convert safely for comparison
-    const normalizedStatus = transaction_status?.trim().toLowerCase();
+//     // Check if transaction is in processing status (with or without trailing space)
+//     // Convert safely for comparison
+//     const normalizedStatus = transaction_status?.trim().toLowerCase();
 
-    // Only allow confirmation when item is in transit
-    const isInTransit = normalizedStatus === "in_transit";
+//     // Only allow confirmation when item is in transit
+//     const isInTransit = normalizedStatus === "in_transit";
 
-    if (!isInTransit) {
-      return next(
-        errorHandler(
-          400,
-          `Transaction status is currently '${transaction_status}'. You can only confirm delivery when the item is in transit.`,
-        ),
-      );
-    }
+//     if (!isInTransit) {
+//       return next(
+//         errorHandler(
+//           400,
+//           `Transaction status is currently '${transaction_status}'. You can only confirm delivery when the item is in transit.`,
+//         ),
+//       );
+//     }
 
-    // Update ProductTransaction status to completed and set buyer_confirm_status to true
-    const updateProductTransactionStatus =
-      await ProductTransaction.findByIdAndUpdate(
-        product_id,
-        {
-          transaction_status: "completed",
-          buyer_confirm_status: true,
-        },
-        { new: true },
-      );
+//     // Update ProductTransaction status to completed and set buyer_confirm_status to true
+//     const updateProductTransactionStatus =
+//       await ProductTransaction.findByIdAndUpdate(
+//         product_id,
+//         {
+//           transaction_status: "completed",
+//           buyer_confirm_status: true,
+//         },
+//         { new: true },
+//       );
 
-    if (!updateProductTransactionStatus) {
-      return next(errorHandler(500, "Failed to update product status"));
-    }
+//     if (!updateProductTransactionStatus) {
+//       return next(errorHandler(500, "Failed to update product status"));
+//     }
 
-    console.log(
-      `Updated ProductTransaction ${product_id} to completed with buyer confirmation`,
-    );
+//     console.log(
+//       `Updated ProductTransaction ${product_id} to completed with buyer confirmation`,
+//     );
 
-    // Resolve dispute if exists and not already resolved
-    if (disputeDetails && disputeDetails.dispute_status !== "resolved") {
-      await ProductDispute.findByIdAndUpdate(
-        disputeDetails._id,
-        { dispute_status: "resolved" },
-        { new: true },
-      );
-      console.log(`Resolved dispute for transaction ${transaction_id}`);
-    }
+//     // Resolve dispute if exists and not already resolved
+//     if (disputeDetails && disputeDetails.dispute_status !== "resolved") {
+//       await ProductDispute.findByIdAndUpdate(
+//         disputeDetails._id,
+//         { dispute_status: "resolved" },
+//         { new: true },
+//       );
+//       console.log(`Resolved dispute for transaction ${transaction_id}`);
+//     }
 
-    // Send confirmation emails
-    await sendSuccessfulEscrowEmailToInitiator(
-      transaction_id,
-      vendor_name,
-      buyer_email,
-      product_name,
-    );
-    await sendSuccessfulEscrowEmailToVendor(
-      transaction_id,
-      vendor_name,
-      vendor_email,
-      product_name,
-    );
-    console.log(`Emails sent for transaction ${transaction_id}`);
+//     // Send confirmation emails
+//     await sendSuccessfulEscrowEmailToInitiator(
+//       transaction_id,
+//       vendor_name,
+//       buyer_email,
+//       product_name,
+//     );
+//     await sendSuccessfulEscrowEmailToVendor(
+//       transaction_id,
+//       vendor_name,
+//       vendor_email,
+//       product_name,
+//     );
+//     console.log(`Emails sent for transaction ${transaction_id}`);
 
-    res.json({
-      status: "success",
-      message: "Escrow has been completed successfully.",
-      data: {
-        transaction_id,
-        transaction_status: "completed",
-        buyer_confirm_status: true,
-      },
-    });
-  } catch (error) {
-    console.error("Error in buyerConfirmsProduct:", error);
-    return next(errorHandler(500, "Server error"));
-  }
-};
+//     res.json({
+//       status: "success",
+//       message: "Escrow has been completed successfully.",
+//       data: {
+//         transaction_id,
+//         transaction_status: "completed",
+//         buyer_confirm_status: true,
+//       },
+//     });
+//   } catch (error) {
+//     console.error("Error in buyerConfirmsProduct:", error);
+//     return next(errorHandler(500, "Server error"));
+//   }
+// };
 
 export const cancelEscrowProductTransaction = async (
   req: Request,
@@ -1202,6 +1302,261 @@ export const getPaymentStatus = async (
     });
   } catch (error) {
     console.error("getPaymentStatus error:", error);
+    return next(errorHandler(500, "Server error"));
+  }
+};
+
+export const buyerConfirmsProduct = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { transaction_id } = req.body;
+
+    if (!transaction_id) {
+      return next(errorHandler(400, "Transaction ID is required"));
+    }
+
+    console.log(`🔄 Processing buyer confirmation: ${transaction_id}`);
+
+    // ============================================
+    // FETCH AND VALIDATE TRANSACTION
+    // ============================================
+    const transaction = await ProductTransaction.findOne({ transaction_id });
+
+    if (!transaction) {
+      return next(errorHandler(404, "Transaction not found"));
+    }
+
+    const {
+      transaction_status,
+      _id: product_id,
+      vendor_name,
+      vendor_email,
+      buyer_email,
+      products,
+      sum_total,
+      verified_payment_status,
+      vendor_bank_details,
+      payment_released,
+    } = transaction;
+
+    const product_name = products?.[0]?.name || "Product";
+
+    // ============================================
+    // VALIDATION CHECKS
+    // ============================================
+    if (transaction_status === "completed") {
+      return next(errorHandler(400, "Transaction already completed"));
+    }
+
+    if (!verified_payment_status) {
+      return next(errorHandler(400, "Payment has not been verified"));
+    }
+
+    if (transaction_status?.trim().toLowerCase() !== "in_transit") {
+      return next(
+        errorHandler(
+          400,
+          `Cannot confirm delivery. Transaction status is '${transaction_status}'. Item must be in transit.`,
+        ),
+      );
+    }
+
+    // ✅ IDEMPOTENCY: Prevent duplicate releases
+    if (payment_released) {
+      return next(errorHandler(400, "Payment already released"));
+    }
+
+    // ✅ CRITICAL: Validate bank details exist
+    if (
+      !vendor_bank_details?.account_number ||
+      !vendor_bank_details?.bank_code
+    ) {
+      return next(
+        errorHandler(
+          500,
+          "Cannot release payment: Vendor bank details are missing. Please contact support.",
+        ),
+      );
+    }
+
+    // Check for active disputes
+    const activeDispute = await ProductDispute.findOne({
+      transaction_id,
+      dispute_status: "In_Dispute",
+    });
+
+    if (activeDispute) {
+      return next(
+        errorHandler(
+          400,
+          "Cannot complete: Active dispute exists. Please resolve the dispute first.",
+        ),
+      );
+    }
+
+    // ============================================
+    // PREPARE PAYMENT RELEASE
+    // ============================================
+    const vendorPayout = sum_total; // Vendor gets full sum_total
+    const vendorPayoutInKobo = Math.round(vendorPayout * 100);
+
+    console.log(`💰 Preparing payment release:
+      - Sum Total: ₦${sum_total}
+      - Vendor Payout: ₦${vendorPayout}
+      - Bank: ${vendor_bank_details.bank_name}
+      - Account: ${vendor_bank_details.account_number}
+    `);
+
+    // ============================================
+    // CREATE TRANSFER RECIPIENT
+    // ============================================
+    let recipientCode = transaction.vendor_recipient_code;
+
+    if (!recipientCode) {
+      console.log("👤 Creating transfer recipient...");
+
+      const recipientResponse = await createTransferRecipient({
+        account_name: vendor_bank_details.account_name,
+        account_number: vendor_bank_details.account_number,
+        bank_code: vendor_bank_details.bank_code,
+        email: vendor_email,
+      });
+
+      if (
+        !recipientResponse.status ||
+        !recipientResponse.data?.recipient_code
+      ) {
+        console.error(
+          "❌ Recipient creation failed:",
+          recipientResponse.message,
+        );
+        return next(
+          errorHandler(
+            500,
+            `Failed to create payment recipient: ${recipientResponse.message || "Unknown error"}`,
+          ),
+        );
+      }
+
+      recipientCode = recipientResponse.data.recipient_code;
+      transaction.vendor_recipient_code = recipientCode;
+      await transaction.save();
+
+      console.log(`✅ Recipient created: ${recipientCode}`);
+    }
+
+    // ============================================
+    // INITIATE TRANSFER
+    // ============================================
+    console.log("💸 Initiating transfer...");
+
+    const transferResponse = await initiateTransfer({
+      amount: vendorPayoutInKobo,
+      recipient: recipientCode,
+      reason: `Escrow release - ${product_name} (${transaction_id})`,
+      reference: `TRF-${transaction_id}-${Date.now()}`,
+    });
+
+    if (!transferResponse.status || !transferResponse.data?.reference) {
+      console.error("❌ Transfer failed:", transferResponse.message);
+      return next(
+        errorHandler(
+          500,
+          `Payment transfer failed: ${transferResponse.message || "Unknown error"}`,
+        ),
+      );
+    }
+
+    const transferRef = transferResponse.data.reference;
+    console.log(`✅ Transfer initiated: ${transferRef}`);
+
+    // ============================================
+    // UPDATE TRANSACTION
+    // ============================================
+    const updatedTransaction = await ProductTransaction.findByIdAndUpdate(
+      product_id,
+      {
+        transaction_status: "completed",
+        buyer_confirm_status: true,
+        payment_released: true,
+        payment_released_at: new Date(),
+        transfer_reference: transferRef,
+        transfer_status: "pending",
+        transfer_amount: vendorPayout,
+      },
+      { new: true },
+    );
+
+    if (!updatedTransaction) {
+      console.error(
+        `❌ CRITICAL: Transfer ${transferRef} initiated but DB update failed`,
+      );
+      return next(
+        errorHandler(
+          500,
+          "Payment initiated but system update failed. Please contact support immediately.",
+        ),
+      );
+    }
+
+    // ============================================
+    // RESOLVE DISPUTES
+    // ============================================
+    const existingDispute = await ProductDispute.findOne({ transaction_id });
+    if (existingDispute && existingDispute.dispute_status !== "resolved") {
+      await ProductDispute.findByIdAndUpdate(existingDispute._id, {
+        dispute_status: "resolved",
+        resolved_at: new Date(),
+        resolution_summary: "Auto-resolved on buyer confirmation",
+      });
+    }
+
+    // ============================================
+    // SEND NOTIFICATIONS
+    // ============================================
+    try {
+      await Promise.all([
+        sendSuccessfulEscrowEmailToInitiator(
+          transaction_id,
+          vendor_name,
+          buyer_email,
+          product_name,
+        ),
+        sendSuccessfulEscrowEmailToVendor(
+          transaction_id,
+          vendor_name,
+          vendor_email,
+          product_name,
+          vendorPayout.toString(),
+        ),
+      ]);
+      console.log("✅ Notification emails sent");
+    } catch (emailError) {
+      console.error("⚠️ Email sending failed (non-critical):", emailError);
+    }
+
+    // ============================================
+    // SUCCESS RESPONSE
+    // ============================================
+    res.json({
+      status: "success",
+      message: "Transaction completed! Payment is being transferred to vendor.",
+      data: {
+        transaction_id,
+        transaction_status: "completed",
+        buyer_confirm_status: true,
+        payment_released: true,
+        transfer_reference: transferRef,
+        transfer_status: "pending",
+        vendor_payout: vendorPayout,
+        estimated_delivery: "Vendor will receive funds within 24 hours",
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error in buyerConfirmsProduct:", error);
     return next(errorHandler(500, "Server error"));
   }
 };
