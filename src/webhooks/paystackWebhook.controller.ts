@@ -297,11 +297,6 @@ async function handleTransferReversed(data: any) {
           transaction.transaction_id,
           `Transfer was reversed: ${reason || "Unknown reason"}`,
         ),
-        sendTransferFailedEmailToBuyer(
-          transaction.buyer_email,
-          transaction.transaction_id,
-          `Payment transfer was reversed: ${reason || "Unknown reason"}`,
-        ),
       ]);
       console.log(`✅ Reversal notification emails sent`);
     } catch (emailError) {
