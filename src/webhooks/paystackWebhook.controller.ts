@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import crypto from "crypto";
 import ProductTransaction from "../modules/transactions/productsTransaction/productsTransaction.model";
-import Payout from "../modules/transactions/productsTransaction/payout.model";
+import Payout from "../modules/transactions/productsTransaction/Payouts/payout.model";
 import { errorHandler } from "../utilities/errorHandler.util";
 import {
   sendTransferSuccessEmailToVendor,
