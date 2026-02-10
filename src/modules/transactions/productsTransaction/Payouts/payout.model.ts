@@ -25,9 +25,9 @@ export interface IPayout extends Document {
     | "transfer_pending" // Waiting for Paystack to process
     | "transfer_success" // Paystack confirmed successful transfer
     | "transfer_failed" // Paystack transfer failed
-    | "manual_payout_required" // Requires manual intervention
     | "manual_payout_processing" // Admin is processing manually
     | "manual_payout_completed" // Manual payout completed
+    | "manual_payout_required" // Requires manual intervention
     | "reversed" // Transfer was reversed
     | "cancelled"; // Payout cancelled
 
@@ -177,9 +177,9 @@ const payoutSchema = new mongoose.Schema<IPayout>(
         "transfer_pending",
         "transfer_success",
         "transfer_failed",
-        "manual_payout_required",
         "manual_payout_processing",
         "manual_payout_completed",
+        "manual_payout_required",
         "reversed",
         "cancelled",
       ],

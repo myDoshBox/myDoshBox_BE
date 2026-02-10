@@ -10,6 +10,7 @@ import {
   sendEscrowInitiationEmailToVendor,
 } from "../modules/transactions/productsTransaction/productTransaction.mail";
 import { sendAdminManualPayoutAlert } from "../modules/transactions/productsTransaction/Payouts/ManualPayment.mail";
+import type { IPayout } from "../modules/transactions/productsTransaction/Payouts/payout.model";
 
 //  Main webhook endpoint for all Paystack events
 //  Handles both payment and transfer events
@@ -287,6 +288,15 @@ Status: transfer_success
   }
 }
 
+// function to find payout
+async function findPayout(reference: string): Promise<IPayout | null> {
+  const result = await Payout.findOne({
+    transfer_reference: reference,
+  })
+    .populate("transaction")
+    .lean<IPayout>();
+  return result as IPayout | null;
+}
 /**
  * Handle failed transfer
  * Updates Payout model and triggers retry logic or manual intervention
@@ -304,9 +314,7 @@ async function handleTransferFailed(data: any) {
     });
 
     //  FIND PAYOUT BY TRANSFER REFERENCE
-    const payout = await Payout.findOne({
-      transfer_reference: reference,
-    }).populate("transaction");
+    const payout = await findPayout(reference);
 
     if (!payout) {
       console.error(`❌ Payout not found for reference: ${reference}`);
@@ -339,6 +347,7 @@ async function handleTransferFailed(data: any) {
     // ============================================
     try {
       const emailPromises = [];
+      const currentStatus = payout.payout_status as IPayout["payout_status"];
 
       // Always notify vendor of failure
       emailPromises.push(
@@ -351,7 +360,7 @@ async function handleTransferFailed(data: any) {
       );
 
       // If manual payout is now required (max retries exceeded), notify admin
-      if (payout.payout_status === "manual_payout_required") {
+      if (currentStatus === "manual_payout_required") {
         emailPromises.push(
           sendAdminManualPayoutAlert(
             payout.transaction_id,
@@ -379,19 +388,6 @@ async function handleTransferFailed(data: any) {
     // ============================================
     // LOG FAILURE
     // ============================================
-    console.log(`
-⚠️ PAYOUT FAILED
-═══════════════════════════════════════
-Transaction ID: ${payout.transaction_id}
-Vendor: ${payout.vendor_email}
-Amount: ₦${payout.payout_amount}
-Transfer Ref: ${reference}
-Failure Reason: ${failureReason}
-Retry Count: ${payout.retry_count}/${payout.max_retries}
-Status: ${payout.payout_status}
-${payout.payout_status === "manual_payout_required" ? "⚠️ MANUAL INTERVENTION REQUIRED" : "🔄 Will retry automatically"}
-═══════════════════════════════════════
-    `);
   } catch (error) {
     console.error("❌ Error handling transfer failure:", error);
   }
@@ -416,9 +412,9 @@ async function handleTransferReversed(data: any) {
     });
 
     //  FIND PAYOUT BY TRANSFER REFERENCE
-    const payout = await Payout.findOne({
+    const payout = (await Payout.findOne({
       transfer_reference: reference,
-    }).populate("transaction");
+    }).populate("transaction")) as IPayout | null;
 
     if (!payout) {
       console.error(`❌ Payout not found for reference: ${reference}`);
