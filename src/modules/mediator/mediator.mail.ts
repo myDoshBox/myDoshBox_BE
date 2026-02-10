@@ -3,10 +3,10 @@ import { generateMailTransporter } from "../../utilities/email.utils";
 export const sendMediatorLoginDetailsMail = async (
   first_name: string,
   mediator_email: string,
-  password: string
+  password: string,
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
     const supportEmail = "mydoshbox@gmail.com";
     const loginUrl = "https://mydoshbox.vercel.app/login";
 
@@ -229,10 +229,10 @@ export const sendMediatorLoginDetailsMail = async (
 
 export const sendMediatorInvolvementMailToMediator = async (
   mediator_email: string,
-  mediator_first_name: string
+  mediator_first_name: string,
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
 
     const supportEmail = "mydoshbox@gmail.com";
     const emailMessage = `
@@ -283,10 +283,10 @@ export const sendResolutionMailToBuyer = async (
   buyer_email: string,
   product_name: string,
   resolution_description_result: string,
-  dispute_fault_result: string
+  dispute_fault_result: string,
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
     const supportEmail = "mydoshbox@gmail.com";
 
     let actionMessage = "";
@@ -348,10 +348,10 @@ export const sendResolutionMailToSeller = async (
   vendor_email: string,
   product_name: string,
   resolution_description_result: string,
-  dispute_fault_result: string
+  dispute_fault_result: string,
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
     const supportEmail = "mydoshbox@gmail.com";
 
     let actionMessage = "";

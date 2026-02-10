@@ -1,33 +1,227 @@
-import nodemailer from "nodemailer";
+import nodemailer, { Transporter } from "nodemailer";
+import SMTPTransport from "nodemailer/lib/smtp-transport";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-export const generateMailTransporter = () => {
-  const transport = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
-    // port: 587,
-    // secure: false,
-    auth: {
-      user: process.env.EMAIL_USERNAME,
-      pass: process.env.EMAIL_PASSWORD,
-    },
-    tls: {
-      rejectUnauthorized: false,
-    },
-  });
+// ============================================
+// TYPE DEFINITIONS
+// ============================================
 
-  return transport;
+/**
+ * Email configuration interface for SMTP transport
+ */
+interface EmailConfig {
+  service?: string;
+  host?: string;
+  port?: number;
+  secure?: boolean;
+  auth: {
+    user: string | undefined;
+    pass: string | undefined;
+  };
+  tls?: {
+    rejectUnauthorized: boolean;
+  };
+  connectionTimeout?: number;
+  greetingTimeout?: number;
+  socketTimeout?: number;
+}
+
+/**
+ * Available email service configurations
+ */
+interface EmailServiceConfigs {
+  gmail: EmailConfig[];
+  outlook: EmailConfig[];
+  custom: EmailConfig[];
+}
+
+// ============================================
+// OPTIMIZED EMAIL TRANSPORT SYSTEM
+// ============================================
+
+let transporter: Transporter<SMTPTransport.SentMessageInfo> | null = null;
+
+/**
+ * Creates and verifies email transporter with multiple fallback configurations
+ * Tries different SMTP configurations until one succeeds
+ */
+async function createTransporter(): Promise<
+  Transporter<SMTPTransport.SentMessageInfo>
+> {
+  const emailService = process.env.EMAIL_SERVICE || "gmail";
+
+  const configs: EmailServiceConfigs = {
+    gmail: [
+      {
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL_USERNAME,
+          pass: process.env.EMAIL_PASSWORD,
+        },
+      },
+      {
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.EMAIL_USERNAME,
+          pass: process.env.EMAIL_PASSWORD,
+        },
+        tls: {
+          rejectUnauthorized: false,
+        },
+        connectionTimeout: 30000,
+        greetingTimeout: 30000,
+        socketTimeout: 30000,
+      },
+      {
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true,
+        auth: {
+          user: process.env.EMAIL_USERNAME,
+          pass: process.env.EMAIL_PASSWORD,
+        },
+        tls: {
+          rejectUnauthorized: false,
+        },
+        connectionTimeout: 30000,
+        greetingTimeout: 30000,
+        socketTimeout: 30000,
+      },
+    ],
+    outlook: [
+      {
+        service: "hotmail",
+        auth: {
+          user: process.env.EMAIL_USERNAME,
+          pass: process.env.EMAIL_PASSWORD,
+        },
+      },
+    ],
+    custom: [
+      {
+        host: process.env.SMTP_HOST,
+        port: process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587,
+        secure: process.env.SMTP_SECURE === "true",
+        auth: {
+          user: process.env.EMAIL_USERNAME,
+          pass: process.env.EMAIL_PASSWORD,
+        },
+        tls: {
+          rejectUnauthorized: false,
+        },
+      },
+    ],
+  };
+
+  const serviceConfigs =
+    configs[emailService as keyof EmailServiceConfigs] || configs.gmail;
+
+  for (let i = 0; i < serviceConfigs.length; i++) {
+    try {
+      console.log(
+        `Attempting email connection ${i + 1}/${serviceConfigs.length}...`,
+      );
+
+      const newTransporter = nodemailer.createTransport(serviceConfigs[i]);
+
+      const verifyPromise = newTransporter.verify();
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error("Connection timeout")), 15000);
+      });
+
+      await Promise.race([verifyPromise, timeoutPromise]);
+
+      console.log(`✅ Email service connected successfully (attempt ${i + 1})`);
+      return newTransporter;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      console.warn(`⚠️ Connection attempt ${i + 1} failed:`, errorMessage);
+      if (i === serviceConfigs.length - 1) {
+        console.error("❌ All email connection attempts failed");
+        throw error;
+      }
+    }
+  }
+
+  // This line should never be reached due to the loop logic, but TypeScript needs it
+  throw new Error("Failed to create email transporter");
+}
+
+/**
+ * Initialize transporter on module load
+ */
+async function initializeTransporter(): Promise<void> {
+  try {
+    transporter = await createTransporter();
+    console.log("📧 Email transporter initialized successfully");
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    console.error("❌ Failed to initialize email transporter:", errorMessage);
+    console.error(
+      "⚠️ Email functionality may not work. Check your email credentials.",
+    );
+  }
+}
+
+// Initialize on startup
+initializeTransporter();
+
+/**
+ * Ensures transporter is available, creates new one if needed
+ */
+async function ensureTransporter(): Promise<
+  Transporter<SMTPTransport.SentMessageInfo>
+> {
+  if (!transporter) {
+    console.log("🔄 Transporter not initialized, creating new one...");
+    transporter = await createTransporter();
+  }
+  return transporter;
+}
+
+/**
+ * Regenerate transporter - useful after credential updates
+ */
+export const regenerateTransporter = async (): Promise<
+  Transporter<SMTPTransport.SentMessageInfo>
+> => {
+  console.log("🔄 Regenerating email transporter...");
+  transporter = null;
+  return await ensureTransporter();
 };
+
+/**
+ * Generate mail transporter (compatibility with existing code)
+ */
+export const generateMailTransporter = async (): Promise<
+  Transporter<SMTPTransport.SentMessageInfo>
+> => {
+  return await ensureTransporter();
+};
+
+// ============================================
+// EMAIL CONFIGURATION CONSTANTS
+// ============================================
 
 const supportEmail = "mydoshbox@gmail.com";
 const appName = "MyDoshbox";
 
-export const sendVerificationEmail = async (email: string, token: string) => {
+// ============================================
+// EMAIL SENDING TEMPLATES
+// ============================================
+
+export const sendVerificationEmail = async (
+  email: string,
+  token: string,
+): Promise<SMTPTransport.SentMessageInfo> => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await ensureTransporter();
 
     const verificationURL = `${process.env.DEPLOYED_FRONTEND_BASE_URL}/auth/verify-email?token=${token}`;
 
@@ -81,17 +275,23 @@ export const sendVerificationEmail = async (email: string, token: string) => {
       html: emailMessage,
     });
 
-    console.log("Verification email sent - Message ID:", info?.messageId);
+    console.log("✅ Verification email sent - Message ID:", info?.messageId);
     return info;
   } catch (err) {
-    console.error("Error sending verification email:", err);
-    throw err;
+    const error =
+      err instanceof Error
+        ? err
+        : new Error("Unknown error sending verification email");
+    console.error("❌ Error sending verification email:", error);
+    throw error;
   }
 };
 
-export const sendWelcomeEmail = async (email: string) => {
+export const sendWelcomeEmail = async (
+  email: string,
+): Promise<SMTPTransport.SentMessageInfo> => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await ensureTransporter();
 
     const emailMessage = `
     <!DOCTYPE html>
@@ -148,20 +348,24 @@ export const sendWelcomeEmail = async (email: string) => {
       html: emailMessage,
     });
 
-    console.log("Welcome email sent - Message ID:", info?.messageId);
+    console.log("✅ Welcome email sent - Message ID:", info?.messageId);
     return info;
   } catch (err) {
-    console.error("Error sending welcome email:", err);
-    throw err;
+    const error =
+      err instanceof Error
+        ? err
+        : new Error("Unknown error sending welcome email");
+    console.error("❌ Error sending welcome email:", error);
+    throw error;
   }
 };
 
 export const sendPasswordResetEmail = async (
   email: string,
   resetToken: string,
-) => {
+): Promise<SMTPTransport.SentMessageInfo> => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await ensureTransporter();
 
     const resetURL = `${process.env.DEPLOYED_FRONTEND_BASE_URL}/auth/reset-password?token=${resetToken}`;
 
@@ -224,17 +428,23 @@ export const sendPasswordResetEmail = async (
       html: emailMessage,
     });
 
-    console.log("Password reset email sent - Message ID:", info?.messageId);
+    console.log("✅ Password reset email sent - Message ID:", info?.messageId);
     return info;
   } catch (err) {
-    console.error("Error sending password reset email:", err);
-    throw err;
+    const error =
+      err instanceof Error
+        ? err
+        : new Error("Unknown error sending password reset email");
+    console.error("❌ Error sending password reset email:", error);
+    throw error;
   }
 };
 
-export const sendPasswordResetSuccessEmail = async (email: string) => {
+export const sendPasswordResetSuccessEmail = async (
+  email: string,
+): Promise<SMTPTransport.SentMessageInfo> => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await ensureTransporter();
 
     const emailMessage = `
     <!DOCTYPE html>
@@ -295,19 +505,26 @@ export const sendPasswordResetSuccessEmail = async (email: string) => {
     });
 
     console.log(
-      "Password reset success email sent - Message ID:",
+      "✅ Password reset success email sent - Message ID:",
       info?.messageId,
     );
     return info;
   } catch (err) {
-    console.error("Error sending password reset success email:", err);
-    throw err;
+    const error =
+      err instanceof Error
+        ? err
+        : new Error("Unknown error sending password reset success email");
+    console.error("❌ Error sending password reset success email:", error);
+    throw error;
   }
 };
 
-export const sendOtpEmail = async (otp: string, email: string) => {
+export const sendOtpEmail = async (
+  otp: string,
+  email: string,
+): Promise<SMTPTransport.SentMessageInfo> => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await ensureTransporter();
 
     const emailMessage = `
     <!DOCTYPE html>
@@ -353,17 +570,22 @@ export const sendOtpEmail = async (otp: string, email: string) => {
       html: emailMessage,
     });
 
-    console.log("OTP email sent - Message ID:", info?.messageId);
+    console.log("✅ OTP email sent - Message ID:", info?.messageId);
     return info;
   } catch (err) {
-    console.error("Error sending OTP email:", err);
-    throw err;
+    const error =
+      err instanceof Error ? err : new Error("Unknown error sending OTP email");
+    console.error("❌ Error sending OTP email:", error);
+    throw error;
   }
 };
 
-export const sendURLEmail = async (email: string[], resetURL: string) => {
+export const sendURLEmail = async (
+  email: string[],
+  resetURL: string,
+): Promise<SMTPTransport.SentMessageInfo> => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await ensureTransporter();
 
     const emailMessage = `
     <!DOCTYPE html>
@@ -407,10 +629,14 @@ export const sendURLEmail = async (email: string[], resetURL: string) => {
       html: emailMessage,
     });
 
-    console.log("Reset URL email sent - Message ID:", info?.messageId);
+    console.log("✅ Reset URL email sent - Message ID:", info?.messageId);
     return info;
   } catch (err) {
-    console.error("Error sending reset URL email:", err);
-    throw err;
+    const error =
+      err instanceof Error
+        ? err
+        : new Error("Unknown error sending reset URL email");
+    console.error("❌ Error sending reset URL email:", error);
+    throw error;
   }
 };

@@ -9,6 +9,7 @@ import {
   sendResolutionMailToSeller,
 } from "../mediator/mediator.mail";
 import bcrypt from "bcrypt";
+import { bulkSyncToAnalytics } from "./Analytics/analyticsSync.utils";
 
 /**
  * Onboard a new mediator to the system

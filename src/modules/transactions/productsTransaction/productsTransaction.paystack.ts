@@ -1,4 +1,9 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
+
+const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
+const PAYSTACK_PAYMENT_KEY = process.env.PAYSTACK_PAYMENT_KEY;
+const PAYSTACK_BASE_URL =
+  process.env.PAYSTACK_BASE_URL || "https://api.paystack.co";
 
 interface IPayment {
   reference: string;
@@ -8,66 +13,6 @@ interface IPayment {
   channels?: string[];
   callback_url?: string;
 }
-
-export const paymentForEscrowProductTransaction = async (data: IPayment) => {
-  const API_URL = process.env.PAYSTACK_BASE_URL;
-  const API_KEY = process.env.PAYSTACK_PAYMENT_KEY;
-  const DEPLOYED_FRONTEND_BASE_URL =
-    process.env.NODE_ENV === "development"
-      ? "http://localhost:3000"
-      : "https://mydoshbox.vercel.app";
-
-  // FIXED: Added /userdashboard to the callback URL path
-  const callbackURL = `${DEPLOYED_FRONTEND_BASE_URL}/userdashboard/verifyPayment?reference=${data.reference}`;
-
-  const response = await axios.post(
-    `${API_URL}/transaction/initialize`,
-    {
-      reference: data?.reference,
-      amount: data?.amount * 100,
-      email: data?.email,
-      currency: "NGN",
-      channels: ["card"],
-      callback_url: callbackURL,
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${API_KEY}`,
-        "Content-Type": "application/json",
-        "cache-control": "no-cache",
-      },
-    },
-  );
-
-  return response.data;
-};
-
-export const verifyPaymentForEscrowProductTransaction = async (
-  reference: string,
-) => {
-  const API_URL = process.env.PAYSTACK_BASE_URL;
-  const API_KEY = process.env.PAYSTACK_PAYMENT_KEY;
-
-  const response = await axios.get(
-    `${API_URL}/transaction/verify/${reference}`,
-    {
-      headers: {
-        Authorization: `Bearer ${API_KEY}`,
-        "Content-Type": "application/json",
-        "cache-control": "no-cache",
-      },
-    },
-  );
-
-  return response.data;
-};
-
-const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
-const PAYSTACK_BASE_URL = "https://api.paystack.co";
-
-// ============================================
-// INTERFACE DEFINITIONS
-// ============================================
 
 interface CreateRecipientParams {
   account_name: string;
@@ -103,10 +48,10 @@ interface CreateRecipientResponse {
 }
 
 interface InitiateTransferParams {
-  amount: number; // Amount in kobo (smallest currency unit)
-  recipient: string; // Recipient code from createTransferRecipient
+  amount: number;
+  recipient: string;
   reason?: string;
-  reference?: string; // Unique reference for idempotency
+  reference?: string;
   currency?: "NGN";
   source?: "balance";
 }
@@ -197,15 +142,169 @@ interface ListBanksResponse {
   };
 }
 
-// ============================================
-// PAYSTACK TRANSFER FUNCTIONS
-// ============================================
+interface BalanceResponse {
+  status: boolean;
+  message: string;
+  data: Array<{
+    currency: string;
+    balance: number; // Amount in kobo
+  }>;
+}
 
-/**
- * Create a transfer recipient
- * This must be done before initiating a transfer
- * Store the recipient_code for future transfers to the same account
- */
+// PAYMENT FUNCTIONS
+export const paymentForEscrowProductTransaction = async (data: IPayment) => {
+  const DEPLOYED_FRONTEND_BASE_URL =
+    process.env.NODE_ENV === "development"
+      ? "http://localhost:3000"
+      : "https://mydoshbox.vercel.app";
+
+  const callbackURL = `${DEPLOYED_FRONTEND_BASE_URL}/userdashboard/verifyPayment?reference=${data.reference}`;
+
+  try {
+    const response = await axios.post(
+      `${PAYSTACK_BASE_URL}/transaction/initialize`,
+      {
+        reference: data?.reference,
+        amount: data?.amount * 100, // Convert to kobo
+        email: data?.email,
+        currency: "NGN",
+        channels: ["card"],
+        callback_url: callbackURL,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${PAYSTACK_PAYMENT_KEY}`,
+          "Content-Type": "application/json",
+          "cache-control": "no-cache",
+        },
+      },
+    );
+
+    return response.data;
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      console.error("❌ Paystack payment initialization error:", {
+        status: error.response?.status,
+        message: error.response?.data?.message,
+        data: error.response?.data,
+      });
+
+      return {
+        status: false,
+        message:
+          error.response?.data?.message || "Failed to initialize payment",
+        data: {},
+      };
+    }
+
+    console.error("❌ Unexpected error initializing payment:", error);
+    throw error;
+  }
+};
+
+export const verifyPaymentForEscrowProductTransaction = async (
+  reference: string,
+) => {
+  try {
+    const response = await axios.get(
+      `${PAYSTACK_BASE_URL}/transaction/verify/${reference}`,
+      {
+        headers: {
+          Authorization: `Bearer ${PAYSTACK_PAYMENT_KEY}`,
+          "Content-Type": "application/json",
+          "cache-control": "no-cache",
+        },
+      },
+    );
+
+    return response.data;
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      console.error("❌ Paystack payment verification error:", {
+        status: error.response?.status,
+        message: error.response?.data?.message,
+      });
+
+      return {
+        status: false,
+        message: error.response?.data?.message || "Failed to verify payment",
+        data: {},
+      };
+    }
+
+    console.error("❌ Unexpected error verifying payment:", error);
+    throw error;
+  }
+};
+
+// BALANCE CHECKING
+//  Check available Paystack balance
+// CRITICAL: Always check balance before initiating transfers
+//  Returns balance in kobo - divide by 100 for naira
+
+export const checkPaystackBalance = async (): Promise<BalanceResponse> => {
+  try {
+    console.log("🔄 Checking Paystack balance...");
+
+    const response = await axios.get<BalanceResponse>(
+      `${PAYSTACK_BASE_URL}/balance`,
+      {
+        headers: {
+          Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    const ngnBalance = response.data.data.find(
+      (bal: { currency: string; balance: number }) => bal.currency === "NGN",
+    );
+
+    console.log("✅ Balance check successful:", {
+      balance_kobo: ngnBalance?.balance || 0,
+      balance_naira: ((ngnBalance?.balance || 0) / 100).toFixed(2),
+    });
+
+    return response.data;
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      console.error("❌ Paystack balance check error:", {
+        status: error.response?.status,
+        message: error.response?.data?.message,
+        data: error.response?.data,
+      });
+
+      return {
+        status: false,
+        message: error.response?.data?.message || "Failed to check balance",
+        data: [{ currency: "NGN", balance: 0 }],
+      };
+    }
+
+    console.error("❌ Unexpected error checking balance:", error);
+    throw error;
+  }
+};
+
+//  Helper function to get NGN balance in naira (not kobo)
+
+export const getAvailableBalanceInNaira = async (): Promise<number> => {
+  const balanceResponse = await checkPaystackBalance();
+
+  if (!balanceResponse.status) {
+    return 0;
+  }
+
+  const ngnBalance = balanceResponse.data.find((bal) => bal.currency === "NGN");
+
+  return (ngnBalance?.balance || 0) / 100; // Convert kobo to naira
+};
+
+//  TRANSFER RECIPIENT MANAGEMENT//
+//  Create a transfer recipient
+// This must be done before initiating a transfer
+// Store the recipient_code for future transfers to the same account
+
 export const createTransferRecipient = async (
   params: CreateRecipientParams,
 ): Promise<CreateRecipientResponse> => {
@@ -219,7 +318,7 @@ export const createTransferRecipient = async (
     const response = await axios.post<CreateRecipientResponse>(
       `${PAYSTACK_BASE_URL}/transferrecipient`,
       {
-        type: "nuban", // Nigerian bank account
+        type: "nuban",
         name: params.account_name,
         account_number: params.account_number,
         bank_code: params.bank_code,
@@ -236,7 +335,7 @@ export const createTransferRecipient = async (
 
     console.log("✅ Recipient created:", response.data.data.recipient_code);
     return response.data;
-  } catch (error) {
+  } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
       console.error("❌ Paystack recipient creation error:", {
         status: error.response?.status,
@@ -259,16 +358,18 @@ export const createTransferRecipient = async (
   }
 };
 
-/**
- * Initiate a transfer to a recipient
- * Amount should be in kobo (multiply naira by 100)
- */
+//  NOW TRANSFER INITIATION
+// Initiate a transfer to a recipient
+// Amount should be in kobo (multiply naira by 100)
+//  NOTE:Check balance first using checkPaystackBalance()
+
 export const initiateTransfer = async (
   params: InitiateTransferParams,
 ): Promise<InitiateTransferResponse> => {
   try {
     console.log("🔄 Initiating transfer:", {
-      amount: params.amount,
+      amount_kobo: params.amount,
+      amount_naira: (params.amount / 100).toFixed(2),
       recipient: params.recipient,
       reference: params.reference,
     });
@@ -298,7 +399,7 @@ export const initiateTransfer = async (
     });
 
     return response.data;
-  } catch (error) {
+  } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
       console.error("❌ Paystack transfer initiation error:", {
         status: error.response?.status,
@@ -319,10 +420,7 @@ export const initiateTransfer = async (
   }
 };
 
-/**
- * Verify a transfer using reference or transfer code
- * Use this to check the status of a transfer
- */
+//  TRANSFER VERIFICATION
 export const verifyTransfer = async (
   reference: string,
 ): Promise<VerifyTransferResponse> => {
@@ -346,7 +444,7 @@ export const verifyTransfer = async (
     });
 
     return response.data;
-  } catch (error) {
+  } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
       console.error("❌ Paystack transfer verification error:", {
         status: error.response?.status,
@@ -366,10 +464,9 @@ export const verifyTransfer = async (
   }
 };
 
-/**
- * List all Nigerian banks
- * Use this to get bank codes for recipient creation
- */
+//  BANK UTILITIES
+//  * List all Nigerian banks
+//  * Use this to get bank codes for recipient creation
 export const listBanks = async (
   country: string = "nigeria",
   currency: string = "NGN",
@@ -391,7 +488,7 @@ export const listBanks = async (
     );
 
     return response.data;
-  } catch (error) {
+  } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
       console.error("❌ Paystack list banks error:", error.response?.data);
       return {
@@ -411,10 +508,10 @@ export const listBanks = async (
   }
 };
 
-/**
- * Resolve account number
- * Validates account number and returns account name
- */
+//  RESOLVE ACCONNT NUMBER
+//  * Validates account number and returns account name
+// Use this to verify vendor bank details before creating recipient
+
 export const resolveAccountNumber = async (
   account_number: string,
   bank_code: string,
@@ -446,7 +543,7 @@ export const resolveAccountNumber = async (
 
     console.log("✅ Account resolved:", response.data.data.account_name);
     return response.data;
-  } catch (error) {
+  } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
       console.error("❌ Account resolution error:", error.response?.data);
       return {
@@ -462,5 +559,87 @@ export const resolveAccountNumber = async (
 
     console.error("❌ Unexpected error resolving account:", error);
     throw error;
+  }
+};
+
+//  Convert naira to kobo, Helper function
+export const nairaToKobo = (naira: number): number => {
+  return Math.round(naira * 100);
+};
+
+/**
+ * Convert kobo to naira
+ */
+export const koboToNaira = (kobo: number): number => {
+  return kobo / 100;
+};
+
+/**
+ * Format amount for display
+ */
+export const formatAmount = (
+  amount: number,
+  currency: string = "NGN",
+): string => {
+  return new Intl.NumberFormat("en-NG", {
+    style: "currency",
+    currency: currency,
+  }).format(amount);
+};
+
+/**
+ * Validate transfer before initiation
+ * Comprehensive pre-flight checks
+ */
+export const validateTransferRequest = async (
+  amount: number,
+  recipientCode: string,
+): Promise<{
+  valid: boolean;
+  error?: string;
+  availableBalance?: number;
+}> => {
+  try {
+    // Check 1: Validate amount
+    if (amount <= 0) {
+      return {
+        valid: false,
+        error: "Transfer amount must be greater than zero",
+      };
+    }
+
+    // Check 2: Validate recipient code
+    if (!recipientCode || recipientCode.length === 0) {
+      return { valid: false, error: "Recipient code is required" };
+    }
+
+    // Check 3: Check available balance
+    const availableBalance = await getAvailableBalanceInNaira();
+    const amountInNaira = amount / 100; // Convert kobo to naira
+
+    if (availableBalance < amountInNaira) {
+      return {
+        valid: false,
+        error: `Insufficient balance. Required: ₦${amountInNaira.toFixed(2)}, Available: ₦${availableBalance.toFixed(2)}`,
+        availableBalance,
+      };
+    }
+
+    // Check 4: Minimum transfer amount (Paystack minimum is ₦100)
+    if (amountInNaira < 100) {
+      return {
+        valid: false,
+        error: "Minimum transfer amount is ₦100",
+        availableBalance,
+      };
+    }
+
+    return { valid: true, availableBalance };
+  } catch (error: unknown) {
+    console.error("❌ Error validating transfer request:", error);
+    return {
+      valid: false,
+      error: "Failed to validate transfer request. Please try again.",
+    };
   }
 };

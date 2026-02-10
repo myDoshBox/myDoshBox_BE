@@ -11,7 +11,7 @@ export const sendEscrowInitiationEmailToInitiator = async (
   status: "accepted" | "rejected",
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
     const supportEmail = "mydoshbox@gmail.com";
     const loginUrl = "https://mydoshbox.vercel.app/login";
     const dashboardUrl =
@@ -290,7 +290,7 @@ export const sendEscrowInitiationEmailToVendor = async (
   transaction_total: number,
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
     const supportEmail = "mydoshbox@gmail.com";
     const signupUrl = "https://mydoshbox.vercel.app/signup";
     const loginUrl = "https://mydoshbox.vercel.app/login";
@@ -527,7 +527,7 @@ export const sendPaymentVerifiedEmailToVendor = async (
   sum_total: number,
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
     const supportEmail = "mydoshbox@gmail.com";
     const dashboardUrl =
       "https://mydoshbox.vercel.app/userdashboard/transaction-history/confirm-escrow-product-transaction/transactions-in-progress-history";
@@ -770,7 +770,7 @@ export const sendShippingDetailsEmailToInitiator = async (
   pick_up_address: string | undefined,
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
     const supportEmail = "mydoshbox@gmail.com";
     const dashboardUrl = "https://mydoshbox.vercel.app/userdashboard";
 
@@ -969,7 +969,7 @@ export const sendShippingDetailsEmailToVendor = async (
   product_name: string = "",
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
     const supportEmail = "mydoshbox@gmail.com";
     const dashboardUrl = "https://mydoshbox.vercel.app/userdashboard";
 
@@ -1176,7 +1176,7 @@ export const sendSuccessfulEscrowEmailToInitiator = async (
   product_name: string = "",
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
     const supportEmail = "mydoshbox@gmail.com";
     const dashboardUrl = "https://mydoshbox.vercel.app/userdashboard";
 
@@ -1412,7 +1412,7 @@ export const sendSuccessfulEscrowEmailToVendor = async (
   vendorPayout: string = "",
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
     const supportEmail = "mydoshbox@gmail.com";
     const dashboardUrl = "https://mydoshbox.vercel.app/userdashboard";
 
@@ -1648,7 +1648,7 @@ export const sendTransactionCancellationMailToBuyer = async (
   cancellation_reason?: string,
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
     const supportEmail = "mydoshbox@gmail.com";
     const dashboardUrl = "https://mydoshbox.vercel.app/userdashboard";
 
@@ -1909,7 +1909,7 @@ export const sendMediatorInvolvementMailToBuyer = async (
   mediator_email: string,
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
     const supportEmail = "mydoshbox@gmail.com";
     const dashboardUrl = "https://mydoshbox.vercel.app/userdashboard";
 
@@ -2120,7 +2120,7 @@ export const sendMediatorInvolvementMailToSeller = async (
   mediator_email: string,
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
     const supportEmail = "mydoshbox@gmail.com";
     const dashboardUrl = "https://mydoshbox.vercel.app/userdashboard";
 
@@ -2335,7 +2335,7 @@ export const sendTransactionEditNotificationToVendor = async (
   transaction_total: number,
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
     const supportEmail = "mydoshbox@gmail.com";
     const loginUrl = "https://mydoshbox.vercel.app/login";
 
@@ -2523,7 +2523,7 @@ export const sendTransactionEditConfirmationToBuyer = async (
   transaction_total: number,
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
     const supportEmail = "mydoshbox@gmail.com";
     const dashboardUrl = "https://mydoshbox.vercel.app/userdashboard";
 
@@ -2720,7 +2720,7 @@ export const sendTransferSuccessEmailToVendor = async (
   transactionId: string,
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
     const supportEmail = "mydoshbox@gmail.com";
     const dashboardUrl = "https://mydoshbox.vercel.app/userdashboard";
 
@@ -2980,7 +2980,7 @@ export const sendTransferFailedEmailToVendor = async (
   reason: string,
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
     const supportEmail = "mydoshbox@gmail.com";
     const dashboardUrl = "https://mydoshbox.vercel.app/userdashboard";
     const supportUrl = "https://mydoshbox.vercel.app/support";

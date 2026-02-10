@@ -5,7 +5,12 @@ import { validateProductFields } from "./productsTransaction.validation";
 import IndividualUser from "../../authentication/individualUserAuth/individualUserAuth.model1";
 import OrganizationUser from "../../authentication/organizationUserAuth/organizationAuth.model";
 import { errorHandler } from "../../../middlewares/errorHandling.middleware";
-
+import {
+  sendBuyerConfirmationEmail,
+  sendVendorManualPayoutEmail,
+  sendAdminManualPayoutAlert,
+} from "./Payouts/ManualPayment.mail";
+import Payout from "./Payouts/payout.model";
 import ProductTransaction from "./productsTransaction.model";
 import {
   paymentForEscrowProductTransaction,
@@ -33,14 +38,12 @@ import {
 
 const getVendorBankDetails = async (vendor_email: string) => {
   try {
-    // Try Individual User first
     let vendor = await IndividualUser.findOne({ email: vendor_email });
 
     if (vendor && vendor.bank_details) {
       return vendor.bank_details;
     }
 
-    // Try Organization User
     vendor = await OrganizationUser.findOne({
       $or: [
         { organization_email: vendor_email },
@@ -58,7 +61,6 @@ const getVendorBankDetails = async (vendor_email: string) => {
     return null;
   }
 };
-
 export const initiateEscrowProductTransaction = async (
   req: Request,
   res: Response,
@@ -1070,133 +1072,6 @@ export const getAllShippingDetailsWithAggregation = async (
   }
 };
 
-// export const buyerConfirmsProduct = async (
-//   req: Request,
-//   res: Response,
-//   next: NextFunction,
-// ) => {
-//   try {
-//     const { transaction_id } = req.body;
-
-//     if (!transaction_id) {
-//       return next(errorHandler(400, "Transaction ID is required"));
-//     }
-
-//     console.log(
-//       `Processing confirmation for transaction_id: ${transaction_id}`,
-//     );
-
-//     // Check for existing dispute
-//     const disputeDetails = await ProductDispute.findOne({ transaction_id });
-//     console.log(`Dispute details found: ${disputeDetails ? "Yes" : "No"}`);
-
-//     // Fetch product transaction details directly
-//     const fetchProductDetails = await ProductTransaction.findOne({
-//       transaction_id,
-//     });
-
-//     if (!fetchProductDetails) {
-//       return next(errorHandler(404, "Transaction not found"));
-//     }
-
-//     console.log(
-//       "Product transaction found:",
-//       JSON.stringify(fetchProductDetails, null, 2),
-//     );
-
-//     const {
-//       transaction_status,
-//       _id: product_id,
-//       vendor_name,
-//       vendor_email,
-//       buyer_email,
-//       products,
-//     } = fetchProductDetails;
-
-//     // Get product name from the first product
-//     const product_name =
-//       products && products.length > 0 ? products[0].name : "Product";
-
-//     // Check if transaction is already completed
-//     if (transaction_status === "completed") {
-//       return next(errorHandler(400, "This transaction is already completed"));
-//     }
-
-//     // Check if transaction is in processing status (with or without trailing space)
-//     // Convert safely for comparison
-//     const normalizedStatus = transaction_status?.trim().toLowerCase();
-
-//     // Only allow confirmation when item is in transit
-//     const isInTransit = normalizedStatus === "in_transit";
-
-//     if (!isInTransit) {
-//       return next(
-//         errorHandler(
-//           400,
-//           `Transaction status is currently '${transaction_status}'. You can only confirm delivery when the item is in transit.`,
-//         ),
-//       );
-//     }
-
-//     // Update ProductTransaction status to completed and set buyer_confirm_status to true
-//     const updateProductTransactionStatus =
-//       await ProductTransaction.findByIdAndUpdate(
-//         product_id,
-//         {
-//           transaction_status: "completed",
-//           buyer_confirm_status: true,
-//         },
-//         { new: true },
-//       );
-
-//     if (!updateProductTransactionStatus) {
-//       return next(errorHandler(500, "Failed to update product status"));
-//     }
-
-//     console.log(
-//       `Updated ProductTransaction ${product_id} to completed with buyer confirmation`,
-//     );
-
-//     // Resolve dispute if exists and not already resolved
-//     if (disputeDetails && disputeDetails.dispute_status !== "resolved") {
-//       await ProductDispute.findByIdAndUpdate(
-//         disputeDetails._id,
-//         { dispute_status: "resolved" },
-//         { new: true },
-//       );
-//       console.log(`Resolved dispute for transaction ${transaction_id}`);
-//     }
-
-//     // Send confirmation emails
-//     await sendSuccessfulEscrowEmailToInitiator(
-//       transaction_id,
-//       vendor_name,
-//       buyer_email,
-//       product_name,
-//     );
-//     await sendSuccessfulEscrowEmailToVendor(
-//       transaction_id,
-//       vendor_name,
-//       vendor_email,
-//       product_name,
-//     );
-//     console.log(`Emails sent for transaction ${transaction_id}`);
-
-//     res.json({
-//       status: "success",
-//       message: "Escrow has been completed successfully.",
-//       data: {
-//         transaction_id,
-//         transaction_status: "completed",
-//         buyer_confirm_status: true,
-//       },
-//     });
-//   } catch (error) {
-//     console.error("Error in buyerConfirmsProduct:", error);
-//     return next(errorHandler(500, "Server error"));
-//   }
-// };
-
 export const cancelEscrowProductTransaction = async (
   req: Request,
   res: Response,
@@ -1306,6 +1181,267 @@ export const getPaymentStatus = async (
   }
 };
 
+// AUtomated
+
+// export const buyerConfirmsProduct = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction,
+// ) => {
+//   try {
+//     const { transaction_id } = req.body;
+
+//     if (!transaction_id) {
+//       return next(errorHandler(400, "Transaction ID is required"));
+//     }
+
+//     console.log(`🔄 Processing buyer confirmation: ${transaction_id}`);
+
+//     // ============================================
+//     // FETCH AND VALIDATE TRANSACTION
+//     // ============================================
+//     const transaction = await ProductTransaction.findOne({ transaction_id });
+
+//     if (!transaction) {
+//       return next(errorHandler(404, "Transaction not found"));
+//     }
+
+//     const {
+//       transaction_status,
+//       _id: product_id,
+//       vendor_name,
+//       vendor_email,
+//       buyer_email,
+//       products,
+//       sum_total,
+//       verified_payment_status,
+//       vendor_bank_details,
+//       payment_released,
+//     } = transaction;
+
+//     const product_name = products?.[0]?.name || "Product";
+
+//     // ============================================
+//     // VALIDATION CHECKS
+//     // ============================================
+//     if (transaction_status === "completed") {
+//       return next(errorHandler(400, "Transaction already completed"));
+//     }
+
+//     if (!verified_payment_status) {
+//       return next(errorHandler(400, "Payment has not been verified"));
+//     }
+
+//     if (transaction_status?.trim().toLowerCase() !== "in_transit") {
+//       return next(
+//         errorHandler(
+//           400,
+//           `Cannot confirm delivery. Transaction status is '${transaction_status}'. Item must be in transit.`,
+//         ),
+//       );
+//     }
+
+//     // ✅ IDEMPOTENCY: Prevent duplicate releases
+//     if (payment_released) {
+//       return next(errorHandler(400, "Payment already released"));
+//     }
+
+//     // ✅ CRITICAL: Validate bank details exist
+//     if (
+//       !vendor_bank_details?.account_number ||
+//       !vendor_bank_details?.bank_code
+//     ) {
+//       return next(
+//         errorHandler(
+//           500,
+//           "Cannot release payment: Vendor bank details are missing. Please contact support.",
+//         ),
+//       );
+//     }
+
+//     // Check for active disputes
+//     const activeDispute = await ProductDispute.findOne({
+//       transaction_id,
+//       dispute_status: "In_Dispute",
+//     });
+
+//     if (activeDispute) {
+//       return next(
+//         errorHandler(
+//           400,
+//           "Cannot complete: Active dispute exists. Please resolve the dispute first.",
+//         ),
+//       );
+//     }
+
+//     // ============================================
+//     // PREPARE PAYMENT RELEASE
+//     // ============================================
+//     const vendorPayout = sum_total; // Vendor gets full sum_total
+//     const vendorPayoutInKobo = Math.round(vendorPayout * 100);
+
+//     console.log(`💰 Preparing payment release:
+//       - Sum Total: ₦${sum_total}
+//       - Vendor Payout: ₦${vendorPayout}
+//       - Bank: ${vendor_bank_details.bank_name}
+//       - Account: ${vendor_bank_details.account_number}
+//     `);
+
+//     // ============================================
+//     // CREATE TRANSFER RECIPIENT
+//     // ============================================
+//     let recipientCode = transaction.vendor_recipient_code;
+
+//     if (!recipientCode) {
+//       console.log("👤 Creating transfer recipient...");
+
+//       const recipientResponse = await createTransferRecipient({
+//         account_name: vendor_bank_details.account_name,
+//         account_number: vendor_bank_details.account_number,
+//         bank_code: vendor_bank_details.bank_code,
+//         email: vendor_email,
+//       });
+
+//       if (
+//         !recipientResponse.status ||
+//         !recipientResponse.data?.recipient_code
+//       ) {
+//         console.error(
+//           "❌ Recipient creation failed:",
+//           recipientResponse.message,
+//         );
+//         return next(
+//           errorHandler(
+//             500,
+//             `Failed to create payment recipient: ${recipientResponse.message || "Unknown error"}`,
+//           ),
+//         );
+//       }
+
+//       recipientCode = recipientResponse.data.recipient_code;
+//       transaction.vendor_recipient_code = recipientCode;
+//       await transaction.save();
+
+//       console.log(`✅ Recipient created: ${recipientCode}`);
+//     }
+
+//     // ============================================
+//     // INITIATE TRANSFER
+//     // ============================================
+//     console.log("💸 Initiating transfer...");
+
+//     const transferResponse = await initiateTransfer({
+//       amount: vendorPayoutInKobo,
+//       recipient: recipientCode,
+//       reason: `Escrow release - ${product_name} (${transaction_id})`,
+//       reference: `TRF-${transaction_id}-${Date.now()}`,
+//     });
+
+//     if (!transferResponse.status || !transferResponse.data?.reference) {
+//       console.error("❌ Transfer failed:", transferResponse.message);
+//       return next(
+//         errorHandler(
+//           500,
+//           `Payment transfer failed: ${transferResponse.message || "Unknown error"}`,
+//         ),
+//       );
+//     }
+
+//     const transferRef = transferResponse.data.reference;
+//     console.log(`✅ Transfer initiated: ${transferRef}`);
+
+//     // ============================================
+//     // UPDATE TRANSACTION
+//     // ============================================
+//     const updatedTransaction = await ProductTransaction.findByIdAndUpdate(
+//       product_id,
+//       {
+//         transaction_status: "completed",
+//         buyer_confirm_status: true,
+//         payment_released: true,
+//         payment_released_at: new Date(),
+//         transfer_reference: transferRef,
+//         transfer_status: "pending",
+//         transfer_amount: vendorPayout,
+//       },
+//       { new: true },
+//     );
+
+//     if (!updatedTransaction) {
+//       console.error(
+//         `❌ CRITICAL: Transfer ${transferRef} initiated but DB update failed`,
+//       );
+//       return next(
+//         errorHandler(
+//           500,
+//           "Payment initiated but system update failed. Please contact support immediately.",
+//         ),
+//       );
+//     }
+
+//     // ============================================
+//     // RESOLVE DISPUTES
+//     // ============================================
+//     const existingDispute = await ProductDispute.findOne({ transaction_id });
+//     if (existingDispute && existingDispute.dispute_status !== "resolved") {
+//       await ProductDispute.findByIdAndUpdate(existingDispute._id, {
+//         dispute_status: "resolved",
+//         resolved_at: new Date(),
+//         resolution_summary: "Auto-resolved on buyer confirmation",
+//       });
+//     }
+
+//     // ============================================
+//     // SEND NOTIFICATIONS
+//     // ============================================
+//     try {
+//       await Promise.all([
+//         sendSuccessfulEscrowEmailToInitiator(
+//           transaction_id,
+//           vendor_name,
+//           buyer_email,
+//           product_name,
+//         ),
+//         sendSuccessfulEscrowEmailToVendor(
+//           transaction_id,
+//           vendor_name,
+//           vendor_email,
+//           product_name,
+//           vendorPayout.toString(),
+//         ),
+//       ]);
+//       console.log("✅ Notification emails sent");
+//     } catch (emailError) {
+//       console.error("⚠️ Email sending failed (non-critical):", emailError);
+//     }
+
+//     // ============================================
+//     // SUCCESS RESPONSE
+//     // ============================================
+//     res.json({
+//       status: "success",
+//       message: "Transaction completed! Payment is being transferred to vendor.",
+//       data: {
+//         transaction_id,
+//         transaction_status: "completed",
+//         buyer_confirm_status: true,
+//         payment_released: true,
+//         transfer_reference: transferRef,
+//         transfer_status: "pending",
+//         vendor_payout: vendorPayout,
+//         estimated_delivery: "Vendor will receive funds within 24 hours",
+//       },
+//     });
+//   } catch (error) {
+//     console.error("❌ Error in buyerConfirmsProduct:", error);
+//     return next(errorHandler(500, "Server error"));
+//   }
+// };
+// ============================================
+// UPDATED buyerConfirmsProduct WITH FALLBACK
+// ============================================
+// This version handles the case where Paystack transfers aren't enabled
+
 export const buyerConfirmsProduct = async (
   req: Request,
   res: Response,
@@ -1338,8 +1474,6 @@ export const buyerConfirmsProduct = async (
       products,
       sum_total,
       verified_payment_status,
-      vendor_bank_details,
-      payment_released,
     } = transaction;
 
     const product_name = products?.[0]?.name || "Product";
@@ -1348,6 +1482,27 @@ export const buyerConfirmsProduct = async (
     // VALIDATION CHECKS
     // ============================================
     if (transaction_status === "completed") {
+      // Check if payout already exists
+      const existingPayout = await Payout.findOne({ transaction_id });
+
+      if (existingPayout) {
+        return res.json({
+          status: "success",
+          message: "Transaction already completed",
+          data: {
+            transaction_id,
+            transaction_status: "completed",
+            buyer_confirm_status: true,
+            payout: {
+              payout_status: existingPayout.payout_status,
+              payout_method: existingPayout.payout_method,
+              payout_amount: existingPayout.payout_amount,
+              transfer_reference: existingPayout.transfer_reference,
+            },
+          },
+        });
+      }
+
       return next(errorHandler(400, "Transaction already completed"));
     }
 
@@ -1364,20 +1519,13 @@ export const buyerConfirmsProduct = async (
       );
     }
 
-    // ✅ IDEMPOTENCY: Prevent duplicate releases
-    if (payment_released) {
-      return next(errorHandler(400, "Payment already released"));
-    }
-
-    // ✅ CRITICAL: Validate bank details exist
-    if (
-      !vendor_bank_details?.account_number ||
-      !vendor_bank_details?.bank_code
-    ) {
+    // Check if payout already exists (prevent duplicate payouts)
+    const existingPayout = await Payout.findOne({ transaction_id });
+    if (existingPayout) {
       return next(
         errorHandler(
-          500,
-          "Cannot release payment: Vendor bank details are missing. Please contact support.",
+          400,
+          `Payout already initiated with status: ${existingPayout.payout_status}`,
         ),
       );
     }
@@ -1398,12 +1546,47 @@ export const buyerConfirmsProduct = async (
     }
 
     // ============================================
-    // PREPARE PAYMENT RELEASE
+    // FETCH VENDOR BANK DETAILS
     // ============================================
-    const vendorPayout = sum_total; // Vendor gets full sum_total
+    console.log(`🔍 Fetching fresh vendor bank details for: ${vendor_email}`);
+
+    const freshVendorBankDetails = await getVendorBankDetails(vendor_email);
+
+    if (
+      !freshVendorBankDetails?.account_number ||
+      !freshVendorBankDetails?.bank_code
+    ) {
+      console.error("❌ Fresh bank details validation failed:", {
+        vendor_email: vendor_email,
+        has_bank_details: !!freshVendorBankDetails,
+        has_account_number: !!freshVendorBankDetails?.account_number,
+        has_bank_code: !!freshVendorBankDetails?.bank_code,
+      });
+
+      return next(
+        errorHandler(
+          400,
+          "Cannot release payment: Vendor bank details are incomplete. Please ask the vendor to update their bank information in their profile settings.",
+        ),
+      );
+    }
+
+    console.log("✅ Fresh bank details validated:", {
+      vendor_email: vendor_email,
+      account_name: freshVendorBankDetails.account_name,
+      bank_name: freshVendorBankDetails.bank_name,
+      account_number: freshVendorBankDetails.account_number,
+    });
+
+    const vendor_bank_details = freshVendorBankDetails;
+
+    // ============================================
+    // CALCULATE PAYOUT AMOUNT
+    // ============================================
+    const vendorPayout = sum_total;
     const vendorPayoutInKobo = Math.round(vendorPayout * 100);
 
-    console.log(`💰 Preparing payment release:
+    console.log(`💰 Preparing payout:
       - Sum Total: ₦${sum_total}
       - Vendor Payout: ₦${vendorPayout}
       - Bank: ${vendor_bank_details.bank_name}
@@ -1411,95 +1594,146 @@ export const buyerConfirmsProduct = async (
     `);
 
     // ============================================
-    // CREATE TRANSFER RECIPIENT
+    // CREATE PAYOUT RECORD
     // ============================================
-    let recipientCode = transaction.vendor_recipient_code;
-
-    if (!recipientCode) {
-      console.log("👤 Creating transfer recipient...");
-
-      const recipientResponse = await createTransferRecipient({
+    const newPayout = new Payout({
+      transaction: product_id,
+      transaction_id,
+      vendor_email,
+      vendor_name,
+      payout_amount: vendorPayout,
+      original_sum_total: sum_total,
+      vendor_bank_details: {
         account_name: vendor_bank_details.account_name,
         account_number: vendor_bank_details.account_number,
         bank_code: vendor_bank_details.bank_code,
-        email: vendor_email,
-      });
-
-      if (
-        !recipientResponse.status ||
-        !recipientResponse.data?.recipient_code
-      ) {
-        console.error(
-          "❌ Recipient creation failed:",
-          recipientResponse.message,
-        );
-        return next(
-          errorHandler(
-            500,
-            `Failed to create payment recipient: ${recipientResponse.message || "Unknown error"}`,
-          ),
-        );
-      }
-
-      recipientCode = recipientResponse.data.recipient_code;
-      transaction.vendor_recipient_code = recipientCode;
-      await transaction.save();
-
-      console.log(`✅ Recipient created: ${recipientCode}`);
-    }
-
-    // ============================================
-    // INITIATE TRANSFER
-    // ============================================
-    console.log("💸 Initiating transfer...");
-
-    const transferResponse = await initiateTransfer({
-      amount: vendorPayoutInKobo,
-      recipient: recipientCode,
-      reason: `Escrow release - ${product_name} (${transaction_id})`,
-      reference: `TRF-${transaction_id}-${Date.now()}`,
+        bank_name: vendor_bank_details.bank_name,
+      },
+      payout_status: "pending_initiation",
+      payout_method: "automatic", // Will change to manual if needed
+      initiated_by_buyer_confirmation: true,
+      buyer_confirmation_date: new Date(),
     });
 
-    if (!transferResponse.status || !transferResponse.data?.reference) {
-      console.error("❌ Transfer failed:", transferResponse.message);
-      return next(
-        errorHandler(
-          500,
-          `Payment transfer failed: ${transferResponse.message || "Unknown error"}`,
-        ),
-      );
-    }
-
-    const transferRef = transferResponse.data.reference;
-    console.log(`✅ Transfer initiated: ${transferRef}`);
+    await newPayout.save();
+    console.log(`✅ Payout record created: ${newPayout._id}`);
 
     // ============================================
-    // UPDATE TRANSACTION
+    // UPDATE TRANSACTION TO COMPLETED
     // ============================================
     const updatedTransaction = await ProductTransaction.findByIdAndUpdate(
       product_id,
       {
         transaction_status: "completed",
         buyer_confirm_status: true,
-        payment_released: true,
-        payment_released_at: new Date(),
-        transfer_reference: transferRef,
-        transfer_status: "pending",
-        transfer_amount: vendorPayout,
       },
       { new: true },
     );
 
     if (!updatedTransaction) {
-      console.error(
-        `❌ CRITICAL: Transfer ${transferRef} initiated but DB update failed`,
-      );
+      // Rollback payout creation if transaction update fails
+      await Payout.findByIdAndDelete(newPayout._id);
       return next(
         errorHandler(
           500,
-          "Payment initiated but system update failed. Please contact support immediately.",
+          "Failed to update transaction. Please contact support.",
         ),
       );
+    }
+
+    console.log(`✅ Transaction marked as completed: ${transaction_id}`);
+
+    // ============================================
+    // ATTEMPT AUTOMATIC TRANSFER
+    // ============================================
+    let transferSuccessful = false;
+    let transferRef = null;
+    let transferError = null;
+
+    try {
+      // Step 1: Create recipient if needed
+      let recipientCode = transaction.vendor_recipient_code;
+
+      if (!recipientCode) {
+        console.log("👤 Creating transfer recipient...");
+
+        const recipientResponse = await createTransferRecipient({
+          account_name: vendor_bank_details.account_name,
+          account_number: vendor_bank_details.account_number,
+          bank_code: vendor_bank_details.bank_code!,
+          email: transaction.vendor_email,
+        });
+
+        if (
+          !recipientResponse.status ||
+          !recipientResponse.data?.recipient_code
+        ) {
+          throw new Error(
+            recipientResponse.message || "Failed to create recipient",
+          );
+        }
+
+        recipientCode = recipientResponse.data.recipient_code;
+
+        // Store recipient code in both transaction and payout
+        await ProductTransaction.findByIdAndUpdate(product_id, {
+          vendor_recipient_code: recipientCode,
+        });
+
+        newPayout.vendor_recipient_code = recipientCode;
+        await newPayout.save();
+
+        console.log(`✅ Recipient created: ${recipientCode}`);
+      } else {
+        // Use existing recipient code
+        newPayout.vendor_recipient_code = recipientCode;
+        await newPayout.save();
+      }
+
+      // Step 2: Initiate transfer
+      console.log("💸 Initiating transfer...");
+
+      transferRef = `TRF-${transaction_id}-${Date.now()}`;
+
+      const transferResponse = await initiateTransfer({
+        amount: vendorPayoutInKobo,
+        recipient: recipientCode,
+        reason: `Escrow release - ${product_name} (${transaction_id})`,
+        reference: transferRef,
+      });
+
+      if (!transferResponse.status || !transferResponse.data?.reference) {
+        throw new Error(
+          transferResponse.message || "Transfer initiation failed",
+        );
+      }
+
+      transferRef = transferResponse.data.reference;
+      transferSuccessful = true;
+
+      // Update payout with transfer details
+      await newPayout.markAsTransferInitiated(transferRef, recipientCode);
+
+      console.log(`✅ Transfer initiated: ${transferRef}`);
+    } catch (error: any) {
+      transferError = error.message || "Transfer failed";
+      console.error("❌ Automatic transfer failed:", transferError);
+
+      // Check if it's the "third party payouts" error or similar
+      if (
+        transferError.includes("third party payouts") ||
+        transferError.includes("cannot initiate") ||
+        transferError.includes("not enabled")
+      ) {
+        console.log("⚠️ Transfers not enabled - marking for manual payout");
+
+        await newPayout.markAsManualPayoutRequired(
+          `Automatic transfers not available: ${transferError}`,
+        );
+      } else {
+        // Other errors - mark as failed but allow retry
+        await newPayout.markAsTransferFailed(transferError);
+      }
     }
 
     // ============================================
@@ -1512,51 +1746,130 @@ export const buyerConfirmsProduct = async (
         resolved_at: new Date(),
         resolution_summary: "Auto-resolved on buyer confirmation",
       });
+      console.log(`✅ Dispute auto-resolved: ${existingDispute._id}`);
     }
 
     // ============================================
     // SEND NOTIFICATIONS
     // ============================================
     try {
-      await Promise.all([
-        sendSuccessfulEscrowEmailToInitiator(
-          transaction_id,
-          vendor_name,
-          buyer_email,
-          product_name,
-        ),
-        sendSuccessfulEscrowEmailToVendor(
-          transaction_id,
-          vendor_name,
-          vendor_email,
-          product_name,
-          vendorPayout.toString(),
-        ),
-      ]);
+      if (transferSuccessful) {
+        // Automatic transfer initiated
+        await Promise.all([
+          sendSuccessfulEscrowEmailToInitiator(
+            transaction_id,
+            vendor_name,
+            buyer_email,
+            product_name,
+          ),
+          sendSuccessfulEscrowEmailToVendor(
+            transaction_id,
+            vendor_name,
+            vendor_email,
+            product_name,
+            vendorPayout.toString(),
+          ),
+        ]);
+
+        // Mark notifications as sent
+        newPayout.buyer_notified = true;
+        newPayout.buyer_notified_at = new Date();
+        newPayout.vendor_notified = true;
+        newPayout.vendor_notified_at = new Date();
+        await newPayout.save();
+      } else {
+        // Manual payout required
+        await Promise.all([
+          sendBuyerConfirmationEmail(buyer_email, transaction_id, vendor_name),
+          sendVendorManualPayoutEmail(
+            vendor_email,
+            vendor_name,
+            transaction_id,
+            vendorPayout,
+          ),
+          sendAdminManualPayoutAlert(
+            transaction_id,
+            vendor_name,
+            vendorPayout,
+            vendor_bank_details,
+          ),
+        ]);
+
+        // Mark notifications as sent
+        newPayout.buyer_notified = true;
+        newPayout.buyer_notified_at = new Date();
+        newPayout.vendor_notified = true;
+        newPayout.vendor_notified_at = new Date();
+        newPayout.admin_notified = true;
+        newPayout.admin_notified_at = new Date();
+        await newPayout.save();
+      }
+
       console.log("✅ Notification emails sent");
     } catch (emailError) {
       console.error("⚠️ Email sending failed (non-critical):", emailError);
     }
 
     // ============================================
-    // SUCCESS RESPONSE
+    // FETCH LATEST PAYOUT STATUS
     // ============================================
-    res.json({
-      status: "success",
-      message: "Transaction completed! Payment is being transferred to vendor.",
-      data: {
-        transaction_id,
-        transaction_status: "completed",
-        buyer_confirm_status: true,
-        payment_released: true,
-        transfer_reference: transferRef,
-        transfer_status: "pending",
-        vendor_payout: vendorPayout,
-        estimated_delivery: "Vendor will receive funds within 24 hours",
-      },
-    });
+    const latestPayout = await Payout.findOne({ transaction_id });
+
+    // ============================================
+    // RESPONSE TO USER
+    // ============================================
+    if (transferSuccessful && transferRef) {
+      // SUCCESS: Automatic transfer
+      res.json({
+        status: "success",
+        message:
+          "Product confirmation received! Payment transfer has been initiated to the vendor.",
+        data: {
+          transaction_id,
+          transaction_status: "completed",
+          buyer_confirm_status: true,
+          payout: {
+            payout_id: latestPayout?._id,
+            payout_status: latestPayout?.payout_status,
+            payout_method: "automatic",
+            payout_amount: vendorPayout,
+            transfer_reference: transferRef,
+            estimated_delivery:
+              "Vendor will receive funds within 24-48 hours after payment processor settlement.",
+          },
+          next_steps:
+            "You will receive a confirmation email once the vendor receives the payment.",
+        },
+      });
+    } else {
+      // FALLBACK: Manual payout
+      res.json({
+        status: "success",
+        message:
+          "Product confirmation received! Payment will be processed manually and transferred to the vendor within 24-48 hours.",
+        data: {
+          transaction_id,
+          transaction_status: "completed",
+          buyer_confirm_status: true,
+          payout: {
+            payout_id: latestPayout?._id,
+            payout_status: latestPayout?.payout_status,
+            payout_method: "manual",
+            payout_amount: vendorPayout,
+            manual_payout_reason: latestPayout?.manual_payout_reason,
+            estimated_delivery:
+              "Our team will process the vendor payout within 24-48 business hours.",
+          },
+          next_steps:
+            "Our support team has been notified and will complete the payout shortly. Both you and the vendor will receive confirmation emails.",
+        },
+      });
+    }
   } catch (error) {
     console.error("❌ Error in buyerConfirmsProduct:", error);
     return next(errorHandler(500, "Server error"));
   }
 };
+
+// Export the helper function for use in other files
+export { getVendorBankDetails };

@@ -1,18 +1,29 @@
 import nodemailer from "nodemailer";
+import SMTPTransport from "nodemailer/lib/smtp-transport";
 import dotenv from "dotenv";
 import { generateMailTransporter } from "./email.utils";
+
 dotenv.config();
 
 const supportEmail = "mydoshbox@gmail.com";
 const appName = "MyDoshbox";
 
+/**
+ * Sends email verification link to organization
+ *
+ * @param {string} email
+ * @param {string} token
+ * @param {string} organizationName
+ * @returns {Promise<SMTPTransport.SentMessageInfo>}
+ */
 export const sendOrganizationVerificationEmail = async (
   email: string,
   token: string,
-  organizationName: string
-) => {
+  organizationName: string,
+): Promise<SMTPTransport.SentMessageInfo> => {
   try {
-    const transport = generateMailTransporter();
+    // ✅ FIXED: Added await here
+    const transport = await generateMailTransporter();
 
     const verificationURL = `${process.env.DEPLOYED_FRONTEND_BASE_URL}/auth/organization/verify-email?token=${token}`;
 
@@ -71,22 +82,34 @@ export const sendOrganizationVerificationEmail = async (
     });
 
     console.log(
-      "Organization verification email sent - Message ID:",
-      info?.messageId
+      "✅ Organization verification email sent - Message ID:",
+      info?.messageId,
     );
     return info;
   } catch (err) {
-    console.error("Error sending organization verification email:", err);
-    throw err;
+    const error =
+      err instanceof Error
+        ? err
+        : new Error("Unknown error sending organization verification email");
+    console.error("❌ Error sending organization verification email:", error);
+    throw error;
   }
 };
 
+/**
+ * Sends welcome email to organization after successful verification
+ *
+ * @param {string} email - Organization email address
+ * @param {string} organizationName - Name of the organization
+ * @returns {Promise<SMTPTransport.SentMessageInfo>} Email send result
+ */
 export const sendOrganizationWelcomeEmail = async (
   email: string,
-  organizationName: string
-) => {
+  organizationName: string,
+): Promise<SMTPTransport.SentMessageInfo> => {
   try {
-    const transport = generateMailTransporter();
+    // ✅ FIXED: Added await here
+    const transport = await generateMailTransporter();
 
     const emailMessage = `
     <!DOCTYPE html>
@@ -149,23 +172,36 @@ export const sendOrganizationWelcomeEmail = async (
     });
 
     console.log(
-      "Organization welcome email sent - Message ID:",
-      info?.messageId
+      "✅ Organization welcome email sent - Message ID:",
+      info?.messageId,
     );
     return info;
   } catch (err) {
-    console.error("Error sending organization welcome email:", err);
-    throw err;
+    const error =
+      err instanceof Error
+        ? err
+        : new Error("Unknown error sending organization welcome email");
+    console.error("❌ Error sending organization welcome email:", error);
+    throw error;
   }
 };
 
+/**
+ * Sends password reset link to organization
+ *
+ * @param {string} email - Organization email address
+ * @param {string} resetToken - Password reset token
+ * @param {string} organizationName - Name of the organization
+ * @returns {Promise<SMTPTransport.SentMessageInfo>} Email send result
+ */
 export const sendOrganizationPasswordResetEmail = async (
   email: string,
   resetToken: string,
-  organizationName: string
-) => {
+  organizationName: string,
+): Promise<SMTPTransport.SentMessageInfo> => {
   try {
-    const transport = generateMailTransporter();
+    // ✅ FIXED: Added await here
+    const transport = await generateMailTransporter();
 
     const resetURL = `${process.env.DEPLOYED_FRONTEND_BASE_URL}/auth/organization/reset-password?token=${resetToken}`;
 
@@ -234,22 +270,34 @@ export const sendOrganizationPasswordResetEmail = async (
     });
 
     console.log(
-      "Organization password reset email sent - Message ID:",
-      info?.messageId
+      "✅ Organization password reset email sent - Message ID:",
+      info?.messageId,
     );
     return info;
   } catch (err) {
-    console.error("Error sending organization password reset email:", err);
-    throw err;
+    const error =
+      err instanceof Error
+        ? err
+        : new Error("Unknown error sending organization password reset email");
+    console.error("❌ Error sending organization password reset email:", error);
+    throw error;
   }
 };
 
+/**
+ * Sends password reset success confirmation to organization
+ *
+ * @param {string} email - Organization email address
+ * @param {string} organizationName - Name of the organization
+ * @returns {Promise<SMTPTransport.SentMessageInfo>} Email send result
+ */
 export const sendOrganizationPasswordResetSuccessEmail = async (
   email: string,
-  organizationName: string
-) => {
+  organizationName: string,
+): Promise<SMTPTransport.SentMessageInfo> => {
   try {
-    const transport = generateMailTransporter();
+    // ✅ FIXED: Added await here
+    const transport = await generateMailTransporter();
 
     const emailMessage = `
     <!DOCTYPE html>
@@ -321,15 +369,21 @@ export const sendOrganizationPasswordResetSuccessEmail = async (
     });
 
     console.log(
-      "Organization password reset success email sent - Message ID:",
-      info?.messageId
+      "✅ Organization password reset success email sent - Message ID:",
+      info?.messageId,
     );
     return info;
   } catch (err) {
+    const error =
+      err instanceof Error
+        ? err
+        : new Error(
+            "Unknown error sending organization password reset success email",
+          );
     console.error(
-      "Error sending organization password reset success email:",
-      err
+      "❌ Error sending organization password reset success email:",
+      error,
     );
-    throw err;
+    throw error;
   }
 };

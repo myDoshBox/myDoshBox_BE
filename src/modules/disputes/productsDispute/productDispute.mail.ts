@@ -6,7 +6,7 @@
 //   dispute_description: string
 // ) => {
 //   try {
-//     const transport = generateMailTransporter();
+//    const transport = await generateMailTransporter();
 
 //     const supportEmail = "mydoshbox@gmail.com";
 //     const emailMessage = `
@@ -60,7 +60,7 @@
 //   dispute_description: string
 // ) => {
 //   try {
-//     const transport = generateMailTransporter();
+//    const transport = await generateMailTransporter();
 
 //     const supportEmail = "mydoshbox@gmail.com";
 //     const emailMessage = `
@@ -113,7 +113,7 @@
 //   product_name: string
 // ) => {
 //   try {
-//     const transport = generateMailTransporter();
+//    const transport = await generateMailTransporter();
 
 //     const supportEmail = "mydoshbox@gmail.com";
 //     const emailMessage = `
@@ -164,7 +164,7 @@
 //   product_name: string
 // ) => {
 //   try {
-//     const transport = generateMailTransporter();
+//    const transport = await generateMailTransporter();
 
 //     const supportEmail = "mydoshbox@gmail.com";
 //     const emailMessage = `
@@ -215,7 +215,7 @@
 //   product_name: string
 // ) => {
 //   try {
-//     const transport = generateMailTransporter();
+//    const transport = await generateMailTransporter();
 
 //     const supportEmail = "mydoshbox@gmail.com";
 //     const emailMessage = `
@@ -266,7 +266,7 @@
 //   product_name: string
 // ) => {
 //   try {
-//     const transport = generateMailTransporter();
+//    const transport = await generateMailTransporter();
 
 //     const supportEmail = "mydoshbox@gmail.com";
 //     const emailMessage = `
@@ -317,7 +317,7 @@
 //   product_name: string
 // ) => {
 //   try {
-//     const transport = generateMailTransporter();
+//    const transport = await generateMailTransporter();
 
 //     const supportEmail = "mydoshbox@gmail.com";
 //     const emailMessage = `
@@ -368,7 +368,7 @@
 //   product_name: string
 // ) => {
 //   try {
-//     const transport = generateMailTransporter();
+//    const transport = await generateMailTransporter();
 
 //     const supportEmail = "mydoshbox@gmail.com";
 //     const emailMessage = `
@@ -427,7 +427,7 @@
 //   dispute_description: string
 // ) => {
 //   try {
-//     const transport = generateMailTransporter();
+//    const transport = await generateMailTransporter();
 
 //     const emailMessage = `
 //   <!DOCTYPE html>
@@ -478,7 +478,7 @@
 //   dispute_description: string
 // ) => {
 //   try {
-//     const transport = generateMailTransporter();
+//    const transport = await generateMailTransporter();
 
 //     const emailMessage = `
 //   <!DOCTYPE html>
@@ -528,7 +528,7 @@
 //   product_name: string
 // ) => {
 //   try {
-//     const transport = generateMailTransporter();
+//    const transport = await generateMailTransporter();
 
 //     const emailMessage = `
 //   <!DOCTYPE html>
@@ -579,7 +579,7 @@
 //   product_name: string
 // ) => {
 //   try {
-//     const transport = generateMailTransporter();
+//    const transport = await generateMailTransporter();
 
 //     const emailMessage = `
 //   <!DOCTYPE html>
@@ -630,7 +630,7 @@
 //   product_name: string
 // ) => {
 //   try {
-//     const transport = generateMailTransporter();
+//    const transport = await generateMailTransporter();
 
 //     const emailMessage = `
 //   <!DOCTYPE html>
@@ -681,7 +681,7 @@
 //   product_name: string
 // ) => {
 //   try {
-//     const transport = generateMailTransporter();
+//    const transport = await generateMailTransporter();
 
 //     const emailMessage = `
 //   <!DOCTYPE html>
@@ -732,7 +732,7 @@
 //   product_name: string
 // ) => {
 //   try {
-//     const transport = generateMailTransporter();
+//    const transport = await generateMailTransporter();
 
 //     const emailMessage = `
 //   <!DOCTYPE html>
@@ -783,7 +783,7 @@
 //   product_name: string
 // ) => {
 //   try {
-//     const transport = generateMailTransporter();
+//    const transport = await generateMailTransporter();
 
 //     const emailMessage = `
 //   <!DOCTYPE html>
@@ -835,7 +835,7 @@
 //   product_name: string
 // ) => {
 //   try {
-//     const transport = generateMailTransporter();
+//    const transport = await generateMailTransporter();
 
 //     const emailMessage = `
 //   <!DOCTYPE html>
@@ -887,7 +887,7 @@
 //   product_name: string
 // ) => {
 //   try {
-//     const transport = generateMailTransporter();
+//    const transport = await generateMailTransporter();
 
 //     const emailMessage = `
 //   <!DOCTYPE html>
@@ -939,7 +939,7 @@
 //   product_name: string
 // ) => {
 //   try {
-//     const transport = generateMailTransporter();
+//    const transport = await generateMailTransporter();
 
 //     const emailMessage = `
 //   <!DOCTYPE html>
@@ -990,7 +990,7 @@
 //   product_name: string
 // ) => {
 //   try {
-//     const transport = generateMailTransporter();
+//    const transport = await generateMailTransporter();
 
 //     const emailMessage = `
 //   <!DOCTYPE html>
@@ -1045,10 +1045,10 @@ const dashboardUrl = "https://mydoshbox.vercel.app/dashboard";
 export const sendDisputeMailToBuyer = async (
   buyer_email: string,
   product_name: string,
-  dispute_description: string
+  dispute_description: string,
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
 
     const emailMessage = `
   <!DOCTYPE html>
@@ -1244,10 +1244,10 @@ export const sendDisputeMailToBuyer = async (
 export const sendDisputeMailToSeller = async (
   vendor_email: string,
   product_name: string,
-  dispute_description: string
+  dispute_description: string,
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
 
     const emailMessage = `
   <!DOCTYPE html>
@@ -1444,10 +1444,10 @@ export const sendResolutionProposedToBuyer = async (
   buyer_email: string,
   product_name: string,
   proposed_by: "buyer" | "seller",
-  proposal_number: number
+  proposal_number: number,
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
 
     const message =
       proposed_by === "buyer"
@@ -1586,7 +1586,7 @@ export const sendResolutionProposedToBuyer = async (
 
     console.log(
       "Resolution proposal email sent to buyer - Message ID:",
-      info?.messageId
+      info?.messageId,
     );
   } catch (error: unknown) {
     console.error("Error sending resolution proposal email to buyer:", error);
@@ -1597,10 +1597,10 @@ export const sendResolutionProposedToSeller = async (
   vendor_email: string,
   product_name: string,
   proposed_by: "buyer" | "seller",
-  proposal_number: number
+  proposal_number: number,
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
 
     const message =
       proposed_by === "seller"
@@ -1739,7 +1739,7 @@ export const sendResolutionProposedToSeller = async (
 
     console.log(
       "Resolution proposal email sent to seller - Message ID:",
-      info?.messageId
+      info?.messageId,
     );
   } catch (error: unknown) {
     console.error("Error sending resolution proposal email to seller:", error);
@@ -1748,10 +1748,10 @@ export const sendResolutionProposedToSeller = async (
 
 export const sendResolutionAcceptedMailToBuyer = async (
   buyer_email: string,
-  product_name: string
+  product_name: string,
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
 
     const emailMessage = `
   <!DOCTYPE html>
@@ -1855,7 +1855,7 @@ export const sendResolutionAcceptedMailToBuyer = async (
 
     console.log(
       "Resolution accepted email sent to buyer - Message ID:",
-      info?.messageId
+      info?.messageId,
     );
   } catch (error: unknown) {
     console.error("Error sending resolution accepted mail to buyer:", error);
@@ -1864,10 +1864,10 @@ export const sendResolutionAcceptedMailToBuyer = async (
 
 export const sendResolutionAcceptedMailToSeller = async (
   vendor_email: string,
-  product_name: string
+  product_name: string,
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
 
     const emailMessage = `
   <!DOCTYPE html>
@@ -1971,7 +1971,7 @@ export const sendResolutionAcceptedMailToSeller = async (
 
     console.log(
       "Resolution accepted email sent to seller - Message ID:",
-      info?.messageId
+      info?.messageId,
     );
   } catch (error: unknown) {
     console.error("Error sending resolution accepted mail to seller:", error);
@@ -1983,10 +1983,10 @@ export const sendResolutionRejectedToBuyer = async (
   product_name: string,
   rejected_by: "buyer" | "seller",
   rejection_count: number,
-  max_rejections: number
+  max_rejections: number,
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
     const remainingAttempts = max_rejections - rejection_count;
 
     const emailMessage = `
@@ -2033,8 +2033,8 @@ export const sendResolutionRejectedToBuyer = async (
                       </p>
                       <p style="margin: 0; color: #78350f; font-size: 14px; line-height: 1.6;">
                         ${remainingAttempts} attempt${
-      remainingAttempts !== 1 ? "s" : ""
-    } remaining before automatic mediator escalation.
+                          remainingAttempts !== 1 ? "s" : ""
+                        } remaining before automatic mediator escalation.
                       </p>
                     </td>
                   </tr>
@@ -2136,7 +2136,7 @@ export const sendResolutionRejectedToBuyer = async (
 
     console.log(
       "Resolution rejected email sent to buyer - Message ID:",
-      info?.messageId
+      info?.messageId,
     );
   } catch (error: unknown) {
     console.error("Error sending rejection email to buyer:", error);
@@ -2148,10 +2148,10 @@ export const sendResolutionRejectedToSeller = async (
   product_name: string,
   rejected_by: "buyer" | "seller",
   rejection_count: number,
-  max_rejections: number
+  max_rejections: number,
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
     const remainingAttempts = max_rejections - rejection_count;
 
     const emailMessage = `
@@ -2198,8 +2198,8 @@ export const sendResolutionRejectedToSeller = async (
                       </p>
                       <p style="margin: 0; color: #78350f; font-size: 14px; line-height: 1.6;">
                         ${remainingAttempts} attempt${
-      remainingAttempts !== 1 ? "s" : ""
-    } remaining before automatic mediator escalation.
+                          remainingAttempts !== 1 ? "s" : ""
+                        } remaining before automatic mediator escalation.
                       </p>
                     </td>
                   </tr>
@@ -2301,7 +2301,7 @@ export const sendResolutionRejectedToSeller = async (
 
     console.log(
       "Resolution rejected email sent to seller - Message ID:",
-      info?.messageId
+      info?.messageId,
     );
   } catch (error: unknown) {
     console.error("Error sending rejection email to seller:", error);
@@ -2311,10 +2311,10 @@ export const sendResolutionRejectedToSeller = async (
 export const sendAutoEscalationMailToBuyer = async (
   buyer_email: string,
   product_name: string,
-  rejection_count: number
+  rejection_count: number,
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
 
     const emailMessage = `
   <!DOCTYPE html>
@@ -2482,7 +2482,7 @@ export const sendAutoEscalationMailToBuyer = async (
 
     console.log(
       "Auto-escalation email sent to buyer - Message ID:",
-      info?.messageId
+      info?.messageId,
     );
   } catch (error: unknown) {
     console.error("Error sending auto-escalation email to buyer:", error);
@@ -2492,10 +2492,10 @@ export const sendAutoEscalationMailToBuyer = async (
 export const sendAutoEscalationMailToSeller = async (
   vendor_email: string,
   product_name: string,
-  rejection_count: number
+  rejection_count: number,
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
 
     const emailMessage = `
   <!DOCTYPE html>
@@ -2663,7 +2663,7 @@ export const sendAutoEscalationMailToSeller = async (
 
     console.log(
       "Auto-escalation email sent to seller - Message ID:",
-      info?.messageId
+      info?.messageId,
     );
   } catch (error: unknown) {
     console.error("Error sending auto-escalation email to seller:", error);
@@ -2673,10 +2673,10 @@ export const sendAutoEscalationMailToSeller = async (
 export const sendMediatorRequestedMailToBuyer = async (
   buyer_email: string,
   product_name: string,
-  requested_by: "buyer" | "seller"
+  requested_by: "buyer" | "seller",
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
 
     const message =
       requested_by === "buyer"
@@ -2862,7 +2862,7 @@ export const sendMediatorRequestedMailToBuyer = async (
 
     console.log(
       "Mediator requested email sent to buyer - Message ID:",
-      info?.messageId
+      info?.messageId,
     );
   } catch (error: unknown) {
     console.error("Error sending mediator requested mail to buyer:", error);
@@ -2872,10 +2872,10 @@ export const sendMediatorRequestedMailToBuyer = async (
 export const sendMediatorRequestedMailToSeller = async (
   vendor_email: string,
   product_name: string,
-  requested_by: "buyer" | "seller"
+  requested_by: "buyer" | "seller",
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
 
     const message =
       requested_by === "seller"
@@ -3061,7 +3061,7 @@ export const sendMediatorRequestedMailToSeller = async (
 
     console.log(
       "Mediator requested email sent to seller - Message ID:",
-      info?.messageId
+      info?.messageId,
     );
   } catch (error: unknown) {
     console.error("Error sending mediator requested mail to seller:", error);
@@ -3070,10 +3070,10 @@ export const sendMediatorRequestedMailToSeller = async (
 
 export const sendDisputeCancelledMailToBuyer = async (
   buyer_email: string,
-  product_name: string
+  product_name: string,
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
 
     const emailMessage = `
   <!DOCTYPE html>
@@ -3230,7 +3230,7 @@ export const sendDisputeCancelledMailToBuyer = async (
 
     console.log(
       "Dispute cancelled email sent to buyer - Message ID:",
-      info?.messageId
+      info?.messageId,
     );
   } catch (error: unknown) {
     console.error("Error sending dispute cancelled mail to buyer:", error);
@@ -3239,10 +3239,10 @@ export const sendDisputeCancelledMailToBuyer = async (
 
 export const sendDisputeCancelledMailToSeller = async (
   vendor_email: string,
-  product_name: string
+  product_name: string,
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
 
     const emailMessage = `
   <!DOCTYPE html>
@@ -3399,7 +3399,7 @@ export const sendDisputeCancelledMailToSeller = async (
 
     console.log(
       "Dispute cancelled email sent to seller - Message ID:",
-      info?.messageId
+      info?.messageId,
     );
   } catch (error: unknown) {
     console.error("Error sending dispute cancelled mail to seller:", error);

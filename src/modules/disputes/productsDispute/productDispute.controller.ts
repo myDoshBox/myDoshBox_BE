@@ -1394,7 +1394,10 @@
 //   }
 // };
 // productDispute.controller.ts - Updated Version
-// Dispute status changes are now independent of transaction status
+// Dispute status changes are now independent of transaction 
+
+
+
 
 import { Request, Response, NextFunction } from "express";
 import { validateFormFields } from "../../../utilities/validation.utilities";
@@ -1874,14 +1877,14 @@ export const cancelDispute = async (
       return next(errorHandler(400, "Cannot cancel: Mediator is assigned"));
     }
 
-    // ✅ Update transaction's dispute_status flag to "none" (transaction continues normally)
+     
     await ProductTransaction.findOneAndUpdate(
       { transaction_id },
-      { $set: { dispute_status: "none" } },
+      { $set: { dispute_status: "cancelled" } },
       { new: true },
     );
 
-    // ✅ ONLY update dispute status to cancelled (NOT transaction status)
+ 
     dispute.dispute_status = "cancelled";
     await dispute.save();
 

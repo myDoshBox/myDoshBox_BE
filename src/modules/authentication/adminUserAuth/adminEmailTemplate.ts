@@ -7,10 +7,10 @@ const supportEmail = "mydoshbox@gmail.com";
 const appName = "MyDoshbox";
 export const sendAdminVerificationEmail = async (
   email: string,
-  token: string
+  token: string,
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
 
     const verificationURL = `${process.env.DEPLOYED_FRONTEND_BASE_URL}/auth/admin/verify-email?token=${token}`;
 
@@ -113,7 +113,7 @@ export const sendAdminVerificationEmail = async (
 
 export const sendAdminWelcomeEmail = async (email: string, name: string) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
 
     const emailMessage = `
     <!DOCTYPE html>
@@ -215,10 +215,10 @@ export const sendAdminWelcomeEmail = async (email: string, name: string) => {
 
 export const sendAdminPasswordResetEmail = async (
   email: string,
-  resetToken: string
+  resetToken: string,
 ) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
 
     const resetURL = `${process.env.DEPLOYED_FRONTEND_BASE_URL}/auth/admin/reset-password?token=${resetToken}`;
 
@@ -312,7 +312,7 @@ export const sendAdminPasswordResetEmail = async (
 
     console.log(
       "Admin password reset email sent - Message ID:",
-      info?.messageId
+      info?.messageId,
     );
     return info;
   } catch (err) {
@@ -323,7 +323,7 @@ export const sendAdminPasswordResetEmail = async (
 
 export const sendAdminPasswordResetSuccessEmail = async (email: string) => {
   try {
-    const transport = generateMailTransporter();
+    const transport = await generateMailTransporter();
 
     const emailMessage = `
     <!DOCTYPE html>
@@ -429,7 +429,7 @@ export const sendAdminPasswordResetSuccessEmail = async (email: string) => {
 
     console.log(
       "Admin password reset success email sent - Message ID:",
-      info?.messageId
+      info?.messageId,
     );
     return info;
   } catch (err) {

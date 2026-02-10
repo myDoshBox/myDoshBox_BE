@@ -1,31 +1,26 @@
 import { Request, Response, NextFunction } from "express";
 import crypto from "crypto";
 import ProductTransaction from "../modules/transactions/productsTransaction/productsTransaction.model";
+import Payout from "../modules/transactions/productsTransaction/payout.model";
 import { errorHandler } from "../utilities/errorHandler.util";
 import {
   sendTransferSuccessEmailToVendor,
   sendTransferFailedEmailToVendor,
+  sendSuccessfulEscrowEmailToInitiator,
+  sendEscrowInitiationEmailToVendor,
 } from "../modules/transactions/productsTransaction/productTransaction.mail";
+import { sendAdminManualPayoutAlert } from "../modules/transactions/productsTransaction/Payouts/ManualPayment.mail";
 
-/**
- * Handle Paystack webhook events for transfers
- *
- * Webhook Events to handle:
- * - transfer.success: Transfer completed successfully
- * - transfer.failed: Transfer failed
- * - transfer.reversed: Transfer was reversed
- *
- * CRITICAL: Always verify webhook signature to prevent fraud
- */
-export const paystackTransferWebhook = async (
+//  Main webhook endpoint for all Paystack events
+//  Handles both payment and transfer events
+
+export const paystackUnifiedWebhook = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
   try {
-    // ============================================
-    // STEP 1: VERIFY WEBHOOK SIGNATURE
-    // ============================================
+    //  VERIFY WEBHOOK SIGNATURE
     const hash = crypto
       .createHmac("sha512", process.env.PAYSTACK_SECRET_KEY!)
       .update(JSON.stringify(req.body))
@@ -40,18 +35,22 @@ export const paystackTransferWebhook = async (
 
     console.log("✅ Webhook signature verified");
 
-    // ============================================
-    // STEP 2: PARSE WEBHOOK EVENT
-    // ============================================
+    // PARSE WEBHOOK EVENT
     const event = req.body;
     const { event: eventType, data } = event;
 
-    console.log(`📬 Received webhook event: ${eventType}`);
+    console.log(`📬 Webhook event received: ${eventType}`, {
+      reference: data?.reference,
+      status: data?.status,
+    });
 
-    // ============================================
-    // STEP 3: HANDLE TRANSFER EVENTS
-    // ============================================
     switch (eventType) {
+      // ========== PAYMENT EVENTS ==========
+      case "charge.success":
+        await handleChargeSuccess(data);
+        break;
+
+      //TRANSFER EVENTS (Now update Payout model)
       case "transfer.success":
         await handleTransferSuccess(data);
         break;
@@ -78,21 +77,22 @@ export const paystackTransferWebhook = async (
 };
 
 /**
- * Handle successful transfer
+ * Handle successful charge (payment from buyer)
+ * This marks payment as verified and allows vendor to ship
  */
-async function handleTransferSuccess(data: any) {
+async function handleChargeSuccess(data: any) {
   try {
-    const { reference, amount, status, recipient, reason } = data;
+    const { reference, amount, status } = data;
 
-    console.log(`✅ Processing transfer.success:`, {
+    console.log(`💳 Processing charge.success:`, {
       reference,
-      amount,
+      amount: amount / 100, // Convert kobo to naira
       status,
     });
 
-    // Find transaction by transfer reference
+    // Find transaction by payment reference
     const transaction = await ProductTransaction.findOne({
-      transfer_reference: reference,
+      payment_reference: reference,
     });
 
     if (!transaction) {
@@ -100,21 +100,38 @@ async function handleTransferSuccess(data: any) {
       return;
     }
 
-    // Check if already processed (idempotency)
-    if (transaction.transfer_status === "success") {
+    // ✅ IDEMPOTENCY CHECK
+    if (transaction.verified_payment_status) {
       console.log(
-        `⚠️ Transfer already processed for transaction: ${transaction.transaction_id}`,
+        `⚠️ Payment already verified for transaction: ${transaction.transaction_id}`,
       );
       return;
     }
 
-    // Update transaction
+    // Validate amount matches
+    const expectedAmount = Number(transaction.transaction_total) * 100; // Convert to kobo
+
+    if (amount !== expectedAmount) {
+      console.error(
+        `❌ Amount mismatch for ${reference}: Expected ${expectedAmount}, got ${amount}`,
+      );
+      return;
+    }
+
+    if (status !== "success") {
+      console.error(`❌ Payment status is not success: ${status}`);
+      return;
+    }
+
+    // ============================================
+    // UPDATE TRANSACTION
+    // ============================================
     const updatedTransaction = await ProductTransaction.findByIdAndUpdate(
       transaction._id,
       {
-        transfer_status: "success",
-        transfer_completed_at: new Date(),
-        transfer_webhook_data: data, // Store full webhook data for audit
+        verified_payment_status: true,
+        transaction_status: "payment_verified",
+        payment_verified_at: new Date(),
       },
       { new: true },
     );
@@ -127,35 +144,144 @@ async function handleTransferSuccess(data: any) {
     }
 
     console.log(
-      `✅ Transaction updated: ${transaction.transaction_id} - Transfer successful`,
+      `✅ Payment verified for transaction: ${transaction.transaction_id}`,
     );
 
-    // Send success email to vendor
+    // ============================================
+    // SEND NOTIFICATION EMAILS
+    // ============================================
     try {
-      await sendTransferSuccessEmailToVendor(
-        transaction.vendor_email,
-        transaction.vendor_name,
-        transaction.transfer_amount || amount / 100, // Convert from kobo to naira
+      await sendEscrowInitiationEmailToVendor(
         transaction.transaction_id,
+        transaction.vendor_name,
+        transaction.vendor_email,
+        transaction.products,
+        transaction.sum_total,
+        transaction.transaction_total,
       );
-      console.log(
-        `✅ Success email sent to vendor: ${transaction.vendor_email}`,
-      );
+      console.log(`✅ Vendor notification email sent`);
     } catch (emailError) {
-      console.error("⚠️ Failed to send success email:", emailError);
+      console.error("⚠️ Failed to send vendor email:", emailError);
       // Non-critical error, continue
     }
+  } catch (error) {
+    console.error("❌ Error handling charge success:", error);
+  }
+}
 
-    // TODO: Create audit log entry
-    // await AuditLog.create({
-    //   transaction_id: transaction.transaction_id,
-    //   action: 'TRANSFER_SUCCESS',
-    //   details: {
-    //     reference,
-    //     amount: amount / 100,
-    //     timestamp: new Date()
-    //   }
-    // });
+/**
+ * Handle successful transfer (payout to vendor)
+ * Updates Payout model - does NOT change transaction status
+ */
+async function handleTransferSuccess(data: any) {
+  try {
+    const { reference, amount, status, recipient } = data;
+
+    console.log(`💸 Processing transfer.success:`, {
+      reference,
+      amount: amount / 100, // Convert kobo to naira
+      status,
+    });
+
+    //  FIND PAYOUT BY TRANSFER REFERENCE
+    const payout = await Payout.findOne({
+      transfer_reference: reference,
+    }).populate("transaction");
+
+    if (!payout) {
+      console.error(`❌ Payout not found for reference: ${reference}`);
+      return;
+    }
+
+    // ✅ IDEMPOTENCY CHECK
+    if (payout.payout_status === "transfer_success") {
+      console.log(
+        `⚠️ Transfer already processed for payout: ${payout.transaction_id}`,
+      );
+      return;
+    }
+
+    // Validate amount matches
+    const expectedAmount = Math.round(payout.payout_amount * 100); // Convert to kobo
+
+    if (Math.abs(amount - expectedAmount) > 1) {
+      // Allow 1 kobo difference for rounding
+      console.error(
+        `❌ Amount mismatch for ${reference}: Expected ${expectedAmount}, got ${amount}`,
+      );
+      // Log but don't fail - continue with the update
+    }
+
+    // ============================================
+    // UPDATE PAYOUT TO SUCCESS
+    // ============================================
+    await payout.markAsTransferSuccess(data);
+
+    console.log(
+      `✅ Payout completed successfully: ${payout.transaction_id} - Transfer reference: ${reference}`,
+    );
+
+    // ============================================
+    // SEND SUCCESS NOTIFICATIONS (if not already sent)
+    // ============================================
+    if (!payout.vendor_notified || !payout.buyer_notified) {
+      try {
+        const transaction = payout.transaction as any;
+        const product_name = transaction?.products?.[0]?.name || "Product";
+
+        const emailPromises = [];
+
+        if (!payout.vendor_notified) {
+          emailPromises.push(
+            sendTransferSuccessEmailToVendor(
+              payout.vendor_email,
+              payout.vendor_name,
+              payout.payout_amount,
+              payout.transaction_id,
+            ),
+          );
+        }
+
+        if (!payout.buyer_notified && transaction) {
+          emailPromises.push(
+            sendSuccessfulEscrowEmailToInitiator(
+              payout.transaction_id,
+              payout.vendor_name,
+              transaction.buyer_email,
+              product_name,
+            ),
+          );
+        }
+
+        await Promise.all(emailPromises);
+
+        // Mark notifications as sent
+        payout.vendor_notified = true;
+        payout.vendor_notified_at = new Date();
+        payout.buyer_notified = true;
+        payout.buyer_notified_at = new Date();
+        await payout.save();
+
+        console.log(`✅ Success notification emails sent`);
+      } catch (emailError) {
+        console.error("⚠️ Failed to send success emails:", emailError);
+        // Non-critical error, continue
+      }
+    }
+
+    // ============================================
+    // LOG SUCCESS
+    // ============================================
+    console.log(`
+🎉 PAYOUT SUCCESSFUL
+═══════════════════════════════════════
+Transaction ID: ${payout.transaction_id}
+Vendor: ${payout.vendor_email}
+Amount: ₦${payout.payout_amount}
+Transfer Ref: ${reference}
+Status: transfer_success
+═══════════════════════════════════════
+    `);
   } catch (error) {
     console.error("❌ Error handling transfer success:", error);
   }
@@ -163,78 +289,109 @@ async function handleTransferSuccess(data: any) {
 
 /**
  * Handle failed transfer
+ * Updates Payout model and triggers retry logic or manual intervention
  */
 async function handleTransferFailed(data: any) {
   try {
-    const { reference, amount, status, recipient, reason } = data;
+    const { reference, amount, status, recipient, message } = data;
+    const failureReason = data.failure_reason || message || "Transfer failed";
 
     console.log(`❌ Processing transfer.failed:`, {
       reference,
-      amount,
+      amount: amount / 100,
       status,
-      reason,
+      reason: failureReason,
     });
 
-    // Find transaction by transfer reference
-    const transaction = await ProductTransaction.findOne({
+    //  FIND PAYOUT BY TRANSFER REFERENCE
+    const payout = await Payout.findOne({
       transfer_reference: reference,
-    });
+    }).populate("transaction");
 
-    if (!transaction) {
-      console.error(`❌ Transaction not found for reference: ${reference}`);
+    if (!payout) {
+      console.error(`❌ Payout not found for reference: ${reference}`);
       return;
     }
 
-    // Check if already processed
-    if (transaction.transfer_status === "failed") {
+    // ✅ IDEMPOTENCY CHECK
+    if (
+      payout.payout_status === "transfer_failed" ||
+      payout.payout_status === "manual_payout_required"
+    ) {
       console.log(
-        `⚠️ Transfer failure already processed for transaction: ${transaction.transaction_id}`,
+        `⚠️ Transfer failure already processed for payout: ${payout.transaction_id}`,
       );
       return;
     }
 
-    // Update transaction
-    const updatedTransaction = await ProductTransaction.findByIdAndUpdate(
-      transaction._id,
-      {
-        transfer_status: "failed",
-        transfer_failure_reason: reason || "Transfer failed",
-        transfer_webhook_data: data,
-        // Keep payment_released: true but mark transfer as failed
-        // This allows for retry or manual intervention
-      },
-      { new: true },
-    );
-
-    if (!updatedTransaction) {
-      console.error(
-        `❌ Failed to update transaction for reference: ${reference}`,
-      );
-      return;
-    }
+    // ============================================
+    // UPDATE PAYOUT (includes retry logic)
+    // ============================================
+    await payout.markAsTransferFailed(failureReason);
 
     console.log(
-      `⚠️ Transaction updated: ${transaction.transaction_id} - Transfer failed`,
+      `⚠️ Payout marked as failed: ${payout.transaction_id} - Status: ${payout.payout_status}`,
     );
+    console.log(`   Retry count: ${payout.retry_count}/${payout.max_retries}`);
 
-    // Send failure notification emails
+    // ============================================
+    // SEND NOTIFICATIONS
+    // ============================================
     try {
-      await Promise.all([
+      const emailPromises = [];
+
+      // Always notify vendor of failure
+      emailPromises.push(
         sendTransferFailedEmailToVendor(
-          transaction.vendor_email,
-          transaction.vendor_name,
-          transaction.transaction_id,
-          reason || "Transfer processing failed",
+          payout.vendor_email,
+          payout.vendor_name,
+          payout.transaction_id,
+          failureReason,
         ),
-      ]);
+      );
+
+      // If manual payout is now required (max retries exceeded), notify admin
+      if (payout.payout_status === "manual_payout_required") {
+        emailPromises.push(
+          sendAdminManualPayoutAlert(
+            payout.transaction_id,
+            payout.vendor_name,
+            payout.payout_amount,
+            payout.vendor_bank_details,
+          ),
+        );
+
+        payout.admin_notified = true;
+        payout.admin_notified_at = new Date();
+      }
+
+      await Promise.all(emailPromises);
+
+      payout.vendor_notified = true;
+      payout.vendor_notified_at = new Date();
+      await payout.save();
+
       console.log(`✅ Failure notification emails sent`);
     } catch (emailError) {
       console.error("⚠️ Failed to send failure emails:", emailError);
     }
 
-    // TODO: Create support ticket for manual intervention
-    // TODO: Trigger alert to admin dashboard
-    // TODO: Create audit log entry
+    // ============================================
+    // LOG FAILURE
+    // ============================================
+    console.log(`
+⚠️ PAYOUT FAILED
+═══════════════════════════════════════
+Transaction ID: ${payout.transaction_id}
+Vendor: ${payout.vendor_email}
+Amount: ₦${payout.payout_amount}
+Transfer Ref: ${reference}
+Failure Reason: ${failureReason}
+Retry Count: ${payout.retry_count}/${payout.max_retries}
+Status: ${payout.payout_status}
+${payout.payout_status === "manual_payout_required" ? "⚠️ MANUAL INTERVENTION REQUIRED" : "🔄 Will retry automatically"}
+═══════════════════════════════════════
+    `);
   } catch (error) {
     console.error("❌ Error handling transfer failure:", error);
   }
@@ -242,162 +399,139 @@ async function handleTransferFailed(data: any) {
 
 /**
  * Handle reversed transfer
+ * This is CRITICAL - money was sent but came back
+ * Updates Payout and requires immediate manual intervention
  */
 async function handleTransferReversed(data: any) {
   try {
-    const { reference, amount, status, recipient, reason } = data;
+    const { reference, amount, status, recipient, message } = data;
+    const reversalReason =
+      data.reversal_reason || message || "Transfer reversed by bank";
 
     console.log(`🔄 Processing transfer.reversed:`, {
       reference,
-      amount,
+      amount: amount / 100,
       status,
-      reason,
+      reason: reversalReason,
     });
 
-    // Find transaction by transfer reference
-    const transaction = await ProductTransaction.findOne({
+    //  FIND PAYOUT BY TRANSFER REFERENCE
+    const payout = await Payout.findOne({
       transfer_reference: reference,
-    });
+    }).populate("transaction");
 
-    if (!transaction) {
-      console.error(`❌ Transaction not found for reference: ${reference}`);
+    if (!payout) {
+      console.error(`❌ Payout not found for reference: ${reference}`);
       return;
     }
 
-    // Update transaction
-    const updatedTransaction = await ProductTransaction.findByIdAndUpdate(
-      transaction._id,
-      {
-        transfer_status: "reversed",
-        transfer_reversal_reason: reason || "Transfer reversed",
-        transfer_webhook_data: data,
-        // Mark for manual review
-        requires_manual_review: true,
-      },
-      { new: true },
-    );
-
-    if (!updatedTransaction) {
-      console.error(
-        `❌ Failed to update transaction for reference: ${reference}`,
+    // ✅ IDEMPOTENCY CHECK
+    if (payout.payout_status === "reversed") {
+      console.log(
+        `⚠️ Transfer reversal already processed for payout: ${payout.transaction_id}`,
       );
       return;
     }
 
-    console.log(
-      `⚠️ Transaction updated: ${transaction.transaction_id} - Transfer reversed`,
-    );
+    //  UPDATE PAYOUT TO REVERSED
+    payout.payout_status = "reversed";
+    payout.transfer_reversal_reason = reversalReason;
+    payout.transfer_webhook_data = data;
+    await payout.save();
 
-    // Send notification emails about reversal
+    console.log(`🔄 Payout marked as reversed: ${payout.transaction_id}`);
+
+    // SEND URGENT NOTIFICATIONS
     try {
       await Promise.all([
+        // Notify vendor
         sendTransferFailedEmailToVendor(
-          transaction.vendor_email,
-          transaction.vendor_name,
-          transaction.transaction_id,
-          `Transfer was reversed: ${reason || "Unknown reason"}`,
+          payout.vendor_email,
+          payout.vendor_name,
+          payout.transaction_id,
+          `Payment transfer was reversed by your bank. Reason: ${reversalReason}. Please update your bank details and contact support immediately.`,
+        ),
+        // Notify admin urgently
+        sendAdminManualPayoutAlert(
+          payout.transaction_id,
+          payout.vendor_name,
+          payout.payout_amount,
+          payout.vendor_bank_details,
         ),
       ]);
+
+      payout.vendor_notified = true;
+      payout.vendor_notified_at = new Date();
+      payout.admin_notified = true;
+      payout.admin_notified_at = new Date();
+      await payout.save();
+
       console.log(`✅ Reversal notification emails sent`);
     } catch (emailError) {
       console.error("⚠️ Failed to send reversal emails:", emailError);
     }
 
-    // TODO: Create high-priority support ticket
-    // TODO: Trigger urgent admin alert
-    // TODO: Create audit log entry
+    // ============================================
+    // LOG REVERSAL
+    // ============================================
+    console.log(`
+🚨 CRITICAL - PAYOUT REVERSED
+═══════════════════════════════════════
+Transaction ID: ${payout.transaction_id}
+Vendor: ${payout.vendor_email}
+Amount: ₦${payout.payout_amount}
+Transfer Ref: ${reference}
+Reversal Reason: ${reversalReason}
+Status: reversed
+⚠️ IMMEDIATE MANUAL INTERVENTION REQUIRED
+═══════════════════════════════════════
+    `);
   } catch (error) {
     console.error("❌ Error handling transfer reversal:", error);
   }
 }
 
 /**
- * Enhanced webhook handler that also handles payment events
- * This replaces your existing paystackWebhook
+ * Legacy webhook handler for transfers only
+ * Use paystackUnifiedWebhook instead
+ * @deprecated Use paystackUnifiedWebhook for all events
  */
-export const paystackUnifiedWebhook = async (
+export const paystackTransferWebhook = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
-  try {
-    // Verify signature
-    const hash = crypto
-      .createHmac("sha512", process.env.PAYSTACK_SECRET_KEY!)
-      .update(JSON.stringify(req.body))
-      .digest("hex");
-
-    if (hash !== req.headers["x-paystack-signature"]) {
-      return res.status(400).send("Invalid signature");
-    }
-
-    const event = req.body;
-    const { event: eventType, data } = event;
-
-    console.log(`📬 Webhook event received: ${eventType}`);
-
-    // Handle different event types
-    switch (eventType) {
-      // ========== PAYMENT EVENTS ==========
-      case "charge.success":
-        await handleChargeSuccess(data);
-        break;
-
-      // ========== TRANSFER EVENTS ==========
-      case "transfer.success":
-        await handleTransferSuccess(data);
-        break;
-
-      case "transfer.failed":
-        await handleTransferFailed(data);
-        break;
-
-      case "transfer.reversed":
-        await handleTransferReversed(data);
-        break;
-
-      default:
-        console.log(`ℹ️ Unhandled event type: ${eventType}`);
-    }
-
-    res.status(200).send("Webhook received");
-  } catch (error) {
-    console.error("❌ Webhook error:", error);
-    res.status(200).send("Webhook processing failed");
-  }
+  console.warn(
+    "⚠️ Using deprecated paystackTransferWebhook. Please migrate to paystackUnifiedWebhook",
+  );
+  return paystackUnifiedWebhook(req, res, next);
 };
 
+// ============================================
+// HELPER FUNCTIONS
+// ============================================
+
 /**
- * Handle successful charge (payment)
- * This is your existing payment webhook logic
+ * Format payout for logging
  */
-async function handleChargeSuccess(data: any) {
-  try {
-    const { reference, amount, status } = data;
+function formatPayoutLog(payout: any): string {
+  return `
+Payout ID: ${payout._id}
+Transaction ID: ${payout.transaction_id}
+Vendor: ${payout.vendor_email}
+Amount: ₦${payout.payout_amount}
+Status: ${payout.payout_status}
+Transfer Status: ${payout.transfer_reference || "not_initiated"}
+  `.trim();
+}
 
-    const transaction = await ProductTransaction.findOne({
-      payment_reference: reference,
-    });
-
-    if (transaction && !transaction.verified_payment_status) {
-      const expectedAmount = Number(transaction.transaction_total) * 100;
-
-      if (amount === expectedAmount && status === "success") {
-        await ProductTransaction.findByIdAndUpdate(transaction._id, {
-          verified_payment_status: true,
-          transaction_status: "payment_verified",
-          payment_verified_at: new Date(),
-        });
-
-        console.log(
-          `✅ Payment verified for transaction: ${transaction.transaction_id}`,
-        );
-
-        // Send vendor notification email (existing logic)
-        // await sendEscrowInitiationEmailToVendor(...);
-      }
-    }
-  } catch (error) {
-    console.error("❌ Error handling charge success:", error);
-  }
+/**
+ * Check if payout is in valid state for processing
+ */
+function isValidForProcessing(payout: any): boolean {
+  return (
+    payout.payout_status !== "transfer_success" &&
+    payout.payout_status !== "manual_payout_completed" &&
+    payout.payout_status !== "cancelled"
+  );
 }
