@@ -12,7 +12,7 @@ export const sendAdminVerificationEmail = async (
   try {
     const transport = await generateMailTransporter();
 
-    const verificationURL = `${process.env.DEPLOYED_FRONTEND_BASE_URL}/auth/admin/verify-email?token=${token}`;
+    const verificationURL = `${process.env.DEPLOYED_ADMIN_FRONTEND_BASE_URL}/auth/admin/verify-email?token=${token}`;
 
     const emailMessage = `
     <!DOCTYPE html>
@@ -171,7 +171,7 @@ export const sendAdminWelcomeEmail = async (email: string, name: string) => {
 
           <div style="text-align: center;">
             <a href="${
-              process.env.DEPLOYED_FRONTEND_BASE_URL
+              process.env.DEPLOYED_ADMIN_FRONTEND_BASE_URL
             }/admin/login" class="button">Access Admin Dashboard</a>
           </div>
 
@@ -220,7 +220,7 @@ export const sendAdminPasswordResetEmail = async (
   try {
     const transport = await generateMailTransporter();
 
-    const resetURL = `${process.env.DEPLOYED_FRONTEND_BASE_URL}/auth/admin/reset-password?token=${resetToken}`;
+    const resetURL = `${process.env.DEPLOYED_ADMIN_FRONTEND_BASE_URL}/auth/admin/reset-password?token=${resetToken}`;
 
     const emailMessage = `
     <!DOCTYPE html>
@@ -372,7 +372,7 @@ export const sendAdminPasswordResetSuccessEmail = async (email: string) => {
 
           <div style="text-align: center;">
             <a href="${
-              process.env.DEPLOYED_FRONTEND_BASE_URL
+              process.env.DEPLOYED_ADMIN_FRONTEND_BASE_URL
             }/admin/login" class="button">Login to Admin Dashboard</a>
           </div>
 
