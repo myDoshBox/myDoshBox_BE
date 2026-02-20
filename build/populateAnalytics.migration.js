@@ -14,7 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 // scripts/fixCommissionsDetailed.ts
 const mongoose_1 = __importDefault(require("mongoose"));
-const transactionAnalytics_model_1 = __importDefault(require("./modules/administrator/Analytics/transactionAnalytics.model"));
+const transactionAnalytics_model_1 = __importDefault(require("./modules/administrator/adminAnalytics/transactionAnalytics.model"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const fixCommissionsDetailed = () => __awaiter(void 0, void 0, void 0, function* () {

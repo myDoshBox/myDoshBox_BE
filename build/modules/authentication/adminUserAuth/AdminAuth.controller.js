@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resetAdminPassword = exports.forgotAdminPassword = exports.resendAdminVerificationEmail = exports.verifyAdminEmail = exports.adminUserLogin = exports.adminUserRegistration = void 0;
+exports.refreshAdminToken = exports.resetAdminPassword = exports.forgotAdminPassword = exports.resendAdminVerificationEmail = exports.verifyAdminEmail = exports.adminUserLogin = exports.adminUserRegistration = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const adminAuth_model_1 = __importDefault(require("./adminAuth.model"));
 const adminEmailTemplate_1 = require("../adminUserAuth/adminEmailTemplate");
@@ -20,6 +20,7 @@ const bcrypt_1 = __importDefault(require("bcrypt"));
 const createSessionAndSendToken_util_1 = require("../../../utilities/createSessionAndSendToken.util");
 const crypto_1 = __importDefault(require("crypto"));
 const cookieConfig_util_1 = require("../../../utilities/cookieConfig.util");
+const session_model_1 = require("../../sessions/session.model");
 const adminUserRegistration = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { email, phone_number, password, confirm_password, name, username } = req.body;
@@ -126,10 +127,8 @@ const adminUserLogin = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
             message: "Admin login successful",
         });
         // ✅ FIX: Use consistent cookie configuration
-        res.cookie("access_token", result.accessToken, (0, cookieConfig_util_1.getCookieOptions)(15 * 60 * 1000) // 15 minutes
-        );
-        res.cookie("refresh_token", result.refreshToken, (0, cookieConfig_util_1.getCookieOptions)(30 * 24 * 60 * 60 * 1000) // 30 days (changed from 7 for consistency)
-        );
+        res.cookie("access_token", result.accessToken, (0, cookieConfig_util_1.getCookieOptions)(30 * 24 * 60 * 60 * 1000));
+        res.cookie("refresh_token", result.refreshToken, (0, cookieConfig_util_1.getCookieOptions)(30 * 24 * 60 * 60 * 1000));
         res.status(200).json({
             status: "success",
             message: result.message,
@@ -364,3 +363,92 @@ const resetAdminPassword = (req, res, next) => __awaiter(void 0, void 0, void 0,
     }
 });
 exports.resetAdminPassword = resetAdminPassword;
+const refreshAdminToken = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const refreshToken = req.cookies.refresh_token;
+        console.log("🔄 Admin refresh token attempt");
+        if (!refreshToken) {
+            const error = {
+                statusCode: 401,
+                status: "fail",
+                message: "Refresh token not found",
+            };
+            return next(error);
+        }
+        // Verify the refresh token
+        const decoded = jsonwebtoken_1.default.verify(refreshToken, process.env.JWT_SECRET);
+        // Verify it's an admin token
+        if (decoded.userData.role !== "admin") {
+            const error = {
+                statusCode: 403,
+                status: "fail",
+                message: "Invalid admin token",
+            };
+            return next(error);
+        }
+        // Find the session
+        const session = yield session_model_1.Session.findById(decoded.session);
+        if (!session || !session.valid) {
+            const error = {
+                statusCode: 401,
+                status: "fail",
+                message: "Invalid or expired session",
+            };
+            return next(error);
+        }
+        // Get admin user
+        const admin = yield adminAuth_model_1.default.findById(decoded.userData._id);
+        if (!admin) {
+            const error = {
+                statusCode: 404,
+                status: "fail",
+                message: "Admin user not found",
+            };
+            return next(error);
+        }
+        // Create new tokens
+        const userAgent = req.get("User-Agent") || "unknown";
+        const result = yield (0, createSessionAndSendToken_util_1.createSessionAndSendTokens)({
+            user: {
+                _id: admin._id,
+                email: admin.email,
+                role: admin.role,
+                phone_number: admin.phone_number,
+            },
+            userAgent,
+            role: "admin",
+            message: "Token refreshed successfully",
+        });
+        // Invalidate old session
+        session.valid = false;
+        yield session.save();
+        // Set new cookies
+        res.cookie("access_token", result.accessToken, (0, cookieConfig_util_1.getCookieOptions)(30 * 24 * 60 * 60 * 1000));
+        res.cookie("refresh_token", result.refreshToken, (0, cookieConfig_util_1.getCookieOptions)(30 * 24 * 60 * 60 * 1000));
+        res.status(200).json({
+            status: "success",
+            message: result.message,
+            admin: {
+                id: admin._id,
+                email: admin.email,
+                name: admin.name,
+                username: admin.username,
+                role: admin.role,
+            },
+            accessToken: result.accessToken,
+            refreshToken: result.refreshToken,
+        });
+    }
+    catch (error) {
+        const errResponse = {
+            statusCode: error instanceof jsonwebtoken_1.default.JsonWebTokenError ? 401 : 500,
+            status: "fail",
+            message: error instanceof jsonwebtoken_1.default.JsonWebTokenError
+                ? "Invalid or expired refresh token"
+                : "Error refreshing token",
+            stack: error instanceof Error ? { stack: error.stack } : undefined,
+        };
+        next(errResponse);
+    }
+});
+exports.refreshAdminToken = refreshAdminToken;

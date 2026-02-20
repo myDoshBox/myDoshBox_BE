@@ -12,11 +12,12 @@ import { createSessionAndSendTokens } from "../../../utilities/createSessionAndS
 import { ErrorResponse } from "../../../utilities/errorHandler.util";
 import crypto from "crypto";
 import { getCookieOptions } from "../../../utilities/cookieConfig.util";
+import { Session } from "../../sessions/session.model";
 
 export const adminUserRegistration = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { email, phone_number, password, confirm_password, name, username } =
@@ -67,7 +68,7 @@ export const adminUserRegistration = async (
     const verificationToken = jwt.sign(
       { email: newAdmin.email, role: "admin" },
       process.env.JWT_SECRET as string,
-      { expiresIn: "2h" }
+      { expiresIn: "2h" },
     );
 
     await sendAdminVerificationEmail(email, verificationToken);
@@ -91,7 +92,7 @@ export const adminUserRegistration = async (
 export const adminUserLogin = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { email, password } = req.body;
@@ -152,13 +153,13 @@ export const adminUserLogin = async (
     res.cookie(
       "access_token",
       result.accessToken,
-      getCookieOptions(15 * 60 * 1000) // 15 minutes
+      getCookieOptions(30 * 24 * 60 * 60 * 1000), // 30 days for now
     );
 
     res.cookie(
       "refresh_token",
       result.refreshToken,
-      getCookieOptions(30 * 24 * 60 * 60 * 1000) // 30 days (changed from 7 for consistency)
+      getCookieOptions(30 * 24 * 60 * 60 * 1000), // 30 days (changed from 7 for consistency)
     );
 
     res.status(200).json({
@@ -191,7 +192,7 @@ export const adminUserLogin = async (
 export const verifyAdminEmail = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { token } = req.query;
@@ -266,7 +267,7 @@ export const verifyAdminEmail = async (
 export const resendAdminVerificationEmail = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { email } = req.body;
@@ -303,7 +304,7 @@ export const resendAdminVerificationEmail = async (
     const verificationToken = jwt.sign(
       { email: admin.email, role: "admin" },
       process.env.JWT_SECRET as string,
-      { expiresIn: "2h" }
+      { expiresIn: "2h" },
     );
 
     await sendAdminVerificationEmail(email, verificationToken);
@@ -327,7 +328,7 @@ export const resendAdminVerificationEmail = async (
 export const forgotAdminPassword = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { email } = req.body;
@@ -376,7 +377,7 @@ export const forgotAdminPassword = async (
 export const resetAdminPassword = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const { token } = req.query;
@@ -444,6 +445,127 @@ export const resetAdminPassword = async (
       statusCode: 500,
       status: "error",
       message: "Error resetting password",
+      stack: error instanceof Error ? { stack: error.stack } : undefined,
+    };
+    next(errResponse);
+  }
+};
+
+export const refreshAdminToken = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const refreshToken = req.cookies.refresh_token;
+
+    console.log("🔄 Admin refresh token attempt");
+
+    if (!refreshToken) {
+      const error: ErrorResponse = {
+        statusCode: 401,
+        status: "fail",
+        message: "Refresh token not found",
+      };
+      return next(error);
+    }
+
+    // Verify the refresh token
+    const decoded = jwt.verify(
+      refreshToken,
+      process.env.JWT_SECRET as string,
+    ) as {
+      userData: { _id: string; role: string; email: string };
+      session: string;
+    };
+
+    // Verify it's an admin token
+    if (decoded.userData.role !== "admin") {
+      const error: ErrorResponse = {
+        statusCode: 403,
+        status: "fail",
+        message: "Invalid admin token",
+      };
+      return next(error);
+    }
+
+    // Find the session
+    const session = await Session.findById(decoded.session);
+
+    if (!session || !session.valid) {
+      const error: ErrorResponse = {
+        statusCode: 401,
+        status: "fail",
+        message: "Invalid or expired session",
+      };
+      return next(error);
+    }
+
+    // Get admin user
+    const admin = await AdminUser.findById(decoded.userData._id);
+
+    if (!admin) {
+      const error: ErrorResponse = {
+        statusCode: 404,
+        status: "fail",
+        message: "Admin user not found",
+      };
+      return next(error);
+    }
+
+    // Create new tokens
+    const userAgent = req.get("User-Agent") || "unknown";
+
+    const result = await createSessionAndSendTokens({
+      user: {
+        _id: admin._id,
+        email: admin.email,
+        role: admin.role,
+        phone_number: admin.phone_number,
+      },
+      userAgent,
+      role: "admin",
+      message: "Token refreshed successfully",
+    });
+
+    // Invalidate old session
+    session.valid = false;
+    await session.save();
+
+    // Set new cookies
+    res.cookie(
+      "access_token",
+      result.accessToken,
+      getCookieOptions(30 * 24 * 60 * 60 * 1000),
+    );
+
+    res.cookie(
+      "refresh_token",
+      result.refreshToken,
+      getCookieOptions(30 * 24 * 60 * 60 * 1000),
+    );
+
+    res.status(200).json({
+      status: "success",
+      message: result.message,
+      admin: {
+        id: admin._id,
+        email: admin.email,
+        name: admin.name,
+        username: admin.username,
+        role: admin.role,
+      },
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+    });
+  } catch (error) {
+    const errResponse: ErrorResponse = {
+      statusCode: error instanceof jwt.JsonWebTokenError ? 401 : 500,
+      status: "fail",
+      message:
+        error instanceof jwt.JsonWebTokenError
+          ? "Invalid or expired refresh token"
+          : "Error refreshing token",
       stack: error instanceof Error ? { stack: error.stack } : undefined,
     };
     next(errResponse);

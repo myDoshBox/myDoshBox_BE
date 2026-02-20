@@ -240,13 +240,17 @@ const payoutSchema = new mongoose_1.default.Schema({
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
 });
-// Indexes for efficient queries
+// ============================================
+// INDEXES
+// ============================================
 payoutSchema.index({ payout_status: 1, createdAt: -1 });
 payoutSchema.index({ vendor_email: 1, payout_status: 1 });
 payoutSchema.index({ payout_method: 1, payout_status: 1 });
 payoutSchema.index({ transfer_reference: 1 });
 payoutSchema.index({ createdAt: -1 });
-// Middleware
+// ============================================
+// MIDDLEWARE
+// ============================================
 payoutSchema.pre("save", function (next) {
     const payout = this;
     // Auto-set timestamps for status changes
@@ -273,7 +277,9 @@ payoutSchema.pre("save", function (next) {
     }
     next();
 });
-// Virtual fields
+// ============================================
+// VIRTUAL FIELDS
+// ============================================
 payoutSchema.virtual("is_completed").get(function () {
     const payout = this;
     return (payout.payout_status === "transfer_success" ||
@@ -300,7 +306,12 @@ payoutSchema.virtual("can_retry").get(function () {
     return (payout.payout_status === "transfer_failed" &&
         payout.retry_count < payout.max_retries);
 });
-// Instance methods
+// ============================================
+// INSTANCE METHODS
+// ============================================
+/**
+ * Mark payout as transfer initiated
+ */
 payoutSchema.methods.markAsTransferInitiated = function (transferRef, recipientCode) {
     this.payout_status = "transfer_initiated";
     this.transfer_reference = transferRef;
@@ -310,6 +321,9 @@ payoutSchema.methods.markAsTransferInitiated = function (transferRef, recipientC
     }
     return this.save();
 };
+/**
+ * Mark payout as transfer successful
+ */
 payoutSchema.methods.markAsTransferSuccess = function (webhookData) {
     this.payout_status = "transfer_success";
     this.transfer_completed_at = new Date();
@@ -318,6 +332,9 @@ payoutSchema.methods.markAsTransferSuccess = function (webhookData) {
     }
     return this.save();
 };
+/**
+ * Mark payout as transfer failed
+ */
 payoutSchema.methods.markAsTransferFailed = function (reason) {
     this.payout_status = "transfer_failed";
     this.transfer_failure_reason = reason;
@@ -331,6 +348,9 @@ payoutSchema.methods.markAsTransferFailed = function (reason) {
     }
     return this.save();
 };
+/**
+ * Mark payout as requiring manual intervention
+ */
 payoutSchema.methods.markAsManualPayoutRequired = function (reason) {
     this.payout_status = "manual_payout_required";
     this.payout_method = "manual";
@@ -338,6 +358,20 @@ payoutSchema.methods.markAsManualPayoutRequired = function (reason) {
     this.manual_payout_requested_at = new Date();
     return this.save();
 };
+/**
+ * Mark payout as manual processing started (admin action)
+ */
+payoutSchema.methods.markAsManualPayoutProcessing = function (processedBy, notes) {
+    this.payout_status = "manual_payout_processing";
+    this.manual_payout_processed_by = processedBy;
+    if (notes) {
+        this.manual_payout_notes = notes;
+    }
+    return this.save();
+};
+/**
+ * Mark payout as manual processing completed (admin action)
+ */
 payoutSchema.methods.markAsManualPayoutCompleted = function (processedBy, proof, notes) {
     this.payout_status = "manual_payout_completed";
     this.manual_payout_processed_by = processedBy;
@@ -348,7 +382,9 @@ payoutSchema.methods.markAsManualPayoutCompleted = function (processedBy, proof,
         this.manual_payout_notes = notes;
     return this.save();
 };
-// Static methods
+// ============================================
+// STATIC METHODS
+// ============================================
 payoutSchema.statics.findPendingPayouts = function () {
     return this.find({
         payout_status: {

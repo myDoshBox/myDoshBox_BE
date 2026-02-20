@@ -21,7 +21,7 @@ const appName = "MyDoshbox";
 const sendAdminVerificationEmail = (email, token) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const transport = yield (0, email_utils_1.generateMailTransporter)();
-        const verificationURL = `${process.env.DEPLOYED_FRONTEND_BASE_URL}/auth/admin/verify-email?token=${token}`;
+        const verificationURL = `${process.env.DEPLOYED_ADMIN_FRONTEND_BASE_URL}/auth/admin/verify-email?token=${token}`;
         const emailMessage = `
     <!DOCTYPE html>
     <html lang="en">
@@ -176,7 +176,7 @@ const sendAdminWelcomeEmail = (email, name) => __awaiter(void 0, void 0, void 0,
           </div>
 
           <div style="text-align: center;">
-            <a href="${process.env.DEPLOYED_FRONTEND_BASE_URL}/admin/login" class="button">Access Admin Dashboard</a>
+            <a href="${process.env.DEPLOYED_ADMIN_FRONTEND_BASE_URL}/admin/login" class="button">Access Admin Dashboard</a>
           </div>
 
           <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 25px 0; border-radius: 8px;">
@@ -219,7 +219,7 @@ exports.sendAdminWelcomeEmail = sendAdminWelcomeEmail;
 const sendAdminPasswordResetEmail = (email, resetToken) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const transport = yield (0, email_utils_1.generateMailTransporter)();
-        const resetURL = `${process.env.DEPLOYED_FRONTEND_BASE_URL}/auth/admin/reset-password?token=${resetToken}`;
+        const resetURL = `${process.env.DEPLOYED_ADMIN_FRONTEND_BASE_URL}/auth/admin/reset-password?token=${resetToken}`;
         const emailMessage = `
     <!DOCTYPE html>
     <html lang="en">
@@ -364,7 +364,7 @@ const sendAdminPasswordResetSuccessEmail = (email) => __awaiter(void 0, void 0, 
           <p>You can now login to your admin dashboard using your new password:</p>
 
           <div style="text-align: center;">
-            <a href="${process.env.DEPLOYED_FRONTEND_BASE_URL}/admin/login" class="button">Login to Admin Dashboard</a>
+            <a href="${process.env.DEPLOYED_ADMIN_FRONTEND_BASE_URL}/admin/login" class="button">Login to Admin Dashboard</a>
           </div>
 
           <div class="security-tip">

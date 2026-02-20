@@ -42,7 +42,7 @@ const createSessionAndSendTokens = (_a) => __awaiter(void 0, [_a], void 0, funct
         role: userRole,
     };
     // Generate tokens with email included
-    const accessToken = (0, signAndVerifyToken_util_1.signJwt)(tokenPayload, { expiresIn: "15m" });
+    const accessToken = (0, signAndVerifyToken_util_1.signJwt)(tokenPayload, { expiresIn: "30d" });
     const refreshToken = (0, signAndVerifyToken_util_1.signJwt)(tokenPayload, { expiresIn: "30d" });
     // Update session with refreshToken
     session.refreshToken = refreshToken;

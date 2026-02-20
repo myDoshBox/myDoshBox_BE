@@ -33,7 +33,8 @@ const admin_route_1 = __importDefault(require("./modules/administrator/admin.rou
 const mediator_route_1 = __importDefault(require("./modules/mediator/mediator.route"));
 const userProfile_route_1 = __importDefault(require("./modules/profiles/userProfile.route"));
 // In your main app.ts or server.ts
-const adminStats_route_1 = __importDefault(require("./modules/administrator/AdminServices/adminStats.route"));
+const adminStats_route_1 = __importDefault(require("./modules/administrator/AdmistatServices/adminStats.route"));
+const Admintransactions_routes_1 = __importDefault(require("./modules/administrator/AdminTransactions/Admintransactions.routes"));
 // Middleware
 const deserializeUser_middleware_1 = __importDefault(require("./middlewares/deserializeUser.middleware"));
 const errorHandling_middleware_1 = require("./middlewares/errorHandling.middleware");
@@ -127,6 +128,7 @@ app.use("/auth/individual", individualAuth_route_1.default);
 app.use("/auth/organization", organizationAuth_route_1.default);
 app.use("/auth/admin", adminAuth_route_1.default);
 app.use("/admin/stats", adminStats_route_1.default);
+app.use("/admin/transactions", Admintransactions_routes_1.default);
 // User routes
 app.use("/profile", userProfile_route_1.default);
 // app.use("/user", organizationUsersRoutes);

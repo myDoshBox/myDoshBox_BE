@@ -1,27 +1,4 @@
 "use strict";
-// import { Request, Response, NextFunction } from "express";
-// import { validateFormFields } from "../../../utilities/validation.utilities";
-// import IndividualUser from "../../authentication/individualUserAuth/individualUserAuth.model1";
-// import ProductTransaction from "../../transactions/productsTransaction/productsTransaction.model";
-// import ProductDispute from "./productDispute.model";
-// import { errorHandler } from "../../../middlewares/errorHandling.middleware";
-// import {
-//   BuyerResolveDisputeParams,
-//   BuyerResolveDisputeBody,
-//   BuyerResolveDisputeResponse,
-//   SellerResolveDisputeParams,
-//   SellerResolveDisputeResponse,
-//   SellerResolveDisputeBody,
-// } from "./productDispute.interface";
-// import { log } from "console";
-// import {
-//   sendBuyerResolutionMailToBuyer,
-//   sendBuyerResolutionMailToSeller,
-//   sendDisputeMailToBuyer,
-//   sendDisputeMailToSeller,
-//   sendSellerResolutionMailToBuyer,
-//   sendSellerResolutionMailToSeller,
-// } from "./productDispute.mail";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -35,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getDisputeDetails = exports.respondToResolution = exports.proposeResolution = exports.getAllDisputesByUser = exports.cancelDispute = exports.requestMediator = exports.raiseDispute = exports.getUserEmailFromToken = void 0;
+exports.getDisputeDetails = exports.respondToResolution = exports.proposeResolution = exports.getAllDisputesByUser = exports.cancelDispute = exports.requestMediator = exports.raiseDispute = exports.getUserEmailFromTokenDetailed = exports.getUserEmailFromToken = void 0;
 const validation_utilities_1 = require("../../../utilities/validation.utilities");
 const individualUserAuth_model1_1 = __importDefault(require("../../authentication/individualUserAuth/individualUserAuth.model1"));
 const organizationAuth_model_1 = __importDefault(require("../../authentication/organizationUserAuth/organizationAuth.model"));
@@ -43,44 +20,38 @@ const productsTransaction_model_1 = __importDefault(require("../../transactions/
 const productDispute_model_1 = __importDefault(require("./productDispute.model"));
 const errorHandling_middleware_1 = require("../../../middlewares/errorHandling.middleware");
 const productDispute_mail_1 = require("./productDispute.mail");
-// Helper to get user email from token
-const getUserEmailFromToken = (req) => __awaiter(void 0, void 0, void 0, function* () {
+const getUserEmailFromToken = (req) => {
     var _a, _b;
-    const tokenUser = req.user;
-    const emailFromToken = ((_a = tokenUser === null || tokenUser === void 0 ? void 0 : tokenUser.userData) === null || _a === void 0 ? void 0 : _a.email) || (tokenUser === null || tokenUser === void 0 ? void 0 : tokenUser.email);
-    if (emailFromToken) {
-        console.log("✅ Email found in token:", emailFromToken);
-        return emailFromToken;
-    }
-    console.log("⚠️ Email not in token, fetching from database...");
-    const userId = (_b = tokenUser === null || tokenUser === void 0 ? void 0 : tokenUser.userData) === null || _b === void 0 ? void 0 : _b._id;
-    if (!userId) {
-        console.error("❌ No user ID in token");
+    const email = (_a = req.user) === null || _a === void 0 ? void 0 : _a.email;
+    if (!email || email === "unknown") {
+        console.error("❌ No email found in req.user");
+        console.error("❌ User ID:", (_b = req.user) === null || _b === void 0 ? void 0 : _b.id);
+        console.error("❌ This should have been set by verifyAuth middleware");
         return null;
     }
-    try {
-        const individualUser = yield individualUserAuth_model1_1.default.findById(userId).select("email");
-        if (individualUser === null || individualUser === void 0 ? void 0 : individualUser.email) {
-            console.log("✅ Email found in IndividualUser DB:", individualUser.email);
-            return individualUser.email;
-        }
-        const orgUser = yield organizationAuth_model_1.default.findById(userId).select("organization_email contact_email email");
-        if (orgUser) {
-            const email = orgUser.organization_email ||
-                orgUser.contact_email ||
-                orgUser.email;
-            console.log("✅ Email found in OrganizationUser DB:", email);
-            return email || null;
-        }
-        console.error("❌ User not found in database");
-        return null;
-    }
-    catch (error) {
-        console.error("❌ Error fetching user email from database:", error);
-        return null;
-    }
-});
+    console.log("✅ Email found from req.user:", email);
+    return email;
+};
 exports.getUserEmailFromToken = getUserEmailFromToken;
+/**
+ * ALTERNATIVE: More detailed version with fallback
+ * Use this if you need extra debugging or fallback logic
+ */
+const getUserEmailFromTokenDetailed = (req) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    // First try: Get from req.user (set by verifyAuth)
+    const emailFromReqUser = (_a = req.user) === null || _a === void 0 ? void 0 : _a.email;
+    if (emailFromReqUser && emailFromReqUser !== "unknown") {
+        console.log("✅ Email found in req.user:", emailFromReqUser);
+        return emailFromReqUser;
+    }
+    // Log warning if email is missing
+    console.warn("⚠️ Email not found in req.user, this indicates an issue with verifyAuth");
+    console.warn("⚠️ req.user:", JSON.stringify(req.user, null, 2));
+    // Return null - don't try to fetch from DB again as verifyAuth should have done this
+    return null;
+});
+exports.getUserEmailFromTokenDetailed = getUserEmailFromTokenDetailed;
 // Helper to determine dispute stage
 const determineDisputeStage = (transaction) => {
     if (!transaction.verified_payment_status) {

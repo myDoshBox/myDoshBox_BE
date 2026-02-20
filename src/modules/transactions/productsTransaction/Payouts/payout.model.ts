@@ -20,16 +20,16 @@ export interface IPayout extends Document {
 
   // Payout status tracking
   payout_status:
-    | "pending_initiation" // Buyer confirmed, payout needs to be initiated
-    | "transfer_initiated" // Transfer started via Paystack
-    | "transfer_pending" // Waiting for Paystack to process
-    | "transfer_success" // Paystack confirmed successful transfer
-    | "transfer_failed" // Paystack transfer failed
-    | "manual_payout_processing" // Admin is processing manually
-    | "manual_payout_completed" // Manual payout completed
-    | "manual_payout_required" // Requires manual intervention
-    | "reversed" // Transfer was reversed
-    | "cancelled"; // Payout cancelled
+    | "pending_initiation"
+    | "transfer_initiated"
+    | "transfer_pending"
+    | "transfer_success"
+    | "transfer_failed"
+    | "manual_payout_processing"
+    | "manual_payout_completed"
+    | "manual_payout_required"
+    | "reversed"
+    | "cancelled";
 
   // Payout method
   payout_method: "automatic" | "manual";
@@ -46,10 +46,10 @@ export interface IPayout extends Document {
   // Manual payout tracking
   manual_payout_reason?: string;
   manual_payout_requested_at?: Date;
-  manual_payout_processed_by?: string; // Admin email/ID
+  manual_payout_processed_by?: string;
   manual_payout_processed_at?: Date;
   manual_payout_notes?: string;
-  manual_payout_proof?: string; // Receipt/proof of transfer
+  manual_payout_proof?: string;
 
   // Retry tracking
   retry_count: number;
@@ -87,6 +87,10 @@ export interface IPayout extends Document {
   markAsTransferSuccess(webhookData?: any): Promise<this>;
   markAsTransferFailed(reason: string): Promise<this>;
   markAsManualPayoutRequired(reason: string): Promise<this>;
+  markAsManualPayoutProcessing(
+    processedBy: string,
+    notes?: string,
+  ): Promise<this>; // ✅ FIXED: Added Promise<this>
   markAsManualPayoutCompleted(
     processedBy: string,
     proof?: string,
@@ -328,14 +332,18 @@ const payoutSchema = new mongoose.Schema<IPayout>(
   },
 );
 
-// Indexes for efficient queries
+// ============================================
+// INDEXES
+// ============================================
 payoutSchema.index({ payout_status: 1, createdAt: -1 });
 payoutSchema.index({ vendor_email: 1, payout_status: 1 });
 payoutSchema.index({ payout_method: 1, payout_status: 1 });
 payoutSchema.index({ transfer_reference: 1 });
 payoutSchema.index({ createdAt: -1 });
 
-// Middleware
+// ============================================
+// MIDDLEWARE
+// ============================================
 payoutSchema.pre("save", function (next) {
   const payout = this as IPayout;
 
@@ -367,7 +375,9 @@ payoutSchema.pre("save", function (next) {
   next();
 });
 
-// Virtual fields
+// ============================================
+// VIRTUAL FIELDS
+// ============================================
 payoutSchema.virtual("is_completed").get(function () {
   const payout = this as IPayout;
   return (
@@ -407,7 +417,13 @@ payoutSchema.virtual("can_retry").get(function () {
   );
 });
 
-// Instance methods
+// ============================================
+// INSTANCE METHODS
+// ============================================
+
+/**
+ * Mark payout as transfer initiated
+ */
 payoutSchema.methods.markAsTransferInitiated = function (
   transferRef: string,
   recipientCode?: string,
@@ -421,6 +437,9 @@ payoutSchema.methods.markAsTransferInitiated = function (
   return this.save();
 };
 
+/**
+ * Mark payout as transfer successful
+ */
 payoutSchema.methods.markAsTransferSuccess = function (webhookData?: any) {
   this.payout_status = "transfer_success";
   this.transfer_completed_at = new Date();
@@ -430,6 +449,9 @@ payoutSchema.methods.markAsTransferSuccess = function (webhookData?: any) {
   return this.save();
 };
 
+/**
+ * Mark payout as transfer failed
+ */
 payoutSchema.methods.markAsTransferFailed = function (reason: string) {
   this.payout_status = "transfer_failed";
   this.transfer_failure_reason = reason;
@@ -446,6 +468,9 @@ payoutSchema.methods.markAsTransferFailed = function (reason: string) {
   return this.save();
 };
 
+/**
+ * Mark payout as requiring manual intervention
+ */
 payoutSchema.methods.markAsManualPayoutRequired = function (reason: string) {
   this.payout_status = "manual_payout_required";
   this.payout_method = "manual";
@@ -454,6 +479,24 @@ payoutSchema.methods.markAsManualPayoutRequired = function (reason: string) {
   return this.save();
 };
 
+/**
+ * Mark payout as manual processing started (admin action)
+ */
+payoutSchema.methods.markAsManualPayoutProcessing = function (
+  processedBy: string,
+  notes?: string,
+) {
+  this.payout_status = "manual_payout_processing";
+  this.manual_payout_processed_by = processedBy;
+  if (notes) {
+    this.manual_payout_notes = notes;
+  }
+  return this.save();
+};
+
+/**
+ * Mark payout as manual processing completed (admin action)
+ */
 payoutSchema.methods.markAsManualPayoutCompleted = function (
   processedBy: string,
   proof?: string,
@@ -467,7 +510,10 @@ payoutSchema.methods.markAsManualPayoutCompleted = function (
   return this.save();
 };
 
-// Static methods
+// ============================================
+// STATIC METHODS
+// ============================================
+
 payoutSchema.statics.findPendingPayouts = function () {
   return this.find({
     payout_status: {

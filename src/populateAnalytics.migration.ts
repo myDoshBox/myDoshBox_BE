@@ -1,6 +1,6 @@
 // scripts/fixCommissionsDetailed.ts
 import mongoose from "mongoose";
-import TransactionAnalytics from "./modules/administrator/Analytics/transactionAnalytics.model";
+import TransactionAnalytics from "./modules/administrator/adminAnalytics/transactionAnalytics.model";
 import dotenv from "dotenv";
 
 dotenv.config();

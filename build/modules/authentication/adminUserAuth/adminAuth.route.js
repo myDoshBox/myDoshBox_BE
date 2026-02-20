@@ -237,4 +237,6 @@ adminRouter.route("/forgot-password").post((0, asyncHandler_middleware_1.asyncHa
  *           description: Internal server error
  */
 adminRouter.route("/reset-password").post((0, asyncHandler_middleware_1.asyncHandler)(AdminAuth_controller_1.resetAdminPassword));
+// refresh-token
+adminRouter.post("/refresh-token", AdminAuth_controller_1.refreshAdminToken);
 exports.default = adminRouter;

@@ -6,6 +6,7 @@ import {
   adminUserLogin,
   resendAdminVerificationEmail,
   forgotAdminPassword,
+  refreshAdminToken,
 } from "../adminUserAuth/AdminAuth.controller";
 import { asyncHandler } from "../../../middlewares/asyncHandler.middleware";
 
@@ -250,5 +251,7 @@ adminRouter.route("/forgot-password").post(asyncHandler(forgotAdminPassword));
  *           description: Internal server error
  */
 adminRouter.route("/reset-password").post(asyncHandler(resetAdminPassword));
+// refresh-token
+adminRouter.post("/refresh-token", refreshAdminToken);
 
 export default adminRouter;
