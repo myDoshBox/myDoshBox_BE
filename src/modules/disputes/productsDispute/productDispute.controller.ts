@@ -23,6 +23,7 @@ import {
 } from "./productDispute.mail";
 
 import { IResolutionProposal } from "./productDispute.model";
+import MediatorModel, { IMediator } from "../../mediator/mediator.model";
 
 export const getUserEmailFromToken = (req: any): string | null => {
   const email = req.user?.email;
@@ -348,50 +349,73 @@ export const requestMediator = async (
   req: Request,
   res: Response,
   next: NextFunction,
-): Promise<void> => {
+) => {
   const { transaction_id } = req.params;
-
   const userEmail = await getUserEmailFromToken(req);
-  if (!userEmail) {
-    return next(errorHandler(401, "Authentication required"));
-  }
+  if (!userEmail) return next(errorHandler(401, "Authentication required"));
 
   try {
     const dispute = await ProductDispute.findOne({ transaction_id });
+    if (!dispute) return next(errorHandler(404, "Dispute not found"));
 
-    if (!dispute) {
-      return next(errorHandler(404, "Dispute not found"));
-    }
-
-    if (
-      userEmail !== dispute.buyer_email &&
-      userEmail !== dispute.vendor_email
-    ) {
+    if (userEmail !== dispute.buyer_email && userEmail !== dispute.vendor_email)
       return next(errorHandler(403, "Not authorized"));
-    }
 
-    if (dispute.dispute_resolution_method === "mediator") {
+    if (dispute.dispute_resolution_method === "mediator")
       return next(errorHandler(400, "Mediator already involved"));
-    }
 
-    if (["resolved", "cancelled"].includes(dispute.dispute_status)) {
-      return next(
-        errorHandler(
-          400,
-          `Cannot request mediator: Dispute is ${dispute.dispute_status}`,
-        ),
-      );
+    if (["resolved", "cancelled"].includes(dispute.dispute_status))
+      return next(errorHandler(400, `Dispute is ${dispute.dispute_status}`));
+
+    // ✅ Auto-assign an available mediator
+    const mediators = await MediatorModel.find()
+      .select("-password")
+      .populate({
+        path: "disputes",
+        match: {
+          dispute_status: {
+            $in: ["In_Dispute", "resolving", "escalated_to_mediator"],
+          },
+        },
+      });
+
+    const availableMediator = mediators.find(
+      (m: IMediator) =>
+        (m.disputes?.length || 0) < 5 &&
+        m.mediator_email !== dispute.buyer_email &&
+        m.mediator_email !== dispute.vendor_email,
+    );
+
+    if (!availableMediator) {
+      // Still escalate even without mediator, but flag it
+      dispute.dispute_status = "escalated_to_mediator";
+      dispute.dispute_resolution_method = "mediator";
+      dispute.mediator_requested_by =
+        userEmail === dispute.buyer_email ? "buyer" : "seller";
+      dispute.mediator_requested_at = new Date();
+      await dispute.save();
+
+      return res.status(200).json({
+        status: "success",
+        message:
+          "Escalated to mediator queue. A mediator will be assigned shortly.",
+        data: { dispute, mediator_assigned: false },
+      });
     }
 
     const requested_by = userEmail === dispute.buyer_email ? "buyer" : "seller";
 
-    // ✅ ONLY update dispute status (NOT transaction status)
     dispute.dispute_status = "escalated_to_mediator";
     dispute.dispute_resolution_method = "mediator";
+    dispute.mediator = availableMediator._id;
     dispute.mediator_requested_by = requested_by;
     dispute.mediator_requested_at = new Date();
-
     await dispute.save();
+
+    // Update mediator's dispute list
+    await MediatorModel.findByIdAndUpdate(availableMediator._id, {
+      $addToSet: { disputes: dispute._id },
+    });
 
     try {
       await Promise.all([
@@ -412,15 +436,10 @@ export const requestMediator = async (
 
     res.status(200).json({
       status: "success",
-      message:
-        "Mediator requested successfully. A mediator will be assigned soon.",
-      data: {
-        dispute,
-        requested_by,
-      },
+      message: "Mediator assigned successfully.",
+      data: { dispute, mediator_assigned: true },
     });
   } catch (error) {
-    console.error("Error requesting mediator:", error);
     return next(errorHandler(500, "Internal server error"));
   }
 };

@@ -7,22 +7,22 @@ export const getCookieOptions = (maxAge: number) => {
     .replace(/^(https?:\/\/)?(www\.)?/, "")
     .replace(/\/$/, "");
 
-  console.log("🍪 Cookie Configuration:", {
-    NODE_ENV: process.env.NODE_ENV,
-    isProduction,
-    rawCookieDomain: cookieDomain,
-    cleanDomain,
-    willSetDomain: isProduction && !!cleanDomain,
-    options: {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? "none" : "lax",
-      maxAge,
-      path: "/",
-      ...(isProduction && cleanDomain ? { domain: cleanDomain } : {}),
-    },
-    maxAgeMinutes: maxAge / 60000,
-  });
+  // console.log("🍪 Cookie Configuration:", {
+  //   NODE_ENV: process.env.NODE_ENV,
+  //   isProduction,
+  //   rawCookieDomain: cookieDomain,
+  //   cleanDomain,
+  //   willSetDomain: isProduction && !!cleanDomain,
+  //   options: {
+  //     httpOnly: true,
+  //     secure: isProduction,
+  //     sameSite: isProduction ? "none" : "lax",
+  //     maxAge,
+  //     path: "/",
+  //     ...(isProduction && cleanDomain ? { domain: cleanDomain } : {}),
+  //   },
+  //   maxAgeMinutes: maxAge / 60000,
+  // });
 
   return {
     httpOnly: true,

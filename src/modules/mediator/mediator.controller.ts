@@ -1047,7 +1047,11 @@ export const mediatorResolveDispute = async (
     }
 
     // Check dispute status
-    if (dispute.dispute_status !== "resolving") {
+    // if (dispute.dispute_status !== "resolving") {
+
+    if (
+      !["resolving", "escalated_to_mediator"].includes(dispute.dispute_status)
+    ) {
       return next(
         errorHandler(
           400,
