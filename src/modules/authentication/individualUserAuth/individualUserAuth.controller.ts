@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import axios from "axios";
 import { Request, Response, NextFunction } from "express";
 import IndividualUser from "./individualUserAuth.model1";
 import individualAuthPasswordToken from "./individualAuthPasswordToken";
@@ -102,207 +103,6 @@ export const individualUserRegistration = async (
   }
 };
 
-// export const individualUserLogin = async (
-//   req: Request,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   try {
-//     const { email, password } = req.body;
-
-//     if (!email || !password) {
-//       const error: ErrorResponse = {
-//         statusCode: 400,
-//         status: "fail",
-//         message: "Email and password are required",
-//       };
-//       return next(error);
-//     }
-
-//     const user = await IndividualUser.findOne({ email }).select("+password");
-//     if (!user) {
-//       const error: ErrorResponse = {
-//         statusCode: 404,
-//         status: "fail",
-//         message: "User not found",
-//       };
-//       return next(error);
-//     }
-
-//     if (!user.email_verified) {
-//       const error: ErrorResponse = {
-//         statusCode: 403,
-//         status: "fail",
-//         message: "Please verify your email before logging in",
-//       };
-//       return next(error);
-//     }
-
-//     const isMatch = await bcrypt.compare(password, user.password);
-//     if (!isMatch) {
-//       const error: ErrorResponse = {
-//         statusCode: 401,
-//         status: "fail",
-//         message: "Invalid email or password",
-//       };
-//       return next(error);
-//     }
-
-//     // Get user agent from request
-//     const userAgent = req.get("User-Agent") || "unknown";
-
-//     // Use the session utility to create session and send tokens
-//     const result = await createSessionAndSendTokens({
-//       user: user.toObject(),
-//       userAgent: userAgent,
-//       role: "ind", // Individual user role
-//       message: "Login successful",
-//     });
-
-//     // Set cookies for access and refresh tokens
-//     res.cookie("access_token", result.accessToken, {
-//       httpOnly: true,
-//       secure: process.env.NODE_ENV === "production",
-//       sameSite: "strict",
-//       maxAge: 15 * 60 * 1000, // 15 minutes
-//     });
-
-//     res.cookie("refresh_token", result.refreshToken, {
-//       httpOnly: true,
-//       secure: process.env.NODE_ENV === "production",
-//       sameSite: "strict",
-//       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-//     });
-
-//     res.status(200).json({
-//       status: "success",
-//       message: result.message,
-//       user: {
-//         id: user._id,
-//         email: user.email,
-//         phone_number: user.phone_number,
-//         role: user.role,
-//       },
-//       accessToken: result.accessToken,
-//       refreshToken: result.refreshToken,
-//     });
-//   } catch (error) {
-//     const errResponse: ErrorResponse = {
-//       statusCode: 500,
-//       status: "error",
-//       message: "Error logging in",
-//       stack: error instanceof Error ? { stack: error.stack } : undefined,
-//     };
-//     next(errResponse);
-//   }
-// };
-
-// export const individualUserLogin = async (
-//   req: Request,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   try {
-//     const { email, password } = req.body;
-
-//     // Validation
-//     if (!email || !password) {
-//       const error: ErrorResponse = {
-//         statusCode: 400,
-//         status: "fail",
-//         message: "Email and password are required",
-//       };
-//       return next(error);
-//     }
-
-//     // Find user and include password field
-//     const user = await IndividualUser.findOne({ email }).select("+password");
-
-//     if (!user) {
-//       const error: ErrorResponse = {
-//         statusCode: 404,
-//         status: "fail",
-//         message: "Invalid email or password", // Generic message for security
-//       };
-//       return next(error);
-//     }
-
-//     // Check if email is verified
-//     if (!user.email_verified) {
-//       const error: ErrorResponse = {
-//         statusCode: 403,
-//         status: "fail",
-//         message: "Please verify your email before logging in",
-//       };
-//       return next(error);
-//     }
-
-//     // Verify password
-//     const isMatch = await bcrypt.compare(password, user.password);
-
-//     if (!isMatch) {
-//       const error: ErrorResponse = {
-//         statusCode: 401,
-//         status: "fail",
-//         message: "Invalid email or password",
-//       };
-//       return next(error);
-//     }
-
-//     // Get user agent from request headers
-//     const userAgent = req.get("User-Agent") || "unknown";
-
-//     // Create session and generate tokens
-//     const result = await createSessionAndSendTokens({
-//       user: {
-//         _id: user._id,
-//         email: user.email,
-//         phone_number: user.phone_number,
-//         role: user.role,
-//       },
-//       userAgent,
-//       role: "ind",
-//       message: "Login successful",
-//     });
-
-//     // Set HTTP-only cookies
-//     res.cookie("access_token", result.accessToken, {
-//       httpOnly: true,
-//       secure: process.env.NODE_ENV === "production",
-//       sameSite: "strict",
-//       maxAge: 15 * 60 * 1000, // 15 minutes
-//     });
-
-//     res.cookie("refresh_token", result.refreshToken, {
-//       httpOnly: true,
-//       secure: process.env.NODE_ENV === "production",
-//       sameSite: "strict",
-//       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-//     });
-
-//     // Send response
-//     res.status(200).json({
-//       status: "success",
-//       message: result.message,
-//       user: {
-//         id: user._id,
-//         email: user.email,
-//         phone_number: user.phone_number,
-//         role: user.role,
-//       },
-//       accessToken: result.accessToken,
-//       refreshToken: result.refreshToken,
-//     });
-//   } catch (error) {
-//     const errResponse: ErrorResponse = {
-//       statusCode: 500,
-//       status: "error",
-//       message: "Error logging in",
-//       stack: error instanceof Error ? { stack: error.stack } : undefined,
-//     };
-//     next(errResponse);
-//   }
-// };
 export const individualUserLogin = async (
   req: Request,
   res: Response,
@@ -487,6 +287,301 @@ export const verifyEmail = async (
           ? "Invalid or expired token"
           : "Error verifying email",
       stack: error instanceof Error ? { stack: error.stack } : undefined,
+    };
+    next(errResponse);
+  }
+};
+export const completeEmailVerificationWithBankDetails = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { token } = req.query;
+    const { account_number, bank_name, account_name, bank_code } = req.body;
+
+    // ============================================
+    // STEP 1: Validate Token
+    // ============================================
+    if (!token || typeof token !== "string") {
+      const error: ErrorResponse = {
+        statusCode: 400,
+        status: "fail",
+        message: "Invalid or missing verification token",
+      };
+      return next(error);
+    }
+
+    // ============================================
+    // STEP 2: Validate Bank Details (ALL REQUIRED)
+    // ============================================
+    if (!account_number || !bank_name || !account_name || !bank_code) {
+      const error: ErrorResponse = {
+        statusCode: 400,
+        status: "fail",
+        message: "All bank details are required)",
+      };
+      return next(error);
+    }
+
+    // Validate account number format
+    if (!/^\d{10}$/.test(account_number)) {
+      const error: ErrorResponse = {
+        statusCode: 400,
+        status: "fail",
+        message: "Account number must be exactly 10 digits",
+      };
+      return next(error);
+    }
+
+    // ============================================
+    // STEP 3: Verify JWT Token
+    // ============================================
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET as string) as {
+        email: string;
+      };
+    } catch (err) {
+      const error: ErrorResponse = {
+        statusCode: 400,
+        status: "fail",
+        message: "Invalid or expired verification token",
+      };
+      return next(error);
+    }
+
+    // ============================================
+    // STEP 4: Find User
+    // ============================================
+    const user = await IndividualUser.findOne({ email: decoded.email });
+
+    if (!user) {
+      const error: ErrorResponse = {
+        statusCode: 404,
+        status: "fail",
+        message: "User not found",
+      };
+      return next(error);
+    }
+
+    // Check if already verified
+    if (user.email_verified) {
+      const error: ErrorResponse = {
+        statusCode: 400,
+        status: "fail",
+        message:
+          "Email already verified. You can update bank details in your profile settings.",
+      };
+      return next(error);
+    }
+
+    // ============================================
+    // STEP 5: Verify Bank Account with Paystack (Optional but Recommended)
+    // ============================================
+    try {
+      const paystackResponse = await axios.get(
+        `https://api.paystack.co/bank/resolve?account_number=${account_number}&bank_code=${bank_code}`,
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+          },
+        },
+      );
+
+      // Check if account name matches
+      const paystackAccountName =
+        paystackResponse.data.data?.account_name?.toLowerCase();
+      const providedAccountName = account_name.toLowerCase();
+
+      // Log for debugging
+      console.log("🏦 Bank verification:", {
+        provided: account_name,
+        paystack: paystackResponse.data.data?.account_name,
+      });
+
+      // Optional: Enforce exact match
+      // if (paystackAccountName !== providedAccountName) {
+      //   const error: ErrorResponse = {
+      //     statusCode: 400,
+      //     status: "fail",
+      //     message: `Account name mismatch. Paystack returned: ${paystackResponse.data.data?.account_name}`,
+      //   };
+      //   return next(error);
+      // }
+    } catch (paystackError) {
+      console.error("❌ Paystack verification failed:", paystackError);
+
+      // Decide: Fail hard or allow anyway?
+      // Option 1: Fail hard (recommended)
+      const error: ErrorResponse = {
+        statusCode: 400,
+        status: "fail",
+        message:
+          "Unable to verify bank account. Please check your account number and bank.",
+      };
+      return next(error);
+
+      // Option 2: Log warning and continue (less secure)
+      // console.warn("⚠️ Proceeding without Paystack verification");
+    }
+
+    // ============================================
+    // STEP 6: Update User (Email + Bank Details Together)
+    // ============================================
+    user.email_verified = true;
+    user.bank_details = {
+      account_number,
+      bank_name,
+      account_name,
+      bank_code,
+    };
+
+    await user.save();
+
+    console.log(`✅ User verified and bank details saved: ${user.email}`);
+
+    // ============================================
+    // STEP 7: Send Welcome Email
+    // ============================================
+    try {
+      await sendWelcomeEmail(user.email);
+      console.log(`📧 Welcome email sent to: ${user.email}`);
+    } catch (emailError) {
+      console.error("⚠️ Failed to send welcome email:", emailError);
+      // Don't fail the request if email fails
+    }
+
+    // ============================================
+    // STEP 8: Return Success
+    // ============================================
+    res.status(200).json({
+      status: "success",
+      message:
+        "Email verified and bank details saved successfully! You can now sign in.",
+      data: {
+        email: user.email,
+        email_verified: true,
+        bank_details_added: true,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Email verification with bank details error:", error);
+
+    const errResponse: ErrorResponse = {
+      statusCode: 500,
+      status: "error",
+      message: "Error completing verification",
+      stack: error instanceof Error ? { stack: error.stack } : undefined,
+    };
+    next(errResponse);
+  }
+};
+
+// ============================================
+// HELPER: Verify Bank Account Endpoint (for frontend pre-validation)
+// ============================================
+
+/**
+ * Separate endpoint to verify account before submission
+ * This is called when user clicks "Verify" button
+ */
+export const verifyBankAccountOnly = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { account_number, bank_code } = req.body;
+
+    console.log("🔍 Verification request received:", {
+      account_number,
+      bank_code,
+      hasPaystackKey: !!process.env.PAYSTACK_SECRET_KEY,
+      paystackKeyPrefix:
+        process.env.PAYSTACK_SECRET_KEY?.substring(0, 10) + "...",
+    });
+
+    if (!account_number || !bank_code) {
+      const error: ErrorResponse = {
+        statusCode: 400,
+        status: "fail",
+        message: "Account number and bank code are required",
+      };
+      return next(error);
+    }
+
+    if (!/^\d{10}$/.test(account_number)) {
+      const error: ErrorResponse = {
+        statusCode: 400,
+        status: "fail",
+        message: "Account number must be 10 digits",
+      };
+      return next(error);
+    }
+
+    console.log(
+      `🌐 Calling Paystack API: account=${account_number}, bank=${bank_code}`,
+    );
+
+    const response = await axios.get(
+      `https://api.paystack.co/bank/resolve?account_number=${account_number}&bank_code=${bank_code}`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+        },
+      },
+    );
+
+    console.log("✅ Paystack response:", {
+      status: response.data.status,
+      accountName: response.data.data?.account_name,
+    });
+
+    if (response.data.status && response.data.data) {
+      res.status(200).json({
+        status: "success",
+        message: "Account verified successfully",
+        data: {
+          account_name: response.data.data.account_name,
+          account_number: response.data.data.account_number,
+        },
+      });
+    } else {
+      console.log("❌ Paystack verification failed:", response.data);
+      const error: ErrorResponse = {
+        statusCode: 400,
+        status: "fail",
+        message: response.data.message || "Unable to verify account details",
+      };
+      return next(error);
+    }
+  } catch (error) {
+    console.error("❌ Account verification error details:", {
+      message: error instanceof Error ? error.message : "Unknown error",
+      response: axios.isAxiosError(error)
+        ? {
+            status: error.response?.status,
+            data: error.response?.data,
+            headers: error.response?.headers,
+          }
+        : null,
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+
+    if (axios.isAxiosError(error) && error.response) {
+      const errorResponse: ErrorResponse = {
+        statusCode: error.response.status || 400,
+        status: "fail",
+        message: error.response.data?.message || "Invalid account details",
+      };
+      return next(errorResponse);
+    }
+
+    const errResponse: ErrorResponse = {
+      statusCode: 500,
+      status: "error",
+      message: "Error verifying account",
     };
     next(errResponse);
   }

@@ -3,6 +3,8 @@ import {
   individualUserRegistration,
   resetIndividualPassword,
   verifyEmail,
+  completeEmailVerificationWithBankDetails,
+  verifyBankAccountOnly,
   individualUserLogin,
   resendVerificationEmail,
   forgotPassword,
@@ -134,7 +136,18 @@ individualrouter.route("/login").post(asyncHandler(individualUserLogin));
  *         '500':
  *           description: Internal server error
  */
+
 individualrouter.get("/verify-email", verifyEmail);
+
+individualrouter.post(
+  "/verify-emailAndBank",
+  asyncHandler(completeEmailVerificationWithBankDetails),
+);
+
+individualrouter.post(
+  "/verifyBankAccountOnly",
+  asyncHandler(verifyBankAccountOnly),
+);
 
 /**
  * @swagger

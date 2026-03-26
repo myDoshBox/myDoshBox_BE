@@ -485,6 +485,11 @@ const vendorBankDetailsSchema = new Schema(
 export interface IProductTransaction extends Document {
   user: mongoose.Schema.Types.ObjectId;
   shipping?: mongoose.Schema.Types.ObjectId | IShippingDetails;
+  delivery_option: string;
+  agreed_delivery_fee: number;
+  expected_delivery_date: Date;
+  expected_delivery_range: string;
+  commission: number;
   transaction_id: string;
   payment_reference?: string;
   buyer_email: string;
@@ -547,10 +552,21 @@ const productTransactionSchema = new mongoose.Schema<IProductTransaction>(
       ref: "IndividualUser",
       required: true,
     },
+    delivery_option: {
+      type: String,
+      enum: ["pickup", "pay_on_delivery", "agreed_delivery_fee"],
+    },
+    agreed_delivery_fee: { type: Number, default: 0 },
+    expected_delivery_date: { type: Date },
+    expected_delivery_range: { type: String },
 
     shipping: {
       type: Schema.Types.ObjectId,
       ref: "ShippingDetails",
+    },
+    commission: {
+      type: Number,
+      default: 0,
     },
 
     transaction_id: { type: String, required: true, unique: true },

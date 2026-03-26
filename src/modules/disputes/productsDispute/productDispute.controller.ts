@@ -77,6 +77,49 @@ const determineDisputeStage = (
   }
 };
 
+// SHARED HELPER — assign a mediator to a dispute.
+const assignMediatorToDispute = async (
+  dispute: any,
+  requestedBy: "buyer" | "seller" | "auto_escalation",
+): Promise<{ assigned: boolean; mediator: any | null }> => {
+  const mediators = await MediatorModel.find()
+    .select("-password")
+    .populate({
+      path: "disputes",
+      match: {
+        dispute_status: {
+          $in: ["In_Dispute", "resolving", "escalated_to_mediator"],
+        },
+      },
+    });
+
+  const availableMediator = mediators.find(
+    (m: IMediator) =>
+      (m.disputes?.length || 0) < 5 &&
+      m.mediator_email !== dispute.buyer_email &&
+      m.mediator_email !== dispute.vendor_email,
+  );
+
+  dispute.dispute_status = "escalated_to_mediator";
+  dispute.dispute_resolution_method = "mediator";
+  dispute.mediator_requested_by = requestedBy;
+  dispute.mediator_requested_at = new Date();
+
+  if (availableMediator) {
+    dispute.mediator = availableMediator._id;
+
+    // Update mediator's dispute list
+    await MediatorModel.findByIdAndUpdate(availableMediator._id, {
+      $addToSet: { disputes: dispute._id },
+    });
+
+    return { assigned: true, mediator: availableMediator };
+  }
+
+  // No mediator available — escalate anyway, assign later
+  dispute.mediator = null;
+  return { assigned: false, mediator: null };
+};
 /**
  * Raise a new dispute
  */
@@ -367,67 +410,27 @@ export const requestMediator = async (
     if (["resolved", "cancelled"].includes(dispute.dispute_status))
       return next(errorHandler(400, `Dispute is ${dispute.dispute_status}`));
 
-    // ✅ Auto-assign an available mediator
-    const mediators = await MediatorModel.find()
-      .select("-password")
-      .populate({
-        path: "disputes",
-        match: {
-          dispute_status: {
-            $in: ["In_Dispute", "resolving", "escalated_to_mediator"],
-          },
-        },
-      });
+    const requestedBy = userEmail === dispute.buyer_email ? "buyer" : "seller";
 
-    const availableMediator = mediators.find(
-      (m: IMediator) =>
-        (m.disputes?.length || 0) < 5 &&
-        m.mediator_email !== dispute.buyer_email &&
-        m.mediator_email !== dispute.vendor_email,
+    // ✅ Use shared helper
+    const { assigned, mediator } = await assignMediatorToDispute(
+      dispute,
+      requestedBy,
     );
 
-    if (!availableMediator) {
-      // Still escalate even without mediator, but flag it
-      dispute.dispute_status = "escalated_to_mediator";
-      dispute.dispute_resolution_method = "mediator";
-      dispute.mediator_requested_by =
-        userEmail === dispute.buyer_email ? "buyer" : "seller";
-      dispute.mediator_requested_at = new Date();
-      await dispute.save();
-
-      return res.status(200).json({
-        status: "success",
-        message:
-          "Escalated to mediator queue. A mediator will be assigned shortly.",
-        data: { dispute, mediator_assigned: false },
-      });
-    }
-
-    const requested_by = userEmail === dispute.buyer_email ? "buyer" : "seller";
-
-    dispute.dispute_status = "escalated_to_mediator";
-    dispute.dispute_resolution_method = "mediator";
-    dispute.mediator = availableMediator._id;
-    dispute.mediator_requested_by = requested_by;
-    dispute.mediator_requested_at = new Date();
     await dispute.save();
-
-    // Update mediator's dispute list
-    await MediatorModel.findByIdAndUpdate(availableMediator._id, {
-      $addToSet: { disputes: dispute._id },
-    });
 
     try {
       await Promise.all([
         sendMediatorRequestedMailToBuyer(
           dispute.buyer_email,
           dispute.product_name,
-          requested_by,
+          requestedBy,
         ),
         sendMediatorRequestedMailToSeller(
           dispute.vendor_email,
           dispute.product_name,
-          requested_by,
+          requestedBy,
         ),
       ]);
     } catch (emailError) {
@@ -436,8 +439,10 @@ export const requestMediator = async (
 
     res.status(200).json({
       status: "success",
-      message: "Mediator assigned successfully.",
-      data: { dispute, mediator_assigned: true },
+      message: assigned
+        ? "Mediator assigned successfully."
+        : "Escalated to mediator queue. A mediator will be assigned shortly.",
+      data: { dispute, mediator_assigned: assigned },
     });
   } catch (error) {
     return next(errorHandler(500, "Internal server error"));
@@ -581,182 +586,6 @@ export const getAllDisputesByUser = async (
   }
 };
 
-/**
- * Get single dispute details with full resolution history
- */
-
-// ========================================
-// KEY FIXES FOR DISPUTE CONTROLLER
-// ========================================
-
-/**
- * Get single dispute details with full resolution history
- * FIXED: Proper user role determination and proposal filtering
- */
-/**
- * Get single dispute details with full resolution history
- * FIXED: Better proposal detection
- */
-
-/**
- * Propose a resolution
- * FIXED: Better validation and duplicate prevention
- */
-// export const proposeResolution = async (
-//   req: Request,
-//   res: Response,
-//   next: NextFunction
-// ): Promise<void> => {
-//   const { transaction_id } = req.params;
-//   const { proposal_description } = req.body;
-
-//   validateFormFields({ proposal_description }, next);
-
-//   if (!proposal_description?.trim()) {
-//     return next(errorHandler(400, "Proposal description is required"));
-//   }
-
-//   const userEmail = await getUserEmailFromToken(req);
-//   if (!userEmail) {
-//     return next(errorHandler(401, "Authentication required"));
-//   }
-
-//   try {
-//     const dispute = await ProductDispute.findOne({
-//       transaction_id,
-//     }).populate("transaction");
-
-//     if (!dispute) {
-//       return next(errorHandler(404, "Dispute not found"));
-//     }
-
-//     const userEmailLower = userEmail.toLowerCase();
-//     const buyerEmailLower = dispute.buyer_email.toLowerCase();
-//     const vendorEmailLower = dispute.vendor_email.toLowerCase();
-
-//     // ✅ FIX: Case-insensitive email comparison
-//     if (
-//       userEmailLower !== buyerEmailLower &&
-//       userEmailLower !== vendorEmailLower
-//     ) {
-//       return next(errorHandler(403, "Not authorized to propose resolution"));
-//     }
-
-//     // ✅ FIX: Check status more clearly
-//     if (!["In_Dispute", "resolving"].includes(dispute.dispute_status)) {
-//       return next(
-//         errorHandler(
-//           400,
-//           `Cannot propose resolution: Dispute status is ${dispute.dispute_status}`
-//         )
-//       );
-//     }
-
-//     if (dispute.dispute_resolution_method === "mediator") {
-//       return next(
-//         errorHandler(400, "Cannot propose: Mediator is handling this dispute")
-//       );
-//     }
-
-//     // ✅ FIX: Check for existing pending proposals more carefully
-//     const currentUserPendingProposal = dispute.resolution_proposals.find(
-//       (p) => {
-//         const proposalEmailLower = p.proposed_by_email.toLowerCase();
-//         return p.status === "pending" && proposalEmailLower === userEmailLower;
-//       }
-//     );
-
-//     if (currentUserPendingProposal) {
-//       return next(
-//         errorHandler(
-//           400,
-//           "You already have a pending proposal. Wait for response before proposing another."
-//         )
-//       );
-//     }
-
-//     // ✅ FIX: Check if there's a pending proposal from other party to respond to
-//     const otherPartyPendingProposal = dispute.resolution_proposals.find((p) => {
-//       const proposalEmailLower = p.proposed_by_email.toLowerCase();
-//       return p.status === "pending" && proposalEmailLower !== userEmailLower;
-//     });
-
-//     if (otherPartyPendingProposal) {
-//       return next(
-//         errorHandler(
-//           400,
-//           "Please respond to the pending proposal before creating a new one"
-//         )
-//       );
-//     }
-
-//     const proposed_by = userEmailLower === buyerEmailLower ? "buyer" : "seller";
-
-//     const newProposal = {
-//       proposed_by,
-//       proposed_by_email: userEmail,
-//       proposal_date: new Date(),
-//       proposal_type: "description_only" as const,
-//       resolution_description: proposal_description.trim(),
-//       proposal_description: proposal_description.trim(),
-//       status: "pending" as const,
-//     } as IResolutionProposal;
-
-//     dispute.resolution_proposals.push(newProposal);
-//     dispute.dispute_status = "resolving";
-//     dispute.dispute_resolution_method = "dispute_parties";
-
-//     await dispute.save();
-
-//     // ✅ Send emails to the OTHER party
-//     try {
-//       const productSummary = dispute.product_name;
-
-//       if (proposed_by === "buyer") {
-//         await sendResolutionProposedToSeller(
-//           dispute.vendor_email,
-//           productSummary,
-//           "buyer",
-//           dispute.resolution_proposals.length
-//         );
-//       } else {
-//         await sendResolutionProposedToBuyer(
-//           dispute.buyer_email,
-//           productSummary,
-//           "seller",
-//           dispute.resolution_proposals.length
-//         );
-//       }
-//     } catch (emailError) {
-//       console.error("Error sending proposal emails:", emailError);
-//     }
-
-//     res.status(200).json({
-//       status: "success",
-//       message: "Resolution proposed successfully. Awaiting response.",
-//       data: {
-//         dispute,
-//         proposal_number: dispute.resolution_proposals.length,
-//         rejections_remaining: dispute.max_rejections - dispute.rejection_count,
-//         dispute_stage: dispute.dispute_stage,
-//         next_step: "waiting_for_response",
-//         proposed_by: proposed_by,
-//       },
-//     });
-//   } catch (error) {
-//     console.error("Error proposing resolution:", error);
-//     return next(errorHandler(500, "Internal server error"));
-//   }
-// };
-/**
- * Propose a resolution - FIXED VERSION
- */
-/**
- * Propose a resolution - FIXED VERSION with correct TypeScript interface
- */
-/**
- * Propose a resolution - FIXED VERSION with proper TypeScript
- */
 export const proposeResolution = async (
   req: Request,
   res: Response,
@@ -1066,8 +895,12 @@ export const respondToResolution = async (
 
       // Check for auto-escalation
       if (dispute.rejection_count >= dispute.max_rejections) {
-        dispute.dispute_status = "escalated_to_mediator";
-        dispute.dispute_resolution_method = "mediator";
+        //  Use shared helper
+        const { assigned, mediator } = await assignMediatorToDispute(
+          dispute,
+          "auto_escalation",
+        );
+
         dispute.resolution_summary = `Auto-escalated to mediator after ${dispute.max_rejections} rejections`;
 
         await dispute.save();
@@ -1091,10 +924,13 @@ export const respondToResolution = async (
 
         res.status(200).json({
           status: "success",
-          message: `Resolution rejected. Dispute automatically escalated to mediator after ${dispute.max_rejections} rejections.`,
+          message: assigned
+            ? `Resolution rejected. Dispute automatically escalated to mediator after ${dispute.max_rejections} rejections. A mediator has been assigned.`
+            : `Resolution rejected. Dispute automatically escalated to mediator after ${dispute.max_rejections} rejections. A mediator will be assigned shortly.`,
           data: {
             dispute,
             auto_escalated: true,
+            mediator_assigned: assigned,
             rejected_by: responderRole,
           },
         });
@@ -1168,7 +1004,6 @@ export const getDisputeDetails = async (
       return next(errorHandler(401, "Authentication required"));
     }
 
-    // ✅ FIX: Proper user role determination
     const userEmailLower = userEmail.toLowerCase();
     const buyerEmailLower = dispute.buyer_email.toLowerCase();
     const vendorEmailLower = dispute.vendor_email.toLowerCase();
@@ -1194,7 +1029,6 @@ export const getDisputeDetails = async (
       })),
     });
 
-    // ✅ FIX: Find pending proposal that the CURRENT USER should respond to
     // (proposals from the OTHER party that are pending)
     const pendingProposalForCurrentUser = dispute.resolution_proposals.find(
       (proposal) => {
@@ -1206,7 +1040,7 @@ export const getDisputeDetails = async (
       },
     );
 
-    // ✅ FIX: Check if current user has a pending proposal (waiting for response)
+    // Check if current user has a pending proposal (waiting for response)
     const currentUserPendingProposal = dispute.resolution_proposals.find(
       (proposal) => {
         const proposalEmailLower = proposal.proposed_by_email.toLowerCase();
@@ -1217,30 +1051,13 @@ export const getDisputeDetails = async (
       },
     );
 
-    console.log("🔍 BACKEND DEBUG - Proposal Results:", {
-      pendingProposalForCurrentUser: pendingProposalForCurrentUser
-        ? {
-            proposed_by: pendingProposalForCurrentUser.proposed_by,
-            proposed_by_email: pendingProposalForCurrentUser.proposed_by_email,
-            status: pendingProposalForCurrentUser.status,
-          }
-        : null,
-      currentUserPendingProposal: currentUserPendingProposal
-        ? {
-            proposed_by: currentUserPendingProposal.proposed_by,
-            proposed_by_email: currentUserPendingProposal.proposed_by_email,
-            status: currentUserPendingProposal.status,
-          }
-        : null,
-    });
-
-    // ✅ FIX: Better permission determination
+    //Better permission determination
     const canPropose =
       (dispute.dispute_status === "In_Dispute" ||
         dispute.dispute_status === "resolving") &&
       dispute.dispute_resolution_method !== "mediator" &&
-      !currentUserPendingProposal && // Can't propose if already waiting for response
-      !pendingProposalForCurrentUser; // Can't propose if need to respond first
+      !currentUserPendingProposal &&
+      !pendingProposalForCurrentUser;
 
     const canRespond = !!pendingProposalForCurrentUser;
 
@@ -1253,7 +1070,7 @@ export const getDisputeDetails = async (
       !["resolved", "cancelled"].includes(dispute.dispute_status) &&
       dispute.dispute_resolution_method !== "mediator";
 
-    // ✅ FIX: Add detailed status information for frontend
+    // Add detailed status information for frontend
     const statusInfo = {
       dispute_status: dispute.dispute_status,
       is_mediator_involved: dispute.dispute_resolution_method === "mediator",
@@ -1273,23 +1090,23 @@ export const getDisputeDetails = async (
         dispute_stage: dispute.dispute_stage,
         transaction_state: dispute.transaction_state_snapshot,
 
-        // ✅ User identification
+        // User identification
         user_email: userEmail,
         user_role: userRole,
         is_buyer: isBuyer,
         is_seller: isSeller,
 
-        // ✅ Action permissions
+        // Action permissions
         can_propose: canPropose,
         can_respond: canRespond,
         can_request_mediator: canRequestMediator,
         can_cancel_dispute: canCancelDispute,
 
-        // ✅ Proposal context
+        // Proposal context
         pending_proposal_for_user: pendingProposalForCurrentUser || null,
         current_user_pending_proposal: currentUserPendingProposal || null,
 
-        // ✅ Status information
+        // Status information
         status_info: statusInfo,
       },
     });

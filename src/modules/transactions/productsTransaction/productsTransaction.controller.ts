@@ -75,6 +75,10 @@ export const initiateEscrowProductTransaction = async (
     products,
     signed_escrow_doc,
     delivery_address,
+    delivery_option,
+    agreed_delivery_fee,
+    expected_delivery_date,
+    expected_delivery_range,
   } = req.body;
 
   validateProductFields(
@@ -146,6 +150,10 @@ export const initiateEscrowProductTransaction = async (
       delivery_address,
       buyer_initiated: true,
       vendor_bank_details: vendorBankDetails,
+      delivery_option,
+      agreed_delivery_fee: agreed_delivery_fee || 0,
+      expected_delivery_date: expected_delivery_date || null,
+      expected_delivery_range: expected_delivery_range || null,
     });
 
     await newTransaction.save();
@@ -190,6 +198,11 @@ export const editEscrowProductTransaction = async (
     products,
     signed_escrow_doc,
     delivery_address,
+    // ✅ NEW FIELDS
+    delivery_option,
+    agreed_delivery_fee,
+    expected_delivery_date,
+    expected_delivery_range,
   } = req.body;
 
   if (!transaction_id) {
@@ -201,14 +214,12 @@ export const editEscrowProductTransaction = async (
   }
 
   try {
-    // Find the transaction
     const transaction = await ProductTransaction.findOne({ transaction_id });
 
     if (!transaction) {
       return next(errorHandler(404, "Transaction not found"));
     }
 
-    // Verify the buyer email matches
     if (transaction.buyer_email !== buyer_email) {
       return next(
         errorHandler(
@@ -218,7 +229,6 @@ export const editEscrowProductTransaction = async (
       );
     }
 
-    // Check if transaction can be edited
     if (transaction.seller_confirmed) {
       return next(
         errorHandler(
@@ -263,38 +273,69 @@ export const editEscrowProductTransaction = async (
       validateProductFields(fieldsToValidate, next);
     }
 
-    // Calculate new totals if products are updated
-    let sum_total = transaction.sum_total;
-    let commission = transaction.sum_total * 0.01;
-    let transaction_total = transaction.transaction_total;
+    // ✅ FIXED: Recalculate totals accounting for agreed_delivery_fee
+    // Use incoming value if provided, else fall back to what's stored
+    const effectiveProducts =
+      products && products.length > 0 ? products : transaction.products;
+    const effectiveDeliveryOption =
+      delivery_option ?? transaction.delivery_option;
+    const effectiveAgreedFee =
+      agreed_delivery_fee !== undefined
+        ? Number(agreed_delivery_fee)
+        : Number(transaction.agreed_delivery_fee ?? 0);
 
-    if (products && products.length > 0) {
-      sum_total = products.reduce(
-        (sum: number, p: { price: number; quantity: number }) =>
-          sum + p.price * p.quantity,
-        0,
-      );
-      commission = sum_total * 0.01;
-      transaction_total = sum_total + commission;
-    }
+    const sum_total = effectiveProducts.reduce(
+      (sum: number, p: { price: number; quantity: number }) =>
+        sum + p.price * p.quantity,
+      0,
+    );
 
-    // Prepare update object
+    const deliveryFeeAmount =
+      effectiveDeliveryOption === "agreed_delivery_fee"
+        ? effectiveAgreedFee
+        : 0;
+
+    const base = sum_total + deliveryFeeAmount;
+    const commission = base * 0.01;
+    const transaction_total = base + commission;
+
+    // ✅ Build updateData including all new fields
     const updateData: any = {
+      // existing fields
       ...(vendor_name && { vendor_name }),
       ...(vendor_phone_number && { vendor_phone_number }),
       ...(vendor_email && { vendor_email }),
       ...(transaction_type && { transaction_type }),
-      ...(products && { products }),
+      ...(products && products.length > 0 && { products }),
       ...(signed_escrow_doc && { signed_escrow_doc }),
       ...(delivery_address && { delivery_address }),
-      ...(products && {
-        sum_total,
-        transaction_total,
+
+      // always recalculate totals since delivery fee may have changed
+      sum_total,
+      transaction_total,
+      commission,
+
+      // ✅ NEW: delivery option fields
+      ...(delivery_option !== undefined && { delivery_option }),
+      ...(agreed_delivery_fee !== undefined
+        ? { agreed_delivery_fee: Number(agreed_delivery_fee) }
+        : effectiveDeliveryOption !== "agreed_delivery_fee"
+          ? { agreed_delivery_fee: 0 } // clear fee if option changed away from agreed_fee
+          : {}),
+
+      // ✅ NEW: expected delivery — clear the other field when one is set
+      ...(expected_delivery_date !== undefined && {
+        expected_delivery_date: expected_delivery_date || null,
+        expected_delivery_range: null, // clear range when specific date is set
       }),
+      ...(expected_delivery_range !== undefined && {
+        expected_delivery_range: expected_delivery_range || null,
+        expected_delivery_date: null, // clear specific date when range is set
+      }),
+
       updated_at: new Date(),
     };
 
-    // Update the transaction
     const updatedTransaction = await ProductTransaction.findByIdAndUpdate(
       transaction._id,
       updateData,
@@ -305,20 +346,18 @@ export const editEscrowProductTransaction = async (
       return next(errorHandler(500, "Failed to update transaction"));
     }
 
-    // Send notification emails about the edit
+    // Send notification emails
     const emailVendor = vendor_email || transaction.vendor_email;
     const emailVendorName = vendor_name || transaction.vendor_name;
     const emailProducts = products || transaction.products;
-    const emailSumTotal = sum_total;
-    const emailTransactionTotal = transaction_total;
 
     await sendTransactionEditNotificationToVendor(
       transaction_id,
       emailVendorName,
       emailVendor,
       emailProducts,
-      emailSumTotal,
-      emailTransactionTotal,
+      sum_total,
+      transaction_total,
     );
 
     await sendTransactionEditConfirmationToBuyer(
@@ -326,8 +365,8 @@ export const editEscrowProductTransaction = async (
       transaction_id,
       emailVendorName,
       emailProducts,
-      emailSumTotal,
-      emailTransactionTotal,
+      sum_total,
+      transaction_total,
     );
 
     res.json({
@@ -337,10 +376,16 @@ export const editEscrowProductTransaction = async (
         transaction_id: updatedTransaction.transaction_id,
         sum_total: updatedTransaction.sum_total,
         transaction_total: updatedTransaction.transaction_total,
+        commission: updatedTransaction.commission,
         vendor_name: updatedTransaction.vendor_name,
         vendor_email: updatedTransaction.vendor_email,
         products: updatedTransaction.products,
         transaction_status: updatedTransaction.transaction_status,
+        // ✅ Return new fields so frontend can sync state
+        delivery_option: updatedTransaction.delivery_option,
+        agreed_delivery_fee: updatedTransaction.agreed_delivery_fee,
+        expected_delivery_date: updatedTransaction.expected_delivery_date,
+        expected_delivery_range: updatedTransaction.expected_delivery_range,
       },
     });
   } catch (error) {
@@ -895,6 +940,10 @@ export const getSingleEscrowProductTransaction = async (
       delivery_address: transaction.delivery_address,
       buyer_initiated: transaction.buyer_initiated,
       seller_confirmed: transaction.seller_confirmed,
+      delivery_option: transaction.delivery_option ?? null,
+      agreed_delivery_fee: transaction.agreed_delivery_fee ?? 0,
+      expected_delivery_date: transaction.expected_delivery_date ?? null,
+      expected_delivery_range: transaction.expected_delivery_range ?? null,
       verified_payment_status: transaction.verified_payment_status,
       transaction_status: transaction.transaction_status,
       payment_reference: transaction.payment_reference,

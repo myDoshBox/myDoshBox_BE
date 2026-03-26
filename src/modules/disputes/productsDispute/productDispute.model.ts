@@ -373,7 +373,8 @@ export interface IProductDispute extends Document {
   dispute_resolution_method: "unresolved" | "dispute_parties" | "mediator";
 
   // Mediator
-  mediator_requested_by?: "buyer" | "seller";
+
+  mediator_requested_by?: "buyer" | "seller" | "auto_escalation";
   mediator_requested_at?: Date;
   mediator_assigned_at?: Date;
 
@@ -504,9 +505,10 @@ const productDisputeSchema = new Schema<IProductDispute>(
     },
 
     // Mediator
+
     mediator_requested_by: {
       type: String,
-      enum: ["buyer", "seller"],
+      enum: ["buyer", "seller", "auto_escalation"],
     },
     mediator_requested_at: Date,
     mediator_assigned_at: Date,
@@ -527,7 +529,7 @@ const productDisputeSchema = new Schema<IProductDispute>(
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-  }
+  },
 );
 
 // Indexes
@@ -538,7 +540,7 @@ productDisputeSchema.index({ dispute_stage: 1 });
 
 const ProductDispute = mongoose.model<IProductDispute>(
   "ProductDispute",
-  productDisputeSchema
+  productDisputeSchema,
 );
 
 export default ProductDispute;
