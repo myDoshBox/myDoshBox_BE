@@ -8,6 +8,11 @@ import {
   updateMediator,
 } from "./admin.controller";
 import {
+  getDisputeStatsByMediator,
+  getAllDisputesByMediator,
+} from "../disputes/productsDispute/productDispute.controller";
+
+import {
   verifyAuth,
   adminOnly,
   superAdminOnly,
@@ -90,5 +95,14 @@ adminRouter
 adminRouter
   .route("/update-Mediator/:mediatorId")
   .put(asyncHandler(updateMediator));
+
+// Add these routes
+adminRouter
+  .route("/:mediatorId/stats")
+  .get(verifyAuth, asyncHandler(getDisputeStatsByMediator));
+
+adminRouter
+  .route("/:mediatorId/disputes")
+  .get(verifyAuth, asyncHandler(getAllDisputesByMediator));
 
 export default adminRouter;

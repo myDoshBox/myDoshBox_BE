@@ -1115,3 +1115,242 @@ export const getDisputeDetails = async (
     return next(errorHandler(500, "Internal server error"));
   }
 };
+
+/**
+ * Get dispute statistics for a specific mediator
+ * Returns: total disputes, resolved, active, and resolution rate
+ */
+export const getDisputeStatsByMediator = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { mediatorId } = req.params;
+
+    if (!mediatorId) {
+      return next(errorHandler(400, "Mediator ID is required"));
+    }
+
+    // Verify mediator exists
+    const mediator = await MediatorModel.findById(mediatorId);
+    if (!mediator) {
+      return next(errorHandler(404, "Mediator not found"));
+    }
+
+    // Get all disputes assigned to this mediator
+    const disputes = await ProductDispute.find({
+      mediator: mediatorId,
+    }).lean();
+
+    // Calculate statistics
+    const totalDisputes = disputes.length;
+    const resolvedDisputes = disputes.filter(
+      (d) => d.dispute_status === "resolved",
+    ).length;
+    const activeDisputes = disputes.filter((d) =>
+      ["In_Dispute", "resolving", "escalated_to_mediator"].includes(
+        d.dispute_status,
+      ),
+    ).length;
+    const cancelledDisputes = disputes.filter(
+      (d) => d.dispute_status === "cancelled",
+    ).length;
+
+    // Calculate resolution rate (percentage of resolved out of total)
+    const resolutionRate =
+      totalDisputes > 0
+        ? Math.round((resolvedDisputes / totalDisputes) * 100)
+        : 0;
+
+    // Calculate average resolution time (for resolved disputes)
+    const resolvedWithDates = disputes.filter(
+      (d) => d.dispute_status === "resolved" && d.resolved_at,
+    );
+    const avgResolutionTime =
+      resolvedWithDates.length > 0
+        ? resolvedWithDates.reduce((sum, d) => {
+            const createdAt = new Date(d.createdAt);
+            const resolvedAt = new Date(d.resolved_at!);
+            const daysDiff = Math.ceil(
+              (resolvedAt.getTime() - createdAt.getTime()) /
+                (1000 * 60 * 60 * 24),
+            );
+            return sum + daysDiff;
+          }, 0) / resolvedWithDates.length
+        : 0;
+
+    // Get disputes by stage
+    const disputesByStage = {
+      pre_payment: disputes.filter((d) => d.dispute_stage === "pre_payment")
+        .length,
+      post_payment: disputes.filter((d) => d.dispute_stage === "post_payment")
+        .length,
+      post_delivery: disputes.filter((d) => d.dispute_stage === "post_delivery")
+        .length,
+    };
+
+    // Get disputes by resolution method
+    const disputesByMethod = {
+      mediator: disputes.filter(
+        (d) => d.dispute_resolution_method === "mediator",
+      ).length,
+      dispute_parties: disputes.filter(
+        (d) => d.dispute_resolution_method === "dispute_parties",
+      ).length,
+      unresolved: disputes.filter(
+        (d) => d.dispute_resolution_method === "unresolved",
+      ).length,
+    };
+
+    // Get recent disputes (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const recentDisputes = disputes.filter(
+      (d) => new Date(d.createdAt) >= thirtyDaysAgo,
+    ).length;
+
+    // Monthly breakdown for the last 6 months
+    const monthlyBreakdown = [];
+    const now = new Date();
+
+    for (let i = 0; i < 6; i++) {
+      const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
+
+      const monthDisputes = disputes.filter((d) => {
+        const createdAt = new Date(d.createdAt);
+        return createdAt >= monthStart && createdAt <= monthEnd;
+      });
+
+      const monthResolved = monthDisputes.filter(
+        (d) => d.dispute_status === "resolved",
+      ).length;
+
+      monthlyBreakdown.unshift({
+        month: monthStart.toLocaleString("default", {
+          month: "short",
+          year: "numeric",
+        }),
+        total: monthDisputes.length,
+        resolved: monthResolved,
+        active: monthDisputes.length - monthResolved,
+      });
+    }
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        mediator: {
+          id: mediator._id,
+          name: `${mediator.first_name} ${mediator.last_name}`,
+          email: mediator.mediator_email,
+        },
+        stats: {
+          total: totalDisputes,
+          resolved: resolvedDisputes,
+          active: activeDisputes,
+          cancelled: cancelledDisputes,
+          resolution_rate: resolutionRate,
+          avg_resolution_time_days: Math.round(avgResolutionTime * 10) / 10,
+          recent_30_days: recentDisputes,
+        },
+        breakdown: {
+          by_stage: disputesByStage,
+          by_resolution_method: disputesByMethod,
+          monthly: monthlyBreakdown,
+        },
+        last_updated: new Date().toISOString(),
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching mediator dispute stats:", error);
+    return next(errorHandler(500, "Internal server error"));
+  }
+};
+
+/**
+ * Get all disputes for a specific mediator with pagination and filtering
+ */
+export const getAllDisputesByMediator = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { mediatorId } = req.params;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const status = req.query.status as string;
+    const stage = req.query.stage as string;
+    const search = req.query.search as string;
+
+    if (!mediatorId) {
+      return next(errorHandler(400, "Mediator ID is required"));
+    }
+
+    // Build filter
+    const filter: any = { mediator: mediatorId };
+
+    if (status && status !== "all") {
+      filter.dispute_status = status;
+    }
+
+    if (stage && stage !== "all") {
+      filter.dispute_stage = stage;
+    }
+
+    // Search filter
+    if (search) {
+      filter.$or = [
+        { transaction_id: { $regex: search, $options: "i" } },
+        { buyer_email: { $regex: search, $options: "i" } },
+        { vendor_email: { $regex: search, $options: "i" } },
+        { product_name: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    const skip = (page - 1) * limit;
+    const total = await ProductDispute.countDocuments(filter);
+
+    const disputes = await ProductDispute.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate("transaction", "transaction_id transaction_total")
+      .lean();
+
+    const totalPages = Math.ceil(total / limit);
+
+    // Calculate summary for current filtered results
+    const summary = {
+      total: total,
+      resolved: disputes.filter((d) => d.dispute_status === "resolved").length,
+      active: disputes.filter((d) =>
+        ["In_Dispute", "resolving", "escalated_to_mediator"].includes(
+          d.dispute_status,
+        ),
+      ).length,
+    };
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        disputes,
+        summary,
+        pagination: {
+          total,
+          page,
+          limit,
+          totalPages,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching mediator disputes:", error);
+    return next(errorHandler(500, "Internal server error"));
+  }
+};
