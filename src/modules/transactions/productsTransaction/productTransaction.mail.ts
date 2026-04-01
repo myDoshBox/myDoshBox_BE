@@ -288,234 +288,394 @@ export const sendEscrowInitiationEmailToVendor = async (
   products: any[],
   sum_total: number,
   transaction_total: number,
+  delivery_option?: string,
+  agreed_delivery_fee?: number,
+  expected_delivery?: string | null,
+  isNewVendor: boolean = false,
 ) => {
   try {
     const transport = await generateMailTransporter();
     const supportEmail = "mydoshbox@gmail.com";
-    const signupUrl = "https://mydoshbox.vercel.app/signup";
+    const signupUrl = `https://mydoshbox.vercel.app/signup?ref=vendor&email=${encodeURIComponent(vendor_email)}&transaction_id=${transaction_id}`;
     const loginUrl = "https://mydoshbox.vercel.app/login";
     const dashboardUrl =
       "https://mydoshbox.vercel.app/userdashboard/transaction-history/confirm-escrow-product-transaction/transactions-in-progress-history";
 
-    // Generate product rows for the table
     const productRows = products
       .map(
         (p, index) => `
-      <tr style="border-bottom: 1px solid #e5e7eb;">
-        <td style="padding: 16px 12px; text-align: center; color: #6b7280; font-size: 14px;">${
-          index + 1
-        }</td>
-        <td style="padding: 16px 12px; color: #111827; font-size: 14px; font-weight: 500;">${
-          p.name
-        }</td>
-        <td style="padding: 16px 12px; text-align: center; color: #374151; font-size: 14px;">${
-          p.quantity
-        }</td>
-        <td style="padding: 16px 12px; text-align: right; color: #111827; font-size: 14px; font-weight: 500;">₦${Number(
-          p.price,
-        ).toLocaleString()}</td>
-        <td style="padding: 16px 12px; text-align: right; color: #059669; font-size: 14px; font-weight: 600;">₦${(
-          p.price * p.quantity
-        ).toLocaleString()}</td>
-      </tr>
-      ${
-        p.description
-          ? `
-      <tr style="border-bottom: 1px solid #e5e7eb;">
-        <td></td>
-        <td colspan="4" style="padding: 0 12px 16px 12px; color: #6b7280; font-size: 13px; font-style: italic;">
-          ${p.description}
-        </td>
-      </tr>
-      `
-          : ""
-      }
-    `,
+        <tr style="border-bottom: 1px solid #e5e7eb;">
+          <td style="padding: 14px 10px; text-align: center; color: #6b7280; font-size: 13px;">${index + 1}</td>
+          <td style="padding: 14px 10px; color: #111827; font-size: 13px; font-weight: 500;">${p.name}
+            ${p.description ? `<div style="color: #9ca3af; font-size: 11px; font-style: italic; margin-top: 3px;">${p.description}</div>` : ""}
+          </td>
+          <td style="padding: 14px 10px; text-align: center; color: #374151; font-size: 13px;">${p.quantity}</td>
+          <td style="padding: 14px 10px; text-align: right; color: #111827; font-size: 13px;">₦${Number(p.price).toLocaleString()}</td>
+          <td style="padding: 14px 10px; text-align: right; color: #059669; font-size: 13px; font-weight: 600;">₦${(p.price * p.quantity).toLocaleString()}</td>
+        </tr>
+      `,
       )
       .join("");
 
-    const emailMessage = `
-  <!DOCTYPE html>
-  <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>New Escrow Transaction Initiated</title>
-  </head>
-  <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #f3f4f6;">
-    
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f3f4f6; padding: 40px 20px;">
+    // Delivery option display
+    const deliveryLabel =
+      delivery_option === "pickup"
+        ? "Pickup"
+        : delivery_option === "pay_on_delivery"
+          ? "Pay on Delivery"
+          : delivery_option === "agreed_delivery_fee"
+            ? `Agreed Delivery Fee${agreed_delivery_fee ? ` — ₦${Number(agreed_delivery_fee).toLocaleString()}` : ""}`
+            : "Not specified";
+
+    const deliveryRow = delivery_option
+      ? `
       <tr>
-        <td align="center">
-          <!-- Main Container -->
-          <table role="presentation" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); overflow: hidden;" cellspacing="0" cellpadding="0" border="0">
-            
-            <!-- Header with Brand Color -->
-            <tr>
-              <td style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 32px 24px; text-align: center;">
-                <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;">
-                  🎉 New Transaction Request
-                </h1>
-                <p style="margin: 8px 0 0 0; color: #d1fae5; font-size: 14px;">
-                  A buyer wants to purchase from you
-                </p>
-              </td>
-            </tr>
-
-            <!-- Content -->
-            <tr>
-              <td style="padding: 32px 24px;">
-                
-                <!-- Greeting -->
-                <p style="margin: 0 0 20px 0; color: #111827; font-size: 16px; line-height: 1.6;">
-                  Hello <strong>${vendor_name}</strong>,
-                </p>
-                
-                <p style="margin: 0 0 24px 0; color: #374151; font-size: 15px; line-height: 1.6;">
-                  Great news! A buyer has initiated an escrow transaction for your products. Please review the details below and confirm the order in your dashboard.
-                </p>
-
-                <!-- Transaction Info Box -->
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 24px;">
-                  <tr>
-                    <td style="padding: 20px;">
-                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
-                        <tr>
-                          <td style="padding: 8px 0; color: #6b7280; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
-                            Transaction ID
-                          </td>
-                          <td style="padding: 8px 0; color: #111827; font-size: 14px; font-weight: 600; text-align: right; font-family: 'Courier New', monospace;">
-                            ${transaction_id}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td colspan="2" style="padding: 12px 0 0 0; border-top: 1px solid #e5e7eb;"></td>
-                        </tr>
-                        <tr>
-                          <td style="padding: 12px 0 8px 0; color: #6b7280; font-size: 13px;">
-                            Product Sum Total
-                          </td>
-                          <td style="padding: 12px 0 8px 0; color: #059669; font-size: 18px; font-weight: 700; text-align: right;">
-                            ₦${Number(sum_total).toLocaleString()}
-                          </td>
-                        </tr>
-                        <tr>                      
-                        </tr>
-                        <tr>
-                          <td colspan="2" style="padding: 8px 0 0 0; border-top: 2px solid #d1d5db;"></td>
-                        </tr>
-                        <tr>
-                         
-                        </tr>
-                      </table>
-                    </td>
-                  </tr>
-                </table>
-
-                <!-- Products Table -->
-                <h2 style="margin: 0 0 16px 0; color: #111827; font-size: 18px; font-weight: 700;">
-                  📦 Order Details
-                </h2>
-                
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-radius: 8px; border: 1px solid #e5e7eb; overflow: hidden; margin-bottom: 24px;">
-                  <!-- Table Header -->
-                  <tr style="background-color: #f9fafb;">
-                    <th style="padding: 14px 12px; text-align: center; color: #6b7280; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e5e7eb;">#</th>
-                    <th style="padding: 14px 12px; text-align: left; color: #6b7280; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e5e7eb;">Product</th>
-                    <th style="padding: 14px 12px; text-align: center; color: #6b7280; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e5e7eb;">Qty</th>
-                    <th style="padding: 14px 12px; text-align: right; color: #6b7280; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e5e7eb;">Unit Price</th>
-                    <th style="padding: 14px 12px; text-align: right; color: #6b7280; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e5e7eb;">Total</th>
-                  </tr>
-                  
-                  <!-- Product Rows -->
-                  ${productRows}
-                </table>
-
-                <!-- Action Required Section -->
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 8px; border-left: 4px solid #f59e0b; margin-bottom: 24px;">
-                  <tr>
-                    <td style="padding: 20px;">
-                      <p style="margin: 0 0 12px 0; color: #92400e; font-size: 14px; font-weight: 700;">
-                        ⚠️ Action Required
-                      </p>
-                      <p style="margin: 0; color: #78350f; font-size: 14px; line-height: 1.6;">
-                        Please log in to your MyDoshBox account to review and confirm this transaction. Once confirmed, the buyer will proceed with payment, and you'll need to provide shipping details.
-                      </p>
-                    </td>
-                  </tr>
-                </table>
-
-                <!-- CTA Buttons -->
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 24px;">
-                  <tr>
-                    <td align="center" style="padding: 0 0 12px 0;">
-                      <a href="${dashboardUrl}" style="display: inline-block; padding: 14px 32px; background-color: #10b981; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);">
-                        View Transaction in Dashboard
-                      </a>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td align="center" style="padding: 0;">
-                      <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 13px;">
-                        Don't have an account yet?
-                      </p>
-                      <a href="${signupUrl}" style="color: #059669; text-decoration: none; font-weight: 600; font-size: 14px;">
-                        Create Account →
-                      </a>
-                    </td>
-                  </tr>
-                </table>
-
-                <!-- Divider -->
-                <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 32px 0;" />
-
-                <!-- Support Section -->
-                <p style="margin: 0 0 12px 0; color: #6b7280; font-size: 14px; line-height: 1.6;">
-                  Need help? Contact our support team at 
-                  <a href="mailto:${supportEmail}" style="color: #10b981; text-decoration: none; font-weight: 600;">${supportEmail}</a>
-                </p>
-
-                <p style="margin: 0; color: #374151; font-size: 14px; line-height: 1.6;">
-                  Best regards,<br/>
-                  <strong style="color: #10b981;">The MyDoshBox Team</strong>
-                </p>
-
-              </td>
-            </tr>
-
-            <!-- Footer -->
-            <tr>
-              <td style="background-color: #f9fafb; padding: 24px; text-align: center; border-top: 1px solid #e5e7eb;">
-                <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 12px;">
-                  © ${new Date().getFullYear()} MyDoshBox. All rights reserved.
-                </p>
-                <p style="margin: 0; color: #9ca3af; font-size: 11px;">
-                  Secure escrow transactions made simple
-                </p>
-              </td>
-            </tr>
-
-          </table>
-        </td>
+        <td colspan="2" style="padding: 8px 0 0 0; border-top: 1px solid #e5e7eb;"></td>
       </tr>
-    </table>
+      <tr>
+        <td style="padding: 10px 0 6px 0; color: #6b7280; font-size: 13px;">Delivery Option</td>
+        <td style="padding: 10px 0 6px 0; color: #111827; font-size: 13px; font-weight: 600; text-align: right;">${deliveryLabel}</td>
+      </tr>`
+      : "";
 
-  </body>
-  </html>
-  `;
+    const deliveryTimeRow = expected_delivery
+      ? `
+      <tr>
+        <td colspan="2" style="padding: 8px 0 0 0; border-top: 1px solid #e5e7eb;"></td>
+      </tr>
+      <tr>
+        <td style="padding: 10px 0 0 0; color: #6b7280; font-size: 13px;">Expected Delivery</td>
+        <td style="padding: 10px 0 0 0; color: #059669; font-size: 13px; font-weight: 600; text-align: right;">${expected_delivery}</td>
+      </tr>`
+      : "";
 
-    const info = await transport.sendMail({
+    // ─── NEW VENDOR: Invitation-focused email ───────────────────────────────
+    if (isNewVendor) {
+      const emailMessage = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>You have a buyer waiting — Join MyDoshBox</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #f3f4f6;">
+
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f3f4f6; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); overflow: hidden;" cellspacing="0" cellpadding="0" border="0">
+
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 36px 24px; text-align: center;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 26px; font-weight: 700; letter-spacing: -0.5px;">
+                🎉 Someone wants to buy from you!
+              </h1>
+              <p style="margin: 10px 0 0 0; color: #d1fae5; font-size: 14px;">
+                A buyer is waiting — create your free account to confirm
+              </p>
+            </td>
+          </tr>
+
+          <!-- Content -->
+          <tr>
+            <td style="padding: 32px 24px;">
+
+              <p style="margin: 0 0 8px 0; color: #111827; font-size: 16px;">
+                Hello <strong>${vendor_name}</strong>,
+              </p>
+
+              <p style="margin: 0 0 24px 0; color: #374151; font-size: 15px; line-height: 1.7;">
+                A buyer has placed an escrow order for your products on <strong>MyDoshBox</strong> — Nigeria's secure escrow platform. Your payment is guaranteed once you confirm and deliver.
+              </p>
+
+              <!-- Urgency Banner -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 8px; border-left: 4px solid #f59e0b; margin-bottom: 24px;">
+                <tr>
+                  <td style="padding: 16px 20px;">
+                    <p style="margin: 0; color: #92400e; font-size: 14px; font-weight: 700;">
+                      ⏳ Action required — Sign up to confirm this order
+                    </p>
+                    <p style="margin: 6px 0 0 0; color: #78350f; font-size: 13px; line-height: 1.6;">
+                      Create your free MyDoshBox account and set up your bank details to accept this order and receive payment.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Transaction Summary -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 24px;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <p style="margin: 0 0 14px 0; color: #111827; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                      Order Summary
+                    </p>
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                      <tr>
+                        <td style="padding: 8px 0; color: #6b7280; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Transaction ID</td>
+                        <td style="padding: 8px 0; color: #111827; font-size: 13px; font-weight: 600; text-align: right; font-family: 'Courier New', monospace;">${transaction_id}</td>
+                      </tr>
+                      <tr>
+                        <td colspan="2" style="padding: 8px 0 0 0; border-top: 1px solid #e5e7eb;"></td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 10px 0 6px 0; color: #6b7280; font-size: 13px;">Products Total</td>
+                        <td style="padding: 10px 0 6px 0; color: #059669; font-size: 18px; font-weight: 700; text-align: right;">₦${Number(sum_total).toLocaleString()}</td>
+                      </tr>
+                      ${deliveryRow}
+                      ${deliveryTimeRow}
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Products Table -->
+              <h2 style="margin: 0 0 14px 0; color: #111827; font-size: 16px; font-weight: 700;">📦 Order Details</h2>
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-radius: 8px; border: 1px solid #e5e7eb; overflow: hidden; margin-bottom: 28px;">
+                <tr style="background-color: #f9fafb;">
+                  <th style="padding: 10px 8px; text-align: center; color: #6b7280; font-size: 11px; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #e5e7eb;">#</th>
+                  <th style="padding: 10px 8px; text-align: left; color: #6b7280; font-size: 11px; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #e5e7eb;">Product</th>
+                  <th style="padding: 10px 8px; text-align: center; color: #6b7280; font-size: 11px; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #e5e7eb;">Qty</th>
+                  <th style="padding: 10px 8px; text-align: right; color: #6b7280; font-size: 11px; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #e5e7eb;">Unit</th>
+                  <th style="padding: 10px 8px; text-align: right; color: #6b7280; font-size: 11px; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #e5e7eb;">Total</th>
+                </tr>
+                ${productRows}
+              </table>
+
+              <!-- How it works -->
+              <h2 style="margin: 0 0 14px 0; color: #111827; font-size: 16px; font-weight: 700;">🔒 How MyDoshBox Protects You</h2>
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 28px;">
+                <tr><td>
+                  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 10px;">
+                    <tr>
+                      <td style="width: 28px; vertical-align: top; padding-top: 2px;">
+                        <div style="width: 22px; height: 22px; background-color: #d1fae5; border-radius: 50%; text-align: center; line-height: 22px; color: #065f46; font-weight: 700; font-size: 11px;">1</div>
+                      </td>
+                      <td style="padding-left: 10px; color: #374151; font-size: 14px; line-height: 1.6;">
+                        Buyer pays into <strong>secure escrow</strong> — funds are held safely
+                      </td>
+                    </tr>
+                  </table>
+                  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 10px;">
+                    <tr>
+                      <td style="width: 28px; vertical-align: top; padding-top: 2px;">
+                        <div style="width: 22px; height: 22px; background-color: #d1fae5; border-radius: 50%; text-align: center; line-height: 22px; color: #065f46; font-weight: 700; font-size: 11px;">2</div>
+                      </td>
+                      <td style="padding-left: 10px; color: #374151; font-size: 14px; line-height: 1.6;">
+                        You <strong>confirm the order</strong> and deliver the product
+                      </td>
+                    </tr>
+                  </table>
+                  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                    <tr>
+                      <td style="width: 28px; vertical-align: top; padding-top: 2px;">
+                        <div style="width: 22px; height: 22px; background-color: #d1fae5; border-radius: 50%; text-align: center; line-height: 22px; color: #065f46; font-weight: 700; font-size: 11px;">3</div>
+                      </td>
+                      <td style="padding-left: 10px; color: #374151; font-size: 14px; line-height: 1.6;">
+                        Buyer confirms delivery → <strong style="color: #059669;">payment released to your bank account</strong>
+                      </td>
+                    </tr>
+                  </table>
+                </td></tr>
+              </table>
+
+              <!-- CTA -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 12px;">
+                <tr>
+                  <td align="center">
+                    <a href="${signupUrl}" style="display: inline-block; padding: 15px 40px; background-color: #10b981; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 16px; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.35);">
+                      Create Free Account & Confirm Order →
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 28px;">
+                <tr>
+                  <td align="center">
+                    <p style="margin: 0; color: #9ca3af; font-size: 12px;">
+                      Already have an account? <a href="${loginUrl}" style="color: #059669; text-decoration: none; font-weight: 600;">Sign in here</a>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 0 0 24px 0;" />
+
+              <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 13px; line-height: 1.6;">
+                Questions? Contact us at <a href="mailto:${supportEmail}" style="color: #10b981; text-decoration: none; font-weight: 600;">${supportEmail}</a>
+              </p>
+              <p style="margin: 0; color: #374151; font-size: 13px; line-height: 1.6;">
+                Best regards,<br/>
+                <strong style="color: #10b981;">The MyDoshBox Team</strong>
+              </p>
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f9fafb; padding: 20px 24px; text-align: center; border-top: 1px solid #e5e7eb;">
+              <p style="margin: 0 0 4px 0; color: #6b7280; font-size: 11px;">© ${new Date().getFullYear()} MyDoshBox. All rights reserved.</p>
+              <p style="margin: 0; color: #9ca3af; font-size: 10px;">Secure escrow transactions made simple</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>`;
+
+      await transport.sendMail({
+        to: vendor_email,
+        from: process.env.VERIFICATION_EMAIL,
+        subject: "🛍️ You have a buyer waiting — Join MyDoshBox to confirm",
+        html: emailMessage,
+      });
+      return;
+    }
+
+    // ─── EXISTING VENDOR: Standard notification email ──────────────────────
+    const emailMessage = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Escrow Transaction — MyDoshBox</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #f3f4f6;">
+
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f3f4f6; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); overflow: hidden;" cellspacing="0" cellpadding="0" border="0">
+
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 32px 24px; text-align: center;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;">
+                🎉 New Transaction Request
+              </h1>
+              <p style="margin: 8px 0 0 0; color: #d1fae5; font-size: 14px;">
+                A buyer wants to purchase from you
+              </p>
+            </td>
+          </tr>
+
+          <!-- Content -->
+          <tr>
+            <td style="padding: 32px 24px;">
+
+              <p style="margin: 0 0 8px 0; color: #111827; font-size: 16px;">
+                Hello <strong>${vendor_name}</strong>,
+              </p>
+
+              <p style="margin: 0 0 24px 0; color: #374151; font-size: 15px; line-height: 1.7;">
+                A buyer has initiated an escrow transaction for your products. Please review the details and confirm the order in your dashboard.
+              </p>
+
+              <!-- Action Banner -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 8px; border-left: 4px solid #f59e0b; margin-bottom: 24px;">
+                <tr>
+                  <td style="padding: 16px 20px;">
+                    <p style="margin: 0; color: #92400e; font-size: 14px; font-weight: 700;">⚠️ Action Required</p>
+                    <p style="margin: 6px 0 0 0; color: #78350f; font-size: 13px; line-height: 1.6;">
+                      Log in to your dashboard to confirm this order. Once confirmed, the buyer will proceed with payment.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Transaction Summary -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 24px;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                      <tr>
+                        <td style="padding: 8px 0; color: #6b7280; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Transaction ID</td>
+                        <td style="padding: 8px 0; color: #111827; font-size: 13px; font-weight: 600; text-align: right; font-family: 'Courier New', monospace;">${transaction_id}</td>
+                      </tr>
+                      <tr>
+                        <td colspan="2" style="padding: 8px 0 0 0; border-top: 1px solid #e5e7eb;"></td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 10px 0 6px 0; color: #6b7280; font-size: 13px;">Products Total (you receive)</td>
+                        <td style="padding: 10px 0 6px 0; color: #059669; font-size: 18px; font-weight: 700; text-align: right;">₦${Number(sum_total).toLocaleString()}</td>
+                      </tr>
+                      ${deliveryRow}
+                      ${deliveryTimeRow}
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Products Table -->
+              <h2 style="margin: 0 0 14px 0; color: #111827; font-size: 16px; font-weight: 700;">📦 Order Details</h2>
+
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-radius: 8px; border: 1px solid #e5e7eb; overflow: hidden; margin-bottom: 24px;">
+                <tr style="background-color: #f9fafb;">
+                  <th style="padding: 10px 8px; text-align: center; color: #6b7280; font-size: 11px; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #e5e7eb;">#</th>
+                  <th style="padding: 10px 8px; text-align: left; color: #6b7280; font-size: 11px; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #e5e7eb;">Product</th>
+                  <th style="padding: 10px 8px; text-align: center; color: #6b7280; font-size: 11px; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #e5e7eb;">Qty</th>
+                  <th style="padding: 10px 8px; text-align: right; color: #6b7280; font-size: 11px; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #e5e7eb;">Unit</th>
+                  <th style="padding: 10px 8px; text-align: right; color: #6b7280; font-size: 11px; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #e5e7eb;">Total</th>
+                </tr>
+                ${productRows}
+              </table>
+
+              <!-- CTA -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 24px;">
+                <tr>
+                  <td align="center">
+                    <a href="${dashboardUrl}" style="display: inline-block; padding: 14px 36px; background-color: #10b981; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);">
+                      View Transaction in Dashboard →
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 0 0 24px 0;" />
+
+              <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 13px; line-height: 1.6;">
+                Questions? <a href="mailto:${supportEmail}" style="color: #10b981; text-decoration: none; font-weight: 600;">${supportEmail}</a>
+              </p>
+              <p style="margin: 0; color: #374151; font-size: 13px;">
+                Best regards,<br/><strong style="color: #10b981;">The MyDoshBox Team</strong>
+              </p>
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f9fafb; padding: 20px 24px; text-align: center; border-top: 1px solid #e5e7eb;">
+              <p style="margin: 0 0 4px 0; color: #6b7280; font-size: 11px;">© ${new Date().getFullYear()} MyDoshBox. All rights reserved.</p>
+              <p style="margin: 0; color: #9ca3af; font-size: 10px;">Secure escrow transactions made simple</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>`;
+
+    await transport.sendMail({
       to: vendor_email,
       from: process.env.VERIFICATION_EMAIL,
-      subject: "🎉 New Escrow Transaction - Action Required",
+      subject: "🎉 New Escrow Transaction — Action Required",
       html: emailMessage,
     });
-
-    console.log("info mesage id: " + info?.messageId);
-    console.log("info accepted: " + info?.accepted);
-    console.log("info rejected: " + info?.rejected);
   } catch (err) {
-    console.log(err);
+    console.error("Error sending escrow initiation email to vendor:", err);
   }
 };
 

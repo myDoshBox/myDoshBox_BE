@@ -95,10 +95,7 @@ export const initiateEscrowProductTransaction = async (
 
   try {
     const user = await IndividualUser.findOne({ email: buyer_email });
-
-    if (!user) {
-      return next(errorHandler(404, "User not found"));
-    }
+    if (!user) return next(errorHandler(404, "User not found"));
 
     if (buyer_email === vendor_email) {
       return next(
@@ -106,34 +103,42 @@ export const initiateEscrowProductTransaction = async (
       );
     }
 
-    const vendorBankDetails = await getVendorBankDetails(vendor_email);
-
-    if (
-      !vendorBankDetails ||
-      !vendorBankDetails.account_number ||
-      !vendorBankDetails.bank_code
-    ) {
-      return next(
-        errorHandler(
-          400,
-          "Cannot initiate transaction: Vendor has not set up bank details. Please ask the vendor to add their bank information in their profile settings.",
-        ),
-      );
-    }
-
-    console.log("✅ Vendor bank details validated:", {
-      account_name: vendorBankDetails.account_name,
-      bank_name: vendorBankDetails.bank_name,
+    // ✅ Check if vendor exists in either user model
+    const vendorAsIndividual = await IndividualUser.findOne({
+      email: vendor_email,
     });
+    const vendorAsOrg = await OrganizationUser.findOne({
+      $or: [
+        { organization_email: vendor_email },
+        { contact_email: vendor_email },
+      ],
+    });
+    const vendorExists = !!(vendorAsIndividual || vendorAsOrg);
+    const vendorHasBankDetails = vendorExists
+      ? !!(
+          (vendorAsIndividual?.bank_details?.account_number &&
+            vendorAsIndividual?.bank_details?.bank_code) ||
+          (vendorAsOrg?.bank_details?.account_number &&
+            vendorAsOrg?.bank_details?.bank_code)
+        )
+      : false;
 
     const transaction_id = uuidv4();
+
     const sum_total = products.reduce(
       (sum: number, p: { price: number; quantity: number }) =>
         sum + p.price * p.quantity,
       0,
     );
-    const commission = sum_total * 0.01; // 1% commission
-    const transaction_total = sum_total + commission;
+
+    const deliveryFeeAmount =
+      delivery_option === "agreed_delivery_fee" && agreed_delivery_fee
+        ? Number(agreed_delivery_fee)
+        : 0;
+
+    const base = sum_total + deliveryFeeAmount;
+    const commission = base * 0.01;
+    const transaction_total = base + commission;
 
     const newTransaction = new ProductTransaction({
       user,
@@ -146,36 +151,61 @@ export const initiateEscrowProductTransaction = async (
       products,
       sum_total,
       transaction_total,
+      commission,
       signed_escrow_doc,
       delivery_address,
       buyer_initiated: true,
-      vendor_bank_details: vendorBankDetails,
       delivery_option,
       agreed_delivery_fee: agreed_delivery_fee || 0,
       expected_delivery_date: expected_delivery_date || null,
       expected_delivery_range: expected_delivery_range || null,
+      //Track vendor registration status at time of transaction creation
+      vendor_registered: vendorExists,
+      vendor_bank_verified: vendorHasBankDetails,
     });
 
     await newTransaction.save();
 
-    await sendEscrowInitiationEmailToVendor(
-      transaction_id,
-      vendor_name,
-      vendor_email,
-      products,
-      sum_total,
-      transaction_total,
-    );
+    //  Send the right email based on whether vendor has an account
+    if (vendorExists) {
+      await sendEscrowInitiationEmailToVendor(
+        transaction_id,
+        vendor_name,
+        vendor_email,
+        products,
+        sum_total,
+        transaction_total,
+        delivery_option,
+        agreed_delivery_fee,
+        expected_delivery_date || expected_delivery_range,
+        false, // isNewVendor
+      );
+    } else {
+      await sendEscrowInitiationEmailToVendor(
+        transaction_id,
+        vendor_name,
+        vendor_email,
+        products,
+        sum_total,
+        transaction_total,
+        delivery_option,
+        agreed_delivery_fee,
+        expected_delivery_date || expected_delivery_range,
+        true, // isNewVendor — triggers signup-focused email
+      );
+    }
 
     res.json({
       status: "success",
-      message:
-        "Transaction initiated successfully. Vendor bank details verified.",
+      message: vendorExists
+        ? "Transaction initiated successfully. Vendor has been notified."
+        : "Transaction initiated successfully. An invitation has been sent to the vendor to join MyDoshBox.",
       transaction_id,
       sum_total,
       transaction_total,
       commission,
-      vendor_bank_verified: true,
+      vendor_registered: vendorExists,
+      vendor_bank_verified: vendorHasBankDetails,
     });
   } catch (error) {
     console.error("Error initiating transaction:", error);
@@ -198,7 +228,6 @@ export const editEscrowProductTransaction = async (
     products,
     signed_escrow_doc,
     delivery_address,
-    // ✅ NEW FIELDS
     delivery_option,
     agreed_delivery_fee,
     expected_delivery_date,
